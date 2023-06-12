@@ -1,0 +1,93 @@
+.main_grid_container {
+    display: inline-block;
+    text-align: left;
+    float: left;
+    width: 100%;
+}
+.add_tiles {
+    width: auto;
+    padding: 10px;
+    background: #bbb;
+    display: inline-block;
+    box-sizing: border-box;
+    line-height: 15px;
+    border-radius: 5px;
+    color: black;
+    margin-left: 20px;
+}
+.tiles_container {
+    display: inline-block;
+    width: 80%;
+    padding-left: 5%;
+    vertical-align: top;
+    min-height: 100px;
+}
+.tiles{
+    width: 150px;
+    height: 150px;
+    background: pink;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    text-transform: capitalize;
+}
+.tiles_popup {
+    width: 650px;
+    background: white;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+     color: black;
+     padding: 20px;
+     border-radius: 7px;
+}
+.tiles_popup h3 {
+    color: black;
+    text-align: center;
+}
+.radiosets {
+    display: inline-block;
+    width: 47%;
+    float: left;
+    border-right: 1px solid #aaa;
+    margin-right: 3%;
+}
+.radiosets:nth-child(3){
+    border-right: 0 none;
+    margin-right: 3%;
+}
+.radiosets .MuiButtonBase-root .MuiSvgIcon-root {
+    color:  black;
+}
+.all_options {
+    display: inline-block;
+    width: 100%;
+    padding: 30px 0;
+    list-style: none;
+}
+.all_options ul {
+    list-style: none;
+    padding: 0;
+}
+.all_options ul li{
+    padding-bottom: 20px;
+}
+.all_options ul li svg {
+    font-size: 35px;
+}
+.all_options ul li input {
+    display: block;
+    height: 40px;
+    margin-left: 21px;
+    margin-top: 14px;
+    width: 50%;
+}
+.all_options ul li span {
+    vertical-align: middle;
+    padding-left: 15px;
+    font-size: 18px;
+    cursor: pointer;
+}
