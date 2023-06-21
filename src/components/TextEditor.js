@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import QuillEditor from 'react-quill';
+import dynamic from 'next/dynamic';
+const QuillEditor = dynamic(() => import('react-quill'), { ssr: false });
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import 'react-quill/dist/quill.snow.css';
 import { Dialog, DialogTitle, DialogContent ,DialogActions , Button} from '@mui/material';
