@@ -9,12 +9,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-        <ThemeProvider theme={darkTheme}>
+        {/* <ThemeProvider> */}
           <CssBaseline />
           <body id="__next">
             {children}
           </body>
-        </ThemeProvider>
+        {/* </ThemeProvider> */}
     </html>
   );
 }

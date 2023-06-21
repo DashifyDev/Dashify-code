@@ -35,7 +35,7 @@
 }
 .tiles_popup {
     width: 650px;
-    background: white;
+    background:  white;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -43,6 +43,8 @@
      color: black;
      padding: 20px;
      border-radius: 7px;
+     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+     backdrop-filter: blur(10px);
 }
 .tiles_popup h3 {
     color: black;
@@ -90,4 +92,32 @@
     padding-left: 15px;
     font-size: 18px;
     cursor: pointer;
+}
+
+.board_nav {
+    width: '100Px';
+    margin: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: 'flex-start';
+}
+
+.innerTile {
+    height: 100%;
+    margin: 0 5px;
+}
+
+.showPodTileOptions {
+    position: absolute;
+    top: 10px;
+    /* right: 20px; */
+    cursor: pointer;
+  }
+
+.podTilesImage{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
 }

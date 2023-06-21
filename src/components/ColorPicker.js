@@ -14,6 +14,7 @@ class ColorPicker extends React.Component {
       b: '19',
       a: '1',
     },
+    selectedHex : null
   };
 
   handleClick = () => {
@@ -26,6 +27,7 @@ class ColorPicker extends React.Component {
 
   handleChange = (color) => {
     this.setState({ color: color.rgb })
+    this.setState({selectedHex : color.hex})
     console.log('color',color)
     this.props.handleColorChange(color)
 
@@ -69,7 +71,9 @@ class ColorPicker extends React.Component {
         //   <div style={ styles.color } />
         // </div>*/}
         <span onClick={ this.handleClick }><ColorizeSharpIcon/></span>
-        <span>Box Text</span>
+        <span onClick={ this.handleClick }>Box Color</span>
+        <span style={{fontSize:'13px'}}>{this.state.selectedHex}</span>
+        <span></span>
         { this.state.displayColorPicker ? <div style={ styles.popover }>
           <div style={ styles.cover } onClick={ this.handleClose }/>
           <SketchPicker color={ this.state.color } onChange={ this.handleChange } />
