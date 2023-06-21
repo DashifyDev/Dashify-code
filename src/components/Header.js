@@ -4,7 +4,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CssBaseline from '@mui/material/CssBaseline';
 import { IconButton, Avatar, Button } from '@mui/material';
 import SideDrawer from './SideDrawer';
-import '../styles/header.css'
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
