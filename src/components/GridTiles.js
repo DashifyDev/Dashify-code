@@ -19,9 +19,8 @@ import ColorPicker from './ColorPicker';
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { Button, Dialog, DialogContent, List, ListItem, ListItemText, } from '@mui/material';
-import Sortable from 'sortablejs';
 import TextEditor from './TextEditor';
-import 'react-quill/dist/quill.snow.css'
+import { ReactSortable } from "react-sortablejs";
 
 export default function GridTiles() {
   const [tilesCount, setTilesCount] = useState([""]);
@@ -41,6 +40,8 @@ export default function GridTiles() {
   const [openTextEditor, setOpenTextEdior] = useState(false)
   const [content, setContent] = useState('')
   const [textEditorContent, setTextEditorContent] = useState()
+  const [disableDrag, setDisableDrag] = useState(false);
+
 
   const hiddenFileInput = useRef(null)
 
@@ -144,6 +145,7 @@ export default function GridTiles() {
   }
 
   const openModel = (e, index, isPod) => {
+    console.log("===At Open Model=>>>>", pods, tileCordinates)
     e.stopPropagation();
     setColorImage('color')
     setTextLink('text')
@@ -208,7 +210,7 @@ export default function GridTiles() {
       setSelectedPod(null)
       setPods(items)
       return
-    }  
+    }
     tileCordinates.splice(index, 1)
     setTileCordinates([...tileCordinates])
     setShowModel(false)
@@ -270,19 +272,19 @@ export default function GridTiles() {
   }
 
 
-  const setLinkRedirection = (e, link , tileContent,index ,isPod) => {
+  const setLinkRedirection = (e, link, tileContent, index, isPod) => {
     if (e.detail == 2 && link) {
       window.open(link, '_blank');
     }
-    else if(e.detail == 2 && !link){
+    else if (e.detail == 2 && !link) {
       setOpenTextEdior(true)
       setTextEditorContent(tileContent)
-      if(isPod){
+      if (isPod) {
         setSelectedPod(isPod)
-      }else{
+      } else {
         setSelectedTile(index)
       }
-      
+
     }
   }
   const podStyle = (index) => {
@@ -299,7 +301,7 @@ export default function GridTiles() {
 
     return stylevalue
   }
-  const innerTileStyle = (pod, tile) => {
+  const innerTileStyle = (tile) => {
     const stylevalue = {
       display: "flex",
       alignItems: "center",
@@ -309,7 +311,9 @@ export default function GridTiles() {
       border: '1px solid #bbb',
       borderRadius: '20px',
       height: '100%',
-      margin: ' 0 5px'
+      margin: ' 0 5px',
+      cursor: 'grabbing',
+      position: 'relative'
     }
     return stylevalue
   }
@@ -453,41 +457,14 @@ export default function GridTiles() {
     setBoards(dashBoards)
   }
 
-  const dragTilefromPod = (podIndex, oldIndex, newIndex, dragType, pod) => {
-    const tiles = pod.tiles.slice(); 
-    let tile = tiles[oldIndex]
-    if (dragType === 'dragend') {
-      tiles.splice(oldIndex, 1);
-      const updatedPods = pods;
-      pod.tiles = tiles
-      updatedPods[podIndex] = pod
-      localStorage.setItem('pods', JSON.stringify(updatedPods));
-      setPods(updatedPods);
-
-      let freeTiles =   [...tileCordinates, tile]
-      localStorage.setItem('coordinates', JSON.stringify(freeTiles));
-      setTileCordinates(freeTiles)
-    } else {
-      const movedTile = tiles.splice(oldIndex, 1)[0];
-      tiles.splice(newIndex, 0, movedTile); 
-      const updatedPods = [...pods];
-      updatedPods[podIndex] = {
-        ...pod,
-        tiles: tiles,
-      };
-      localStorage.setItem('pods', JSON.stringify(updatedPods));
-      setPods(updatedPods);
-    }
-  }
-
-  const handleCloseTextEditor = (content) =>{
+  const handleCloseTextEditor = (content) => {
     setOpenTextEdior(false)
     setTextEditorContent(null)
     setSelectedTile(null)
     setSelectedPod(null)
   }
 
-  const updateEditorContent = (content) =>{
+  const updateEditorContent = (content) => {
     if (selectedPod) {
       let podIndex = selectedPod.podIndex
       let tileIndex = selectedPod.tileIndex
@@ -497,19 +474,62 @@ export default function GridTiles() {
       items[podIndex].tiles[tileIndex].tileContent = content
       localStorage.setItem('pods', JSON.stringify(items))
       setSelectedPod(null)
-      setOpenTextEdior(false) 
+      setOpenTextEdior(false)
       setTextEditorContent(null)
       return
-    }  
+    }
     let items = [...tileCordinates];
-    let item = { ...items[selectedTile]};
+    let item = { ...items[selectedTile] };
     items[selectedTile].tileContent = content;
     localStorage.setItem('coordinates', JSON.stringify(items))
     setTileCordinates(items)
     setSelectedTile(null)
     setTextEditorContent(null)
-    setOpenTextEdior(false)  
+    setOpenTextEdior(false)
   }
+
+  const onSortEnd = (tileList , pod ,podIndex) => {
+    pod['tiles'] = tileList
+    let podsArray = [ ...pods ]
+    podsArray[podIndex] = pod 
+    localStorage.setItem('pods', JSON.stringify(podsArray))
+    setPods(podsArray)
+  };
+
+  const deletePod = (index) => {
+    let podsArray = [ ...pods ]
+    podsArray.splice(index , 1)
+    localStorage.setItem('pods', JSON.stringify(podsArray))
+    setPods(podsArray)
+  }
+
+  const removeTileFromPod = (event, pod ,podIndex) => {
+    const { oldIndex, newIndex, originalEvent } = event
+    let dragType = originalEvent.type
+    let tile = pod.tiles[newIndex]
+    if (dragType === 'dragend') {
+
+      if(pod.tiles.length === 2){
+        let tiles = pod.tiles
+        deletePod(podIndex)
+        let freeTiles = [...tileCordinates]
+        freeTiles = [...tileCordinates, ...tiles]
+        setTileCordinates(freeTiles)
+        localStorage.setItem('coordinates', JSON.stringify(freeTiles))
+      }
+      else{  
+      pod.tiles.splice(newIndex, 1)
+      onSortEnd(pod.tiles, pod, podIndex)
+      let freeTiles = [...tileCordinates]
+      freeTiles = [...tileCordinates, tile]
+      setTileCordinates(freeTiles)
+      localStorage.setItem('coordinates', JSON.stringify(freeTiles))
+      }
+    }
+  }
+
+  
+
 
   return (
     <div className="main_grid_container">
@@ -530,82 +550,75 @@ export default function GridTiles() {
       </div>
 
       <div className="tiles_container">
-        {pods.map((pod, index) => {
-          return (
-            <div className='pods' key={index} >
-              <Rnd
-                style={podStyle(index)}
-                size={{ width: pod.width, height: pod.height }}
-                position={{ x: pod.x, y: pod.y }}
-                onDragStop={(e, d) => handlePodDragStop(e, d, pod, index)}
-                onResizeStop={(e, direction, ref, delta, position) => handlePodResizeStop(e, direction, ref, delta, position, index)}
-                id={pod.id}
-              >
-
-                <div style={{ display: 'contents' }} ref={(sortableContainer) => {
-                  if (sortableContainer) {
-                    group: 'tiles',
-                      Sortable.create(sortableContainer, {
-                        onEnd: (event) => {
-                          const { oldIndex, newIndex, originalEvent } = event;
-                          const dragType = originalEvent.type
-                          dragTilefromPod(index, oldIndex, newIndex, dragType, pod)
-                        }
-                      });
-                  }
-                }}>
-                  {pod.tiles.map((tile, tileIndex) => {
-                    return (
-                      <div className='innerTile' key={tile.id} style={innerTileStyle(pod, tile)}
-                        onClick={(e) => setLinkRedirection(e, tile.tileLink , tile.tileContent ,index, { podIndex: index, tileIndex: tileIndex })}
-                        onMouseEnter={() => setShowOption(`pod_${index}_tile_${tileIndex}`)}
-                        onMouseLeave={() => setShowOption(null)}
-                      >
-                        {showOption === `pod_${index}_tile_${tileIndex}` &&
-                          <div className='showPodTileOptions'
-                            onClick={(e) => { openModel(e, index, { podIndex: index, tileIndex: tileIndex }) }}>
-                            <MoreHorizSharpIcon />
-                          </div>}
-                        {!tile.tileImage && <span>{tile.tileText ? tile.tileText : 'Tiles'}</span>}
-                        {tile.tileImage && < img className='podTilesImage' src={tile.tileImage} alt="Preview" />}
-                      </div>
-                    )
-
-                  })}
-                </div>
-              </Rnd>
-            </div>
-          )
-        })}
-        {tileCordinates.map((tile, index) => {
-          return (
-            <div className='relative' key={index}>
-              <Rnd
-                onMouseEnter={() => setShowOption(`tiles_${index}`)}
-                onMouseLeave={() => setShowOption(null)}
-                style={style(index)}
-                size={{ width: tile.width, height: tile.height }}
-                position={{ x: tile.x, y: tile.y }}
-                onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
-                onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
-                onClick={(e) => setLinkRedirection(e, tile.tileLink , tile.tileContent , index, null)}
-                // default={{
-                //   x: (index)*160,  
-                //   y: 0,
-                //   width: 150,
-                //   height: 150
-                // }}
-                id={tile.id}
-              >
-                {tileCordinates[index].tileImage ? '' : changedTitlehandle(index)}
-                {tileCordinates[index].tileImage && <img src={tileCordinates[index].tileImage} alt="Preview" style={{ width: tile.width, height: tile.height, borderRadius: '10px' }} />}
-                {showOption === `tiles_${index}` && <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
-                  <MoreHorizSharpIcon />
-                </div>}
-              </Rnd>
-            </div>
-          )
-        })}
+        {pods.map((pod, index) => (
+          <div className='pods' key={pod.id} >
+            <Rnd
+              style={podStyle(index)}
+              size={{ width: pod.width, height: pod.height }}
+              position={{ x: pod.x, y: pod.y }}
+              disableDragging={disableDrag}
+              onDragStop={(e, d) => handlePodDragStop(e, d, pod, index)}
+              onResizeStop={(e, direction, ref, delta, position) => handlePodResizeStop(e, direction, ref, delta, position, index)}
+              id={pod.id}
+            >
+                <ReactSortable
+                  filter=".addImageButtonContainer"
+                  dragClass="sortableDrag"
+                  list={pod.tiles}
+                  setList={(list) =>  onSortEnd(list, pod , index) }
+                  animation="200"
+                  easing="ease-out" style={{display : 'contents'}}
+                  onEnd={(evt) =>removeTileFromPod(evt, pod, index)} 
+                >
+                  {pod.tiles.map((tile, tileIndex) => (
+                    <div className='innerTile' key={tile.id} style={innerTileStyle(tile)}
+                      onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, { podIndex: index, tileIndex: tileIndex })}
+                      onMouseEnter={() => { setShowOption(`pod_${index}_tile_${tileIndex}`); setDisableDrag(true) }}
+                      onMouseLeave={() => { setShowOption(null); setDisableDrag(false) }}
+                    >
+                      {showOption === `pod_${index}_tile_${tileIndex}` &&
+                        <div className='showPodTileOptions'
+                          onClick={(e) => { openModel(e, index, { podIndex: index, tileIndex: tileIndex }) }}>
+                          <MoreHorizSharpIcon />
+                        </div>}
+                      {!tile.tileImage && <span>{tile.tileText ? tile.tileText : 'Tiles'}</span>}
+                      {tile.tileImage && < img className='podTilesImage' src={tile.tileImage} alt="Preview" />}
+                    </div>
+                  )
+                  )}
+                </ReactSortable>
+            </Rnd>
+          </div>
+        )
+        )}
+        {tileCordinates.map((tile, index) => (
+          <div className='relative' key={index}>
+            <Rnd
+              onMouseEnter={() => setShowOption(`tiles_${index}`)}
+              onMouseLeave={() => setShowOption(null)}
+              style={style(index)}
+              size={{ width: tile.width, height: tile.height }}
+              position={{ x: tile.x, y: tile.y }}
+              onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
+              onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
+              onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, null)}
+              // default={{
+              //   x: (index)*160,  
+              //   y: 0,
+              //   width: 150,
+              //   height: 150
+              // }}
+              id={tile.id}
+            >
+              {tileCordinates[index].tileImage ? '' : changedTitlehandle(index)}
+              {tileCordinates[index].tileImage && <img src={tileCordinates[index].tileImage} alt="Preview" style={{ width: tile.width, height: tile.height, borderRadius: '10px' }} />}
+              {showOption === `tiles_${index}` && <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
+                <MoreHorizSharpIcon />
+              </div>}
+            </Rnd>
+          </div>
+        )
+        )}
       </div>
       {showModel ? <div className='tiles_popup' open={showModel} id={`model_${selectedTile}`}>
         <div>
@@ -699,11 +712,11 @@ export default function GridTiles() {
 
         </div>
       </div> : ""}
-      <TextEditor open={openTextEditor} 
-          onClose={handleCloseTextEditor} 
-          content={textEditorContent}
-          onSave = {updateEditorContent}
-        />
+      <TextEditor open={openTextEditor}
+        onClose={handleCloseTextEditor}
+        content={textEditorContent}
+        onSave={updateEditorContent}
+      />
     </div>
   );
 }
