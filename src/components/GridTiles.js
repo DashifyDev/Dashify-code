@@ -1,7 +1,7 @@
 "use client";
 'use strict'
 import AddSharpIcon from '@mui/icons-material/AddSharp';
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import '../styles/styles.css'
 import { Rnd } from "react-rnd";
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
@@ -18,9 +18,14 @@ import { ChromePicker } from 'react-color';
 import ColorPicker from './ColorPicker';
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { Button, Dialog, DialogContent, List, ListItem, ListItemText, } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, 
+  DialogTitle, List, ListItem, ListItemText, } from '@mui/material';
 import TextEditor from './TextEditor';
 import { ReactSortable } from "react-sortablejs";
+import axios from 'axios';
+import { userContext } from '@/context/userContext';
+
+
 
 export default function GridTiles() {
   const [tilesCount, setTilesCount] = useState([""]);
@@ -38,48 +43,30 @@ export default function GridTiles() {
   const [boards, setBoards] = useState([]);
   const [pods, setPods] = useState([])
   const [openTextEditor, setOpenTextEdior] = useState(false)
-  const [content, setContent] = useState('')
+  const [selectedTileDetail, setSelectedTileDetail] = useState({})
+  const [dashBoardName, setDashBoardName] = useState('')
   const [textEditorContent, setTextEditorContent] = useState()
   const [disableDrag, setDisableDrag] = useState(false);
+  const [showDeshboardModel, setShowDashboardModel] = useState(false)
+  const [activeBoard, setActiveBoard] = useState('')
+  const [showIcon , setShowIcon] = useState(null)
+  const [dashbardUpdateId, setDashboardUpdateId] = useState(null)
 
-
+  const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
-
   useEffect(() => {
-    console.log("localStorage.getItem('coordinates')", localStorage.getItem('coordinates'))
-    if (localStorage.getItem('pods')) {
-      setPods(JSON.parse(localStorage.getItem('pods')))
+    if(dbUser){
+      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res)=>{
+        setBoards(res.data);
+        setActiveBoard(res.data[0]._id)
+        axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
+          setTileCordinates(res.data.tiles)
+          setPods(res.data.pods)
+        })
+      })
     }
-    if (localStorage.getItem('boards')) {
-      setBoards(JSON.parse(localStorage.getItem('boards')))
-    }
-    if (localStorage.getItem('coordinates')) {
-      setTileCordinates(JSON.parse(localStorage.getItem('coordinates')));
-    } else {
-
-      var timestamp1 = new Date().getTime().toString();
-      var uniqueId1 = timestamp1.substr(timestamp1.length - 6);
-
-      var timestamp2 = new Date().getTime().toString();
-      var uniqueId2 = timestamp2.substr(timestamp2.length - 7);
-      setTileCordinates([
-        {
-          id: uniqueId1,
-          width: 200,
-          height: 200,
-          x: 10,
-          y: 10
-        },
-        {
-          id: uniqueId2,
-          width: 200,
-          height: 200,
-          x: 300,
-          y: 10
-        },
-      ])
-    }
-  }, []);
+    
+  }, [dbUser]);
 
   const handleClick = () => {
     setDisplayColorPicker(!displayColorPicker)
@@ -94,16 +81,19 @@ export default function GridTiles() {
   const addTiles = () => {
     const naturalNumberx = Math.floor(Math.random() * 1000);
     const naturalNumbery = Math.floor(Math.random() * 350)
-    var timestamp = new Date().getTime().toString();
-    var uniqueId = timestamp.substr(timestamp.length - 6);
-    setTileCordinates([...tileCordinates, {
-      id: uniqueId,
-      width: 200,
-      height: 200,
+    //var timestamp = new Date().getTime().toString();
+    //var uniqueId = timestamp.substr(timestamp.length - 6);
+    const newtile = {
+      dashboardId: activeBoard,
+      width: '200px',
+      height: '200px',
       x: naturalNumberx,
       y: naturalNumbery
-    }])
-    localStorage.setItem('coordinates', JSON.stringify(tileCordinates))
+    }
+    axios.post('/api/tile/tile', newtile ).then((res)=>{
+      console.log("====>>>",res.data)
+      setTileCordinates([...tileCordinates , res.data])
+    })
   }
 
   // const style = {
@@ -145,15 +135,15 @@ export default function GridTiles() {
   }
 
   const openModel = (e, index, isPod) => {
-    console.log("===At Open Model=>>>>", pods, tileCordinates)
     e.stopPropagation();
     setColorImage('color')
-    setTextLink('text')
     setShowModel(true);
     if (isPod) {
       setSelectedPod(isPod)
+      setSelectedTileDetail(pods[isPod.podIndex].tiles[isPod.tileIndex])
     } else {
       setSelectedTile(index)
+      setSelectedTileDetail(tileCordinates[index])
     }
   }
 
@@ -169,31 +159,43 @@ export default function GridTiles() {
   }
 
   const handleSave = (index) => {
+    let formData = new FormData;
+    let payload = formValue
+
+    for (let key in payload) {
+      formData.append(key, payload[key]);
+    }
+
     if (selectedPod) {
       let podIndex = selectedPod.podIndex
       let tileIndex = selectedPod.tileIndex
       let items = [...pods]
       let pod = items[podIndex]
       let changeTile = pod.tiles[tileIndex]
-      items[podIndex].tiles[tileIndex] = { ...changeTile, ...formValue }
-      localStorage.setItem('pods', JSON.stringify(items))
-      setPods(items)
+      let tileId = changeTile._id      
       setFormValue({})
       setImageFileName(null)
       setShowModel(false)
       setSelectedPod(null)
+      axios.patch(`/api/tile/${tileId}`, formData).then((res) => {
+        items[podIndex].tiles[tileIndex] = res.data
+        setPods(items)
+      })
       return
     }
-
     let items = [...tileCordinates];
-    let item = { ...items[selectedTile], ...formValue };
-    items[selectedTile] = item;
-    localStorage.setItem('coordinates', JSON.stringify(items))
-    setTileCordinates(items)
+    let tileId = items[selectedTile]._id
     setFormValue({})
     setSelectedTile(null)
     setImageFileName(null)
     setShowModel(false)
+
+    axios.patch(`/api/tile/${tileId}`, formData
+    ).then((res) => {
+      let item = { ...items[selectedTile], ...res.data };
+      items[selectedTile] = item;
+      setTileCordinates(items)
+    })
   }
 
   const deleteTile = (index) => {
@@ -203,26 +205,40 @@ export default function GridTiles() {
       let items = [...pods]
       let pod = items[podIndex]
       let tiles = pod.tiles
-      tiles.splice(tileIndex, 1)
-      items[podIndex].tiles = tiles
-      localStorage.setItem('pods', JSON.stringify(items))
+      let tileId = tiles[tileIndex]._id
       setShowModel(false)
       setSelectedPod(null)
-      setPods(items)
+        axios.delete(`/api/tile/${tileId}`).then((res) => {
+          if (res) {
+            tiles.splice(tileIndex, 1)
+            if(tiles.length == 1){
+              deletePod(podIndex)
+              let tile = tiles[0]
+              setTileCordinates([...tileCordinates , tile])
+            }
+            else{
+              items[podIndex].tiles = tiles
+              setPods(items)
+            }
+          }
+        })    
       return
     }
-    tileCordinates.splice(index, 1)
-    setTileCordinates([...tileCordinates])
+    let tileId = tileCordinates[index]._id
     setShowModel(false)
-    localStorage.setItem('coordinates', JSON.stringify(tileCordinates))
-
+    axios.delete(`/api/tile/${tileId}`).then((res)=>{
+      if(res){
+        tileCordinates.splice(index, 1)
+        setTileCordinates([...tileCordinates])
+      }
+    })
   }
 
   const handleImageChange = (e) => {
     const selectedImage = e.target.files[0];
     setImageFileName(selectedImage.name)
     const values = formValue
-    values.tileImage = URL.createObjectURL(selectedImage)
+    values.tileImage = selectedImage
     setFormValue(values)
   };
 
@@ -244,6 +260,7 @@ export default function GridTiles() {
       border: "solid 1px #ddd",
       background: tileCordinates[index].tileColor ? tileCordinates[index].tileColor : "pink",
       color: 'black',
+      overflowWrap: 'anywhere',
       borderRadius: '10px',
       margin: '10px 20px'
     }
@@ -313,53 +330,69 @@ export default function GridTiles() {
       height: '100%',
       margin: ' 0 5px',
       cursor: 'grabbing',
-      position: 'relative'
+      position: 'relative',
+      minHeight : '120px',
+      minWidth : '120px'
     }
     return stylevalue
   }
-  const createPods = (dragTile, dropTile) => {
-
+  const createPods = (dragTile, dropTile , direction) => {
+    console.log("=====>>>..",direction)
     let tiles = tileCordinates
-    let removableTileIds = [dragTile.id, dropTile.id]
-    const filteredArray = tiles.filter(obj => !removableTileIds.includes(obj.id));
-    localStorage.setItem('coordinates', JSON.stringify(filteredArray))
+    let removableTileIds = [dragTile._id, dropTile._id]
+    const filteredArray = tiles.filter(obj => !removableTileIds.includes(obj._id));
     setTileCordinates(filteredArray)
 
     const newPod = {
-      id: Date.now(),
       isPod: true,
       x: dropTile.x,
       y: dropTile.y,
       height: 185,
       width: 325,
       tiles: [dropTile, dragTile],
+      dashboardId : activeBoard
     };
-    setPods([...pods, newPod]);
+    axios.post('api/pod/createPod',newPod).then((res)=> {
+      let data = res.data
+      data.tiles = [dropTile , dragTile]
+      setPods([...pods , data])
+    })
   }
 
   const updatePods = (dragtile, droppablePod) => {
 
-    let dragTileIndex = tileCordinates.findIndex(obj => obj.id === dragtile.id)
-    deleteTile(dragTileIndex)
+    let dragTileIndex = tileCordinates.findIndex(obj => obj._id === dragtile._id)
+    let tiles = tileCordinates
+    tiles.splice(dragTileIndex,1)
+    setTileCordinates(tiles)
 
     let tempPods = pods
-    let objIndex = tempPods.findIndex(obj => obj.id === droppablePod.id)
+    let objIndex = tempPods.findIndex(obj => obj._id === droppablePod._id)
     if (objIndex !== -1) {
       tempPods[objIndex].tiles.push(dragtile);
     }
-    localStorage.setItem('pods', JSON.stringify(tempPods));
     setPods(tempPods)
+    var payload = {
+      isAdd : true,
+      tileId : dragtile._id,
+      podId : droppablePod._id
+    }
+    axios.post('api/pod/addTile',payload).then((res)=>{
+      if(res.data){
+        console.log(res.data)
+      }
+    })
   }
 
   const handleDragStop = (e, data, tile, index) => {
 
     const tileBounds = document
-      .getElementById(tile.id)
+      .getElementById(tile._id)
       .getBoundingClientRect();
 
     const overlappingPod = pods.find((pod) => {
       const nearPodBound = document
-        .getElementById(pod.id)
+        .getElementById(pod._id)
         .getBoundingClientRect();
       return (
         tileBounds.left <= nearPodBound.right &&
@@ -374,15 +407,27 @@ export default function GridTiles() {
       return
     }
 
-
+    let direction
     const overlappingTile = tileCordinates.find((nearTile) => {
       const nearTileBound = document
-        .getElementById(nearTile.id)
+        .getElementById(nearTile._id)
         .getBoundingClientRect();
 
-      if (nearTile.id === tile.id) {
+      if (nearTile._id === tile._id) {
         return false;
       }
+
+      const deltaX = tileBounds.left - nearTileBound.left;
+      const deltaY = tileBounds.top - nearTileBound.top;
+  
+      direction =
+        Math.abs(deltaX) > Math.abs(deltaY)
+          ? deltaX > 0
+            ? "horizontal"
+            : "horizontal"
+          : deltaY > 0
+          ? "vertical"
+          : "vertical";
 
       return (
         tileBounds.left <= nearTileBound.right &&
@@ -395,17 +440,24 @@ export default function GridTiles() {
     });
 
     if (overlappingTile) {
-      createPods(tile, overlappingTile)
+      createPods(tile, overlappingTile , direction)
     } else {
       const { x, y } = data;
       e.preventDefault();
       let items = [...tileCordinates];
-      let item = { ...items[index] };
-      item.x = x;
-      item.y = y;
+      let tileId = tileCordinates[index]._id
+      let toUpdate = {
+        x: x,
+        y: y
+      }
+      let item = { ...items[index], ...toUpdate };
       items[index] = item;
-      localStorage.setItem('coordinates', JSON.stringify(items));
-      setTileCordinates([...items]);
+      setTileCordinates(items)
+      axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+        if (res.data) {
+          console.log("update Drag Coordinate")
+        }
+      })
 
     }
 
@@ -416,45 +468,65 @@ export default function GridTiles() {
   const handleResizeStop = (e, direction, ref, delta, position, index) => {
     e.preventDefault();
     let items = [...tileCordinates];
-    let item = { ...items[index] };
-    item.width = ref.style.width;
-    item.height = ref.style.height;
+    let tileId = tileCordinates[index]._id
+    let toUpdate = {
+      width : ref.style.width,
+      height : ref.style.height,
+    }
+    let item = { ...items[index], ...toUpdate };
     items[index] = item;
-    localStorage.setItem('coordinates', JSON.stringify(items));
-    setTileCordinates([...items]);
+    setTileCordinates(items)
+    axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+      if(res.data){
+        console.log("update resize")
+      }
+    })
   }
   const handlePodDragStop = (e, data, pod, index) => {
-    const { x, y } = data;
-    e.preventDefault();
-    let items = [...pods];
-    let item = { ...items[index] };
-    item.x = x;
-    item.y = y;
-    items[index] = item;
-    localStorage.setItem('pods', JSON.stringify(items));
-    setPods([...items]);
-
+   const { x, y } = data;
+      e.preventDefault();
+      let items = [...pods];
+      let podId = pods[index]._id
+      let toUpdate = {
+        x: x,
+        y: y
+      }
+      let item = { ...items[index], ...toUpdate };
+      items[index] = item;
+      setPods(items)
+      axios.patch(`/api/pod/${podId}`, toUpdate).then((res) => {
+        if (res.data) {
+          console.log("update Drag Coordinate")
+        }
+      })
   }
 
   const handlePodResizeStop = (e, direction, ref, delta, position, index) => {
     let items = [...pods];
-    let item = { ...items[index] };
-    item.width = ref.style.width;
-    item.height = ref.style.height;
+    let podId = pods[index]._id
+    let toUpdate = {
+      width : ref.style.width,
+      height : ref.style.height,
+    }
+    let item = { ...items[index], ...toUpdate };
     items[index] = item;
-    localStorage.setItem('pods', JSON.stringify(items));
     setPods([...items])
+    axios.patch(`/api/pod/${podId}`,toUpdate).then((res) => {
+      if(res.data){
+        console.log('update resize')
+      }
+    })
   }
 
 
   const addBoard = () => {
-    let dashBoards = [...boards]
-    dashBoards.push({
-      dashNumber: `Dash${boards.length + 1}`,
-      id: Date.now()
-    })
-    localStorage.setItem('boards', JSON.stringify(dashBoards));
-    setBoards(dashBoards)
+    setShowDashboardModel(false)
+    axios.post('/api/dashboard/addDashboard', {
+      name: dashBoardName,
+      userId: dbUser._id
+    }).then((res)=> {
+      setBoards([...boards, res.data])
+    })  
   }
 
   const handleCloseTextEditor = (content) => {
@@ -471,36 +543,53 @@ export default function GridTiles() {
       let items = [...pods]
       let pod = items[podIndex]
       let changeTile = pod.tiles[tileIndex]
-      items[podIndex].tiles[tileIndex].tileContent = content
-      localStorage.setItem('pods', JSON.stringify(items))
+      let tileId = changeTile._id
+      
       setSelectedPod(null)
       setOpenTextEdior(false)
       setTextEditorContent(null)
+      axios.patch(`/api/tile/${tileId}`, {tileContent : content}).then((res) => {
+        items[podIndex].tiles[tileIndex].tileContent = content
+        setPods(items)
+      })
       return
     }
+
     let items = [...tileCordinates];
-    let item = { ...items[selectedTile] };
-    items[selectedTile].tileContent = content;
-    localStorage.setItem('coordinates', JSON.stringify(items))
-    setTileCordinates(items)
+    let tileId = items[selectedTile]._id
     setSelectedTile(null)
     setTextEditorContent(null)
     setOpenTextEdior(false)
+    axios.patch(`/api/tile/${tileId}`, {tileContent : content}).then((res) => {
+      let item = { ...items[selectedTile], ...res.data };
+      items[selectedTile] = item;
+      setTileCordinates(items)
+    })
   }
 
-  const onSortEnd = (tileList , pod ,podIndex) => {
+  const onSortEnd = (tileList, pod ,podIndex) => {
+    const tileListIdArray = tileList.map((tile)=>{
+      return tile._id
+    }) 
     pod['tiles'] = tileList
     let podsArray = [ ...pods ]
     podsArray[podIndex] = pod 
-    localStorage.setItem('pods', JSON.stringify(podsArray))
     setPods(podsArray)
+    if(pod._id && pod.tiles.length == tileListIdArray.length ){
+      axios.patch(`api/pod/${pod._id}`,{tiles : tileListIdArray}).then((res) => {
+        console.log("update indexing success")
+      })
+    }
   };
 
   const deletePod = (index) => {
+    let podId = pods[index]._id
     let podsArray = [ ...pods ]
     podsArray.splice(index , 1)
-    localStorage.setItem('pods', JSON.stringify(podsArray))
     setPods(podsArray)
+    axios.delete(`/api/pod/${podId}`).then((res) => {
+      console.log("===>>",res.data);
+    })
   }
 
   const removeTileFromPod = (event, pod ,podIndex) => {
@@ -515,7 +604,6 @@ export default function GridTiles() {
         let freeTiles = [...tileCordinates]
         freeTiles = [...tileCordinates, ...tiles]
         setTileCordinates(freeTiles)
-        localStorage.setItem('coordinates', JSON.stringify(freeTiles))
       }
       else{  
       pod.tiles.splice(newIndex, 1)
@@ -523,27 +611,92 @@ export default function GridTiles() {
       let freeTiles = [...tileCordinates]
       freeTiles = [...tileCordinates, tile]
       setTileCordinates(freeTiles)
-      localStorage.setItem('coordinates', JSON.stringify(freeTiles))
+      let payload = {
+        isAdd : false,
+        tileId : tile._id,
+        podId : pod._id
+      }
+      axios.post('api/pod/addTile',payload).then((res)=>{
+        if(res.data){
+          console.log(res.data)
+        }
+      })
       }
     }
   }
 
-  
+  const changeDashboardName =(e) =>{
+    setDashBoardName(e.target.value)
+  }
 
+  const selectBoard = (e,dashboardId , board) => {
+    if (e.detail == 2 && !board.default) {
+      setDashboardUpdateId(dashboardId);
+      setDashBoardName(board.name)
+      setShowDashboardModel(true)
+    } else {
+      axios.get(`api/dashboard/${dashboardId}`).then((res) => {
+        setTileCordinates(res.data.tiles)
+        setPods(res.data.pods)
+        setActiveBoard(dashboardId)
+      })
+    }
+  }
+  
+  const updatedDashBoard = () => {
+    setShowDashboardModel(false)
+    const data= {
+      name: dashBoardName,
+    }
+    axios.patch(`api/dashboard/${dashbardUpdateId}`,data).then((res) => {
+      if (res) {
+        const updatedList = boards.map(board => {
+          if (board._id === res.data._id) {
+            return res.data;
+          }
+          return board;
+        });
+        setBoards(updatedList)
+      }
+    })
+  }
+
+  const deletDashboard = ( id , index) =>{
+     axios.delete(`api/dashboard/${id}`).then((res) => {
+      if(res){
+        boards.splice(index,1)
+        setBoards(boards)
+      }
+     })
+  }
 
   return (
     <div className="main_grid_container">
       <div className='board_nav'>
         {boards.map((board, index) => {
           return (
-            <List>
-              <ListItem button>
-                <ListItemText primary={board.dashNumber} />
+            <List key={board._id}>
+              <ListItem button 
+              onMouseEnter={()=>setShowIcon(board._id) } 
+              onMouseLeave={() => setShowIcon(null)}
+              onClick={(e) => { selectBoard(e, board._id ,board) }} >
+                <ListItemText primary={board.name} 
+                primaryTypographyProps={{
+                  style: { fontWeight: board._id === activeBoard ? 'bold' : 'normal' },
+                }}
+                />
+                {(showIcon === board._id && !board.default && board._id !== activeBoard ) &&
+                <span className="cross" onClick={()=>{deletDashboard(board._id , index)}}>
+                  x
+                </span>}
               </ListItem>
             </List>
           )
         })}
-        <Button sx={{ p: '11px' }} onClick={() => addBoard()}>+ New</Button>
+        <Button sx={{ p: '11px' }} onClick={() => {
+          setShowDashboardModel(true); 
+          setDashboardUpdateId(null) ;
+          setDashBoardName('')}}>+ New</Button>
       </div>
       <div className="add_tiles" onClick={addTiles}>
         <AddSharpIcon />
@@ -551,7 +704,7 @@ export default function GridTiles() {
 
       <div className="tiles_container">
         {pods.map((pod, index) => (
-          <div className='pods' key={pod.id} >
+          <div className='pods' key={pod._id} >
             <Rnd
               style={podStyle(index)}
               size={{ width: pod.width, height: pod.height }}
@@ -559,7 +712,10 @@ export default function GridTiles() {
               disableDragging={disableDrag}
               onDragStop={(e, d) => handlePodDragStop(e, d, pod, index)}
               onResizeStop={(e, direction, ref, delta, position) => handlePodResizeStop(e, direction, ref, delta, position, index)}
-              id={pod.id}
+              id={pod._id}
+              minWidth = {120*pod.tiles.length+ pod.tiles.length*20+20}
+              minHeight = {120+20}
+              bounds="window"
             >
                 <ReactSortable
                   filter=".addImageButtonContainer"
@@ -571,7 +727,7 @@ export default function GridTiles() {
                   onEnd={(evt) =>removeTileFromPod(evt, pod, index)} 
                 >
                   {pod.tiles.map((tile, tileIndex) => (
-                    <div className='innerTile' key={tile.id} style={innerTileStyle(tile)}
+                    <div className='innerTile' key={tile._id} style={innerTileStyle(tile)}
                       onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, { podIndex: index, tileIndex: tileIndex })}
                       onMouseEnter={() => { setShowOption(`pod_${index}_tile_${tileIndex}`); setDisableDrag(true) }}
                       onMouseLeave={() => { setShowOption(null); setDisableDrag(false) }}
@@ -602,16 +758,13 @@ export default function GridTiles() {
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
               onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, null)}
-              // default={{
-              //   x: (index)*160,  
-              //   y: 0,
-              //   width: 150,
-              //   height: 150
-              // }}
-              id={tile.id}
+              minWidth = {120}
+              minHeight = {120}
+              id={tile._id}
+              bounds="window"
             >
               {tileCordinates[index].tileImage ? '' : changedTitlehandle(index)}
-              {tileCordinates[index].tileImage && <img src={tileCordinates[index].tileImage} alt="Preview" style={{ width: tile.width, height: tile.height, borderRadius: '10px' }} />}
+              {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" style={{ width: '100%', height: '100%', borderRadius: '10px' }} />}
               {showOption === `tiles_${index}` && <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>}
@@ -619,9 +772,11 @@ export default function GridTiles() {
           </div>
         )
         )}
-      </div>
-      {showModel ? <div className='tiles_popup' open={showModel} id={`model_${selectedTile}`}>
-        <div>
+    </div>
+
+      {/* Tiles Property Model */ }
+      <Dialog  open={showModel} id={`model_${selectedTile}`}>
+        <DialogContent sx={{width:'600px'}}>
           <h3>Choose to customize your tiles
             <span onClick={() => {
               setShowModel(false); setSelectedPod(null);
@@ -649,7 +804,7 @@ export default function GridTiles() {
 
               <RadioGroup
                 aria-labelledby="demo-radio-buttons-group-label"
-                defaultValue="text"
+                defaultValue={textLink}
                 name="radio-buttonsLink"
                 onChange={handleTextLink}
               >
@@ -662,16 +817,6 @@ export default function GridTiles() {
 
           <div className="all_options">
             <ul>
-              {/*<li>
-                <span onClick={ handleClick }><ColorizeSharpIcon/></span>
-                 { displayColorPicker ? 
-                  <div style={ popover }>
-                    <div style={ cover } onClick={ handleClose } onChange={ handleChange } />
-                    <ChromePicker />
-                  </div> : null }
-                <span>Box Color</span>
-              </li>*/}
-
               {colorImage === 'color' &&
                 <li>
                   <ColorPicker handleColorChange={handleColorChange} />
@@ -679,10 +824,10 @@ export default function GridTiles() {
               {textLink === 'text' &&
                 <li>
                   <span><TitleSharpIcon /></span>
-                  <span>Box Text</span>
+                  <span>Box Title</span>
                   <input type="text"
                     value={formValue.tileText}
-                    defaultValue=''
+                    defaultValue={selectedTileDetail.tileText}
                     onChange={enterText} />
                 </li>}
               {textLink === 'link' &&
@@ -691,7 +836,7 @@ export default function GridTiles() {
                   <span>Box Link</span>
                   <input type="text"
                     value={formValue.tileLink}
-                    defaultValue=''
+                    defaultValue={selectedTileDetail.tileLink}
                     onChange={enterLink} />
                 </li>}
               {colorImage == 'image' &&
@@ -710,13 +855,35 @@ export default function GridTiles() {
             <button className="bg-blue-500 text-base hover:bg-blue-700 text-white font-bold py-3 px-8 rounded border-0" onClick={(index) => handleSave(`tiles_${selectedTile}`)}>Save</button>
           </div>
 
-        </div>
-      </div> : ""}
+        </DialogContent>
+      </Dialog>
       <TextEditor open={openTextEditor}
         onClose={handleCloseTextEditor}
         content={textEditorContent}
         onSave={updateEditorContent}
       />
-    </div>
+
+      {/* DashBoard Model */}
+      <Dialog open={showDeshboardModel}  >
+          <DialogTitle>Add Dashboard</DialogTitle>
+          <span className="absolute top-4 right-7 cursor-pointer"
+            onClick={()=> setShowDashboardModel(false)}>
+            <CloseSharpIcon />
+          </span>
+          <DialogContent sx={{width:"300px"}}>
+          <input type="text"
+            value={dashBoardName}
+            defaultValue=''
+            placeholder='Enter Dashboard Name'
+            onChange={changeDashboardName}
+            style={{ height:'40px', width:'100%'}}
+          />
+        </DialogContent> 
+        <DialogActions>
+         { dashbardUpdateId ? <Button onClick={()=>{updatedDashBoard()}} >Update</Button>
+          : <Button onClick={()=>{addBoard()}}>Save</Button>}
+        </DialogActions>
+      </Dialog>
+    </div >
   );
 }

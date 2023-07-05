@@ -4,6 +4,7 @@ import React from 'react'
 import reactCSS from 'reactcss'
 import { SketchPicker } from 'react-color';
 import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
+import '../styles/styles.css'
 
 class ColorPicker extends React.Component {
   state = {

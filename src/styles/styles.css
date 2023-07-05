@@ -18,7 +18,7 @@
 .tiles_container {
     display: inline-block;
     width: 80%;
-    padding-left: 5%;
+    /* padding-left: 5%; */
     vertical-align: top;
     min-height: 100px;
 }
@@ -128,4 +128,37 @@
 
 .tileContainer{
     display: contents;
+}
+
+.cross{
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+.sketch-picker{
+    height: 360px;
+}
+.flexbox-fix {
+    margin-right: 17px;
+}
+
+a.login_btn {
+    color: #000;
+}
+a.sign_btn {
+    background: #45819e;
+    color: #fff;
+}
+.login a {
+    margin-right: 5px;
+    border: 2px solid #45818e;
+    border-radius: 5px;
+    padding: 5px 15px;
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 600;
+}
+.login a:focus {
+    opacity: 0.5;
 }

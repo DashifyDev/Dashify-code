@@ -4,10 +4,12 @@ import MenuIcon from '@mui/icons-material/Menu';
 import CssBaseline from '@mui/material/CssBaseline';
 import { IconButton, Avatar, Button } from '@mui/material';
 import SideDrawer from './SideDrawer';
+import Link from 'next/link';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
-
+  const { user, error, isLoading } = useUser();
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
   }
@@ -25,9 +27,10 @@ function Header() {
               <Typography>LOGO</Typography>
             </Grid>
             <Grid item>
+            {user &&
               <Button>
-                <Avatar></Avatar>
-              </Button>
+                <Avatar src={user.picture}></Avatar>
+              </Button>}
               <IconButton
                 size="large"
                 edge="end"
@@ -41,7 +44,7 @@ function Header() {
           </Grid>
         </Toolbar>
       </AppBar>
-      <SideDrawer open={isDrawerOpen} close={toggleDrawer}/>
+      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={user}/>
     </Box>
   )
 }
