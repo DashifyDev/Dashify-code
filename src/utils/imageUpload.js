@@ -9,9 +9,9 @@ const imageUpload = async (files) => {
     await fs.move(path, newPath);
 
     cloudinary.config({
-        cloud_name: process.env.CLOUD_NAME,
-        api_key: process.env.API_KEY,
-        api_secret: process.env.CLOUD_API_SECRET,
+        cloud_name: process.env.NEXT_PUBLIC_CLOUD_NAME,
+        api_key: process.env.NEXT_PUBLIC_API_KEY,
+        api_secret: process.env.NEXT_PUBLIC_CLOUD_API_SECRET,
     });
 
     const cloudinaryResponse = await cloudinary.uploader.upload(newPath);
