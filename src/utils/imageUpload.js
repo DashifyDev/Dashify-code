@@ -5,7 +5,7 @@ const imageUpload = async (files) => {
 
     let name = files.tileImage['name'];
     let path = files.tileImage['path']
-    const newPath = `${process.cwd()}/public/uploads/${Date.now()}-${name}`;
+    const newPath = `./src/uploads/${Date.now()}-${name}`;
     await fs.move(path, newPath);
 
     cloudinary.config({

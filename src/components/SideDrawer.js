@@ -22,10 +22,10 @@ function SideDrawer({open , close ,user}) {
             <ListItemText primary="Contact Us" />
           </ListItem>
          {user && <ListItem button>
-            <Link href="/api/auth/logout" style={{
+            <a href="/api/auth/logout" style={{
               textDecoration: 'none',
               color: 'black'
-            }}>Log out</Link>
+            }}>Log out</a>
           </ListItem>}
         </List>
       </Drawer>

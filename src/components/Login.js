@@ -8,8 +8,8 @@ function Login() {
     <div className='login'>
         <List>
               <ListItem >
-                  <ListItemText><Link href="/api/auth/login" className='login_btn'>Log in</Link></ListItemText>
-                  <ListItemText><Link href="/api/auth/login" className='sign_btn'>Sign up</Link></ListItemText>
+                  <ListItemText><a href="/api/auth/login" className='login_btn'>Log in</a></ListItemText>
+                  <ListItemText><a href="/api/auth/login" className='sign_btn'>Sign up</a></ListItemText>
               </ListItem>
         </List>      
     </div>
