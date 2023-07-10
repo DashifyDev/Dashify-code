@@ -27,6 +27,10 @@ const dashboardSchema = new Schema({
         default: Date.now
     },
 
+    sessionId : {
+        type : String,
+    },
+
     default: {
         type:Boolean
     }

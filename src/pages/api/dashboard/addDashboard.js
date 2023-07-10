@@ -15,8 +15,16 @@ const addDashBoard = async (req, res) => {
                 break;
 
             case 'GET':
-                let id = req.query.id
-                let boards = await Dashboard.find({userId : id}).sort({'createdAt': 1})
+                let id = req.query.id 
+                let sid = req.query.sid
+                let boards
+                if(id){
+                    boards = await Dashboard.find({userId : id}).sort({'createdAt': 1})
+                }
+                else{
+                    boards = await Dashboard.find({sessionId : sid}).sort({'createdAt': 1})
+                } 
+                 
                 if(boards){
                     res.status(200).json(boards);
                 }

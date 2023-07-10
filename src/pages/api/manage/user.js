@@ -15,15 +15,6 @@ export default async function addUser(req, res) {
 
                 user = new User({ firstName, lastName, email, picture, createdAt, isSocialLogin: email_verified });
                 await user.save();
-
-                const defaultDashboard = {
-                    name: 'My Dashboard',
-                    userId: user._id,
-                    default : true
-                }
-
-                await Dashboard.create(defaultDashboard)
-
                 res.status(201).json({
                     user,
                     message: "user register succesfully",

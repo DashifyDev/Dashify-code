@@ -27,7 +27,7 @@ import { userContext } from '@/context/userContext';
 
 
 
-export default function GridTiles() {
+export default function GridTiles( {defaultDashboard} ) {
   const [tilesCount, setTilesCount] = useState([""]);
   const [showOption, setShowOption] = useState(null);
   const [displayColorPicker, setDisplayColorPicker] = useState(null);
@@ -55,6 +55,9 @@ export default function GridTiles() {
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
   useEffect(() => {
+    if(defaultDashboard){
+      setBoards([defaultDashboard])
+    }
     if(dbUser){
       axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res)=>{
         setBoards(res.data);
@@ -65,24 +68,29 @@ export default function GridTiles() {
         })
       })
     }
+    else{
+      getDataFromSession()
+    }
     
-  }, [dbUser]);
+  }, [dbUser,defaultDashboard]);
 
-  const handleClick = () => {
-    setDisplayColorPicker(!displayColorPicker)
-  };
-
-  const handleClose = () => {
-    setDisplayColorPicker(false)
-  };
-
-
+  const getDataFromSession = () => {
+    let sessionId = localStorage.getItem('session')
+    if(sessionId){
+      axios.get(`/api/dashboard/addDashboard/?sid=${sessionId}`).then((res) => {
+        setBoards(res.data);
+        setActiveBoard(res.data[0]._id)
+        axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
+          setTileCordinates(res.data.tiles)
+          setPods(res.data.pods)
+        })
+      })
+    }
+  }
 
   const addTiles = () => {
     const naturalNumberx = Math.floor(Math.random() * 1000);
     const naturalNumbery = Math.floor(Math.random() * 350)
-    //var timestamp = new Date().getTime().toString();
-    //var uniqueId = timestamp.substr(timestamp.length - 6);
     const newtile = {
       dashboardId: activeBoard,
       width: '200px',
@@ -521,10 +529,21 @@ export default function GridTiles() {
 
   const addBoard = () => {
     setShowDashboardModel(false)
-    axios.post('/api/dashboard/addDashboard', {
-      name: dashBoardName,
-      userId: dbUser._id
-    }).then((res)=> {
+    let payload
+    if(dbUser){
+      payload={
+        name: dashBoardName,
+        userId: dbUser._id
+      }
+    }
+    else {
+      let sessionId = localStorage.getItem('session')
+      payload={
+        name: dashBoardName,
+        sessionId: sessionId
+      }
+    }
+    axios.post('/api/dashboard/addDashboard', payload ).then((res)=> {
       setBoards([...boards, res.data])
     })  
   }

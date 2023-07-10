@@ -12,7 +12,7 @@ const imageUpload = async (files) => {
     });
 
     const cloudinaryResponse = await cloudinary.uploader.upload(path);
-    return cloudinaryResponse.url
+    return cloudinaryResponse.secure_url
 
 }
 

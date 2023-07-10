@@ -6,6 +6,7 @@ import { IconButton, Avatar, Button } from '@mui/material';
 import SideDrawer from './SideDrawer';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import '../styles/styles.css'
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -27,10 +28,12 @@ function Header() {
               <Typography>LOGO</Typography>
             </Grid>
             <Grid item>
-            {user &&
+            {user ?
               <Button>
                 <Avatar src={user.picture}></Avatar>
-              </Button>}
+              </Button>
+              : <a href="/api/auth/login" className='sign_btn'>Sign up</a>
+            }
               <IconButton
                 size="large"
                 edge="end"
