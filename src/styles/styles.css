@@ -17,7 +17,7 @@
 }
 .tiles_container {
     display: inline-block;
-    width: 80%;
+    width: 100%;
     /* padding-left: 5%; */
     vertical-align: top;
     min-height: 100px;
@@ -98,6 +98,7 @@
     width: '100Px';
     margin: 10px;
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     align-items: center;
     justify-content: 'flex-start';

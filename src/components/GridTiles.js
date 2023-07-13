@@ -23,9 +23,9 @@ import { Button, Dialog, DialogActions, DialogContent,
 import TextEditor from './TextEditor';
 import { ReactSortable } from "react-sortablejs";
 import axios from 'axios';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { userContext } from '@/context/userContext';
-
-
+import { v4 as uuidv4 } from 'uuid';
 
 export default function GridTiles( {defaultDashboard} ) {
   const [tilesCount, setTilesCount] = useState([""]);
@@ -51,40 +51,40 @@ export default function GridTiles( {defaultDashboard} ) {
   const [activeBoard, setActiveBoard] = useState('')
   const [showIcon , setShowIcon] = useState(null)
   const [dashbardUpdateId, setDashboardUpdateId] = useState(null)
+  const [editorLabel, setEditorLabel] = useState()
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
+  const { isLoading,user } = useUser()
   useEffect(() => {
     if(defaultDashboard){
       setBoards([defaultDashboard])
     }
     if(dbUser){
-      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res)=>{
-        setBoards(res.data);
-        setActiveBoard(res.data[0]._id)
-        axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
-          setTileCordinates(res.data.tiles)
-          setPods(res.data.pods)
-        })
+      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res) => {
+        if (res.data.length >= 1) {
+          setBoards(res.data);
+          setActiveBoard(res.data[0]._id)
+          axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
+            setTileCordinates(res.data.tiles)
+            setPods(res.data.pods)
+          })
+        }
       })
     }
     else{
+      if(!isLoading)
       getDataFromSession()
     }
     
-  }, [dbUser,defaultDashboard]);
+  }, [dbUser, defaultDashboard,isLoading]);
 
   const getDataFromSession = () => {
-    let sessionId = localStorage.getItem('session')
-    if(sessionId){
-      axios.get(`/api/dashboard/addDashboard/?sid=${sessionId}`).then((res) => {
-        setBoards(res.data);
-        setActiveBoard(res.data[0]._id)
-        axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
-          setTileCordinates(res.data.tiles)
-          setPods(res.data.pods)
-        })
-      })
+    let boards = JSON.parse(localStorage.getItem('Dasify'))
+    if(boards){
+      setActiveBoard(boards[0]._id)
+      setBoards(boards)
+      setTileCordinates(boards[0].tiles)
     }
   }
 
@@ -98,23 +98,27 @@ export default function GridTiles( {defaultDashboard} ) {
       x: naturalNumberx,
       y: naturalNumbery
     }
-    axios.post('/api/tile/tile', newtile ).then((res)=>{
-      console.log("====>>>",res.data)
-      setTileCordinates([...tileCordinates , res.data])
-    })
+    if(dbUser){
+      axios.post('/api/tile/tile', newtile ).then((res)=>{
+        console.log("====>>>",res.data)
+        setTileCordinates([...tileCordinates , res.data])
+      })
+    }
+    else{
+      let items = [...tileCordinates,newtile]
+      updateTilesInLocalstorage(items)
+      setTileCordinates(items)
+    }
   }
 
-  // const style = {
-  //   display: "flex",
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  //   border: "solid 1px #ddd",
-  //   background: "pink",
-  //   color: 'black',
-  //   borderRadius: '10px' ,
-  //   margin: '10px 20px'
-  // };
-
+  const updateTilesInLocalstorage= (tileArray) => {
+    let items = boards
+    let boardIndex = items.findIndex(obj => obj._id === activeBoard);
+    let item = items[boardIndex]
+    item.tiles = tileArray
+    items[boardIndex] = item
+    localStorage.setItem("Dasify",JSON.stringify(items))
+  }
 
 
   const handleColorImage = (e) => {
@@ -123,23 +127,6 @@ export default function GridTiles( {defaultDashboard} ) {
 
   const handleTextLink = (e) => {
     setTextLink(e.target.value)
-  }
-
-  const handleChange = (color) => {
-    // console.log('color',color)
-  };
-
-
-  const popover = {
-    position: 'absolute',
-    zIndex: '9999',
-  }
-  const cover = {
-    position: 'fixed',
-    top: '0px',
-    right: '0px',
-    bottom: '0px',
-    left: '0px',
   }
 
   const openModel = (e, index, isPod) => {
@@ -194,16 +181,24 @@ export default function GridTiles( {defaultDashboard} ) {
     let items = [...tileCordinates];
     let tileId = items[selectedTile]._id
     setFormValue({})
-    setSelectedTile(null)
     setImageFileName(null)
     setShowModel(false)
-
-    axios.patch(`/api/tile/${tileId}`, formData
-    ).then((res) => {
-      let item = { ...items[selectedTile], ...res.data };
-      items[selectedTile] = item;
-      setTileCordinates(items)
-    })
+    if (dbUser) {
+      axios.patch(`/api/tile/${tileId}`, formData
+      ).then((res) => {
+        let item = { ...items[selectedTile], ...res.data };
+        items[selectedTile] = item;
+        setTileCordinates(items)
+        setSelectedTile(null)
+      })
+    }else{
+      axios.patch('api/tile/updateTile',formData).then((res) => {
+        let item = { ...items[selectedTile], ...res.data }; 
+        items[selectedTile] = item;
+        setTileCordinates(items)
+        updateTilesInLocalstorage(items)
+      })
+    }
   }
 
   const deleteTile = (index) => {
@@ -234,12 +229,20 @@ export default function GridTiles( {defaultDashboard} ) {
     }
     let tileId = tileCordinates[index]._id
     setShowModel(false)
-    axios.delete(`/api/tile/${tileId}`).then((res)=>{
-      if(res){
-        tileCordinates.splice(index, 1)
-        setTileCordinates([...tileCordinates])
-      }
-    })
+    if(dbUser){
+      axios.delete(`/api/tile/${tileId}`).then((res)=>{
+        if(res){
+          tileCordinates.splice(index, 1)
+          setTileCordinates([...tileCordinates])
+        }
+      })
+    }
+    else{
+      let items = tileCordinates
+      items.splice(index,1)
+      setTileCordinates(items)
+      updateTilesInLocalstorage(items)
+    }
   }
 
   const handleImageChange = (e) => {
@@ -270,25 +273,12 @@ export default function GridTiles( {defaultDashboard} ) {
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
-      margin: '10px 20px'
+      //margin: '10px 20px'
     }
 
     return stylevalue
 
   }
-
-  // const style = {
-  //    display: "flex",
-  //     alignItems: "center",
-  //     justifyContent: "center",
-  //     border: "solid 1px #ddd",
-  //      background: 'pink',
-  //     //background: savedItem !== `tiles_${index}` ? "pink" : colorpicked,
-  //     color: 'black',
-  //     borderRadius: '10px' ,
-  //     margin: '10px 20px'
-  // }
-
 
   const changedTitlehandle = (index) => {
     let tileText = tileCordinates[index].tileText
@@ -297,11 +287,13 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
 
-  const setLinkRedirection = (e, link, tileContent, index, isPod) => {
+  const setLinkRedirection = (e, link, tileContent, tile ,index, isPod) => {
     if (e.detail == 2 && link) {
       window.open(link, '_blank');
     }
     else if (e.detail == 2 && !link) {
+      let label = tile.tileText
+      setEditorLabel(label)
       setOpenTextEdior(true)
       setTextEditorContent(tileContent)
       if (isPod) {
@@ -392,64 +384,8 @@ export default function GridTiles( {defaultDashboard} ) {
     })
   }
 
-  const handleDragStop = (e, data, tile, index) => {
-
-    const tileBounds = document
-      .getElementById(tile._id)
-      .getBoundingClientRect();
-
-    const overlappingPod = pods.find((pod) => {
-      const nearPodBound = document
-        .getElementById(pod._id)
-        .getBoundingClientRect();
-      return (
-        tileBounds.left <= nearPodBound.right &&
-        tileBounds.right >= nearPodBound.left &&
-        tileBounds.top <= nearPodBound.bottom &&
-        tileBounds.bottom >= nearPodBound.top
-      );
-    })
-
-    if (overlappingPod) {
-      updatePods(tile, overlappingPod)
-      return
-    }
-
-    let direction
-    const overlappingTile = tileCordinates.find((nearTile) => {
-      const nearTileBound = document
-        .getElementById(nearTile._id)
-        .getBoundingClientRect();
-
-      if (nearTile._id === tile._id) {
-        return false;
-      }
-
-      const deltaX = tileBounds.left - nearTileBound.left;
-      const deltaY = tileBounds.top - nearTileBound.top;
   
-      direction =
-        Math.abs(deltaX) > Math.abs(deltaY)
-          ? deltaX > 0
-            ? "horizontal"
-            : "horizontal"
-          : deltaY > 0
-          ? "vertical"
-          : "vertical";
-
-      return (
-        tileBounds.left <= nearTileBound.right &&
-        tileBounds.right >= nearTileBound.left &&
-        tileBounds.top <= nearTileBound.bottom &&
-        tileBounds.bottom >= nearTileBound.top
-      );
-
-
-    });
-
-    if (overlappingTile) {
-      createPods(tile, overlappingTile , direction)
-    } else {
+  const handleDragStop = (e, data, tile, index) => {
       const { x, y } = data;
       e.preventDefault();
       let items = [...tileCordinates];
@@ -461,15 +397,16 @@ export default function GridTiles( {defaultDashboard} ) {
       let item = { ...items[index], ...toUpdate };
       items[index] = item;
       setTileCordinates(items)
-      axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
-        if (res.data) {
-          console.log("update Drag Coordinate")
-        }
-      })
-
+      if (dbUser){
+        axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+          if (res.data) {
+            console.log("update Drag Coordinate")
+          }
+        })
+      }else{
+        updateTilesInLocalstorage(items)
+      }
     }
-
-  }
 
 
 
@@ -484,11 +421,16 @@ export default function GridTiles( {defaultDashboard} ) {
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setTileCordinates(items)
-    axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
-      if(res.data){
-        console.log("update resize")
-      }
-    })
+    if(dbUser){
+      axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+        if(res.data){
+          console.log("update resize")
+        }
+      })
+    }
+    else{
+      updateTilesInLocalstorage(items)
+    }
   }
   const handlePodDragStop = (e, data, pod, index) => {
    const { x, y } = data;
@@ -535,17 +477,21 @@ export default function GridTiles( {defaultDashboard} ) {
         name: dashBoardName,
         userId: dbUser._id
       }
+      axios.post('/api/dashboard/addDashboard', payload ).then((res)=> {
+        setBoards([...boards, res.data])
+      })  
     }
     else {
-      let sessionId = localStorage.getItem('session')
       payload={
+        _id : uuidv4(),
         name: dashBoardName,
-        sessionId: sessionId
+        tiles : []
       }
+      let items = boards
+      items = [...items , payload]
+      localStorage.setItem("Dasify",JSON.stringify(items))
+      setBoards(items)
     }
-    axios.post('/api/dashboard/addDashboard', payload ).then((res)=> {
-      setBoards([...boards, res.data])
-    })  
   }
 
   const handleCloseTextEditor = (content) => {
@@ -576,14 +522,23 @@ export default function GridTiles( {defaultDashboard} ) {
 
     let items = [...tileCordinates];
     let tileId = items[selectedTile]._id
-    setSelectedTile(null)
     setTextEditorContent(null)
     setOpenTextEdior(false)
-    axios.patch(`/api/tile/${tileId}`, {tileContent : content}).then((res) => {
-      let item = { ...items[selectedTile], ...res.data };
+    if(dbUser){
+      axios.patch(`/api/tile/${tileId}`, {tileContent : content}).then((res) => {
+        let item = { ...items[selectedTile], ...res.data };
+        items[selectedTile] = item;
+        setTileCordinates(items)
+        setSelectedTile(null)
+      })
+    }
+    else{
+      let item = { ...items[selectedTile], tileContent : content }
       items[selectedTile] = item;
       setTileCordinates(items)
-    })
+      updateTilesInLocalstorage(items)
+      setSelectedTile(null)
+    }
   }
 
   const onSortEnd = (tileList, pod ,podIndex) => {
@@ -648,17 +603,24 @@ export default function GridTiles( {defaultDashboard} ) {
     setDashBoardName(e.target.value)
   }
 
-  const selectBoard = (e,dashboardId , board) => {
+  const selectBoard = (e,dashboardId , board , index) => {
     if (e.detail == 2 && !board.default) {
       setDashboardUpdateId(dashboardId);
       setDashBoardName(board.name)
       setShowDashboardModel(true)
     } else {
-      axios.get(`api/dashboard/${dashboardId}`).then((res) => {
-        setTileCordinates(res.data.tiles)
-        setPods(res.data.pods)
+      if (dbUser) {
+        axios.get(`api/dashboard/${dashboardId}`).then((res) => {
+          setTileCordinates(res.data.tiles)
+          setPods(res.data.pods)
+          setActiveBoard(dashboardId)
+        })
+      }
+      else{
+        let tiles = boards[index].tiles
+        setTileCordinates(tiles)
         setActiveBoard(dashboardId)
-      })
+      }
     }
   }
   
@@ -667,26 +629,47 @@ export default function GridTiles( {defaultDashboard} ) {
     const data= {
       name: dashBoardName,
     }
-    axios.patch(`api/dashboard/${dashbardUpdateId}`,data).then((res) => {
-      if (res) {
-        const updatedList = boards.map(board => {
-          if (board._id === res.data._id) {
-            return res.data;
-          }
-          return board;
-        });
-        setBoards(updatedList)
-      }
-    })
+    if (dbUser) {
+      axios.patch(`api/dashboard/${dashbardUpdateId}`, data).then((res) => {
+        if (res) {
+          const updatedList = boards.map(board => {
+            if (board._id === res.data._id) {
+              return res.data;
+            }
+            return board;
+          });
+          setBoards(updatedList)
+        }
+      })
+    }
+    else {
+      let items = boards
+      let boardIndex = items.findIndex(obj => obj._id === dashbardUpdateId);
+      let item = items[boardIndex]
+      item = {...item , name: dashBoardName}
+      items[boardIndex] = item
+      localStorage.setItem("Dasify", JSON.stringify(items))
+    }
   }
 
   const deletDashboard = ( id , index) =>{
-     axios.delete(`api/dashboard/${id}`).then((res) => {
-      if(res){
-        boards.splice(index,1)
-        setBoards(boards)
-      }
-     })
+    if (dbUser) {
+      axios.delete(`api/dashboard/${id}`).then((res) => {
+        if (res) {
+          boards.splice(index, 1)
+          setBoards(boards)
+        }
+      })
+    }
+    else{
+      let items = boards
+      items.splice(index, 1)
+      setBoards(items)
+      localStorage.setItem("Dasify",JSON.stringify(items))
+    }
+  }
+  const setBoardPosition = (list) =>{
+    setBoards(list)
   }
 
   return (
@@ -698,7 +681,7 @@ export default function GridTiles( {defaultDashboard} ) {
               <ListItem button 
               onMouseEnter={()=>setShowIcon(board._id) } 
               onMouseLeave={() => setShowIcon(null)}
-              onClick={(e) => { selectBoard(e, board._id ,board) }} >
+              onClick={(e) => { selectBoard(e, board._id ,board , index) }} >
                 <ListItemText primary={board.name} 
                 primaryTypographyProps={{
                   style: { fontWeight: board._id === activeBoard ? 'bold' : 'normal' },
@@ -722,61 +705,18 @@ export default function GridTiles( {defaultDashboard} ) {
       </div>
 
       <div className="tiles_container">
-        {pods.map((pod, index) => (
-          <div className='pods' key={pod._id} >
-            <Rnd
-              style={podStyle(index)}
-              size={{ width: pod.width, height: pod.height }}
-              position={{ x: pod.x, y: pod.y }}
-              disableDragging={disableDrag}
-              onDragStop={(e, d) => handlePodDragStop(e, d, pod, index)}
-              onResizeStop={(e, direction, ref, delta, position) => handlePodResizeStop(e, direction, ref, delta, position, index)}
-              id={pod._id}
-              minWidth = {120*pod.tiles.length+ pod.tiles.length*20+20}
-              minHeight = {120+20}
-              bounds="window"
-            >
-                <ReactSortable
-                  filter=".addImageButtonContainer"
-                  dragClass="sortableDrag"
-                  list={pod.tiles}
-                  setList={(list) =>  onSortEnd(list, pod , index) }
-                  animation="200"
-                  easing="ease-out" style={{display : 'contents'}}
-                  onEnd={(evt) =>removeTileFromPod(evt, pod, index)} 
-                >
-                  {pod.tiles.map((tile, tileIndex) => (
-                    <div className='innerTile' key={tile._id} style={innerTileStyle(tile)}
-                      onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, { podIndex: index, tileIndex: tileIndex })}
-                      onMouseEnter={() => { setShowOption(`pod_${index}_tile_${tileIndex}`); setDisableDrag(true) }}
-                      onMouseLeave={() => { setShowOption(null); setDisableDrag(false) }}
-                    >
-                      {showOption === `pod_${index}_tile_${tileIndex}` &&
-                        <div className='showPodTileOptions'
-                          onClick={(e) => { openModel(e, index, { podIndex: index, tileIndex: tileIndex }) }}>
-                          <MoreHorizSharpIcon />
-                        </div>}
-                      {!tile.tileImage && <span>{tile.tileText ? tile.tileText : 'Tiles'}</span>}
-                      {tile.tileImage && < img className='podTilesImage' src={tile.tileImage} alt="Preview" />}
-                    </div>
-                  )
-                  )}
-                </ReactSortable>
-            </Rnd>
-          </div>
-        )
-        )}
         {tileCordinates.map((tile, index) => (
-          <div className='relative' key={index}>
             <Rnd
+              key={index}
               onMouseEnter={() => setShowOption(`tiles_${index}`)}
               onMouseLeave={() => setShowOption(null)}
+              className='tile'
               style={style(index)}
               size={{ width: tile.width, height: tile.height }}
               position={{ x: tile.x, y: tile.y }}
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
-              onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent, index, null)}
+              onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent,tile, index, null)}
               minWidth = {120}
               minHeight = {120}
               id={tile._id}
@@ -788,7 +728,6 @@ export default function GridTiles( {defaultDashboard} ) {
                 <MoreHorizSharpIcon />
               </div>}
             </Rnd>
-          </div>
         )
         )}
     </div>
@@ -843,7 +782,7 @@ export default function GridTiles( {defaultDashboard} ) {
               {textLink === 'text' &&
                 <li>
                   <span><TitleSharpIcon /></span>
-                  <span>Box Title</span>
+                  <span>Tile Title</span>
                   <input type="text"
                     value={formValue.tileText}
                     defaultValue={selectedTileDetail.tileText}
@@ -852,7 +791,7 @@ export default function GridTiles( {defaultDashboard} ) {
               {textLink === 'link' &&
                 <li>
                   <span><AddLinkSharpIcon /></span>
-                  <span>Box Link</span>
+                  <span>Tile Link</span>
                   <input type="text"
                     value={formValue.tileLink}
                     defaultValue={selectedTileDetail.tileLink}
@@ -880,6 +819,7 @@ export default function GridTiles( {defaultDashboard} ) {
         onClose={handleCloseTextEditor}
         content={textEditorContent}
         onSave={updateEditorContent}
+        label={editorLabel}
       />
 
       {/* DashBoard Model */}
@@ -892,7 +832,7 @@ export default function GridTiles( {defaultDashboard} ) {
           <DialogContent sx={{width:"300px"}}>
           <input type="text"
             value={dashBoardName}
-            defaultValue=''
+            defaultValue={dashBoardName}
             placeholder='Enter Dashboard Name'
             onChange={changeDashboardName}
             style={{ height:'40px', width:'100%'}}

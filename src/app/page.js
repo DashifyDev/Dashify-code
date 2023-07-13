@@ -7,63 +7,60 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from "react";
+import WarningPrompt from "@/components/WarningPrompt";
 
 export default function Home() {
   const [dbUser, setUser] = useState()
   const [defaultDashboard, setDefaultDashBoard ] = useState()
-  const {user} = useUser()
+  const {user, isLoading} = useUser()
   
   useEffect(()=>{
-    let sessionId = localStorage.getItem('session')
+    let localData  = JSON.parse(localStorage.getItem('Dasify'))
     if (user) {
       axios.post('/api/manage/getUser', user).then((res) => {
         setUser(res.data)
-        if(sessionId){
-          clearSessionData(res.data._id , sessionId)
+        if(localData){
+          localStorage.removeItem('Dasify')
+          clearSessionData(res.data._id , localData)
         }
       })      
     }
     else{
-      let sessionId = localStorage.getItem('session')
-      if (!sessionId){
+      if(!isLoading)
         createDefaultDashboard()
       }
-    }
 
-  },[user])
+  },[user,isLoading])
 
-  const clearSessionData = (userId, sessionId) => {
-    axios.post('/api/manage/manageSession', {userId : userId, sid:sessionId }).then((res) => {
-      localStorage.removeItem('session')
+  const clearSessionData = (userId, localData) => {
+    axios.post('/api/manage/addGuestData', {userId : userId , localData }).then((res) => {
+      localStorage.removeItem('Dasify')
     })
   }
 
 
   const createDefaultDashboard = () => {
-    var sessionId = uuidv4() 
+    let localData  = JSON.parse(localStorage.getItem('Dasify'))
+    if(localData){
+      return
+    }
+
     var data = {
+      _id : uuidv4(),
       name: 'My Dashboard',
       default: true,
-      sessionId: sessionId
+      tiles:[]
     }
-    localStorage.setItem("session",sessionId)
-    axios.post('/api/dashboard/addDashboard', data).then((res) => {
-      setDefaultDashBoard(res.data)
-    })
+    localStorage.setItem("Dasify",JSON.stringify([data]))
+    setDefaultDashBoard(data)
   }
 
   
   return (
     <userContext.Provider value={{ dbUser }}>
-      <Grid container
-        display='flex'
-        height="42vh"
-        alignItems="center"
-        justifyContent="center"
-        flexDirection="column">
         <Header />  
+        {!user && <WarningPrompt/>}
         <GridTiles defaultDashboard={defaultDashboard}/>  
-      </Grid>
     </userContext.Provider>
   );
 }

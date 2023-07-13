@@ -15,11 +15,11 @@ function Header() {
     setDrawerOpen(!isDrawerOpen);
   }
   return (
-    <Box>
-      <AppBar position="fixed" color='transparent'
+    <Box >
+      <AppBar position="relative" color='transparent' 
         sx={{ 
           zIndex: (theme) => {return theme.zIndex.drawer + 1} ,
-          backgroundColor: '#FFFFFF'
+          backgroundColor: '#FFFFFF',
           }}>
         <CssBaseline/>
         <Toolbar>

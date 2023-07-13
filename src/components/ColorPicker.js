@@ -72,7 +72,7 @@ class ColorPicker extends React.Component {
         //   <div style={ styles.color } />
         // </div>*/}
         <span onClick={ this.handleClick }><ColorizeSharpIcon/></span>
-        <span onClick={ this.handleClick }>Box Color</span>
+        <span onClick={ this.handleClick }>Tile Color</span>
         <span style={{fontSize:'13px'}}>{this.state.selectedHex}</span>
         <span></span>
         { this.state.displayColorPicker ? <div style={ styles.popover }>
