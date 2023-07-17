@@ -64,6 +64,7 @@
 .radiosets .MuiButtonBase-root .MuiSvgIcon-root {
     color:  black;
 }
+
 .all_options {
     display: inline-block;
     width: 100%;
@@ -87,6 +88,16 @@
     margin-top: 14px;
     width: 50%;
 }
+.height_width{
+    display: flex;
+    align-items: center
+}
+
+.all_options ul li .height_width input{
+    width: 10%;
+    margin: 10px;
+}
+
 .all_options ul li span {
     vertical-align: middle;
     padding-left: 15px;
@@ -169,4 +180,18 @@ a.sign_btn {
 }
 .login a:focus {
     opacity: 0.5;
+}
+
+.dashboard_drag {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.showOptions {
+    display: none;
+  }
+  
+.tile:hover .showOptions {
+    display: block;
 }

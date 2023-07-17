@@ -14,7 +14,7 @@ const addGuestData = async(req,res) => {
             res.status(200).json({ message: 'user alredy Exists' })
         }
         else {
-            localData.forEach(async (dashboardObj) => {
+            localData.forEach(async (dashboardObj, index) => {
                 try {
 
                     let tiles = dashboardObj.tiles
@@ -24,7 +24,8 @@ const addGuestData = async(req,res) => {
                         userId : id,
                         name: dashboardObj.name,
                         tiles: tileIds,
-                        default: dashboardObj.default
+                        default: dashboardObj.default,
+                        position : index + 1
                     });
                     await dashboard.save();
 

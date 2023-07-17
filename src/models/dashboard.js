@@ -33,6 +33,9 @@ const dashboardSchema = new Schema({
 
     default: {
         type:Boolean
+    },
+    position : {
+        type : Number
     }
 });
 

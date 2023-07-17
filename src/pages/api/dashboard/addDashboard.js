@@ -19,7 +19,7 @@ const addDashBoard = async (req, res) => {
                 let sid = req.query.sid
                 let boards
                 if(id){
-                    boards = await Dashboard.find({userId : id}).sort({'createdAt': 1})
+                    boards = await Dashboard.find({userId : id}).sort({'position': 1})
                 }
                 else{
                     boards = await Dashboard.find({sessionId : sid}).sort({'createdAt': 1})
@@ -32,6 +32,15 @@ const addDashBoard = async (req, res) => {
                     res.status(400).json({message : 'empaty Boards Found'});
                 }
                 break;
+
+            case 'PATCH':
+                let updatedData = req.body
+                updatedData.forEach(async (item,index) => {
+                    await Dashboard.updateOne({ _id: item._id }, { position: item.position });
+                  }); 
+                   return res.status(200).json({message: 'Position Updated'});
+                break;
+                
             default:
                 break;
         }

@@ -8,16 +8,13 @@ const tile = async(req,res) => {
         switch (req.method) {
             case 'POST':
                 const boardId = req.body.dashboardId
-                const data = {
-                    x : req.body.x,
-                    y : req.body.y,
-                    height : req.body.height,
-                    width : req.body.width
+                const data = req.body
+                if(req.body._id){
+                    delete data._id
                 }
                 const tile = await Tile.create(data)
                 var dashboard = await Dashboard.findOne({ _id: boardId })
                 dashboard = dashboard.toObject()
-
                 dashboard.tiles = [...dashboard.tiles, tile._id]
                 const updatedDashBoard = await Dashboard.updateOne({ _id: boardId },
                     {

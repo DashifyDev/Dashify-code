@@ -14,11 +14,12 @@ import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
 import TitleSharpIcon from '@mui/icons-material/TitleSharp';
 import AddLinkSharpIcon from '@mui/icons-material/AddLinkSharp';
 import DeleteSweepSharpIcon from '@mui/icons-material/DeleteSweepSharp';
+import DifferenceIcon from '@mui/icons-material/Difference';
 import { ChromePicker } from 'react-color';
 import ColorPicker from './ColorPicker';
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { Button, Dialog, DialogActions, DialogContent, 
+import { Button, Dialog, DialogActions, DialogContent, Slider,
   DialogTitle, List, ListItem, ListItemText, } from '@mui/material';
 import TextEditor from './TextEditor';
 import { ReactSortable } from "react-sortablejs";
@@ -89,14 +90,14 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const addTiles = () => {
-    const naturalNumberx = Math.floor(Math.random() * 1000);
-    const naturalNumbery = Math.floor(Math.random() * 350)
+    // const naturalNumberx = Math.floor(Math.random() * 1000);
+    // const naturalNumbery = Math.floor(Math.random() * 350)
     const newtile = {
       dashboardId: activeBoard,
       width: '200px',
       height: '200px',
-      x: naturalNumberx,
-      y: naturalNumbery
+      x: 100,
+      y: -50
     }
     if(dbUser){
       axios.post('/api/tile/tile', newtile ).then((res)=>{
@@ -599,6 +600,23 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
+  const tileClone = (index) => {
+    let content = tileCordinates[index]
+    setShowModel(false)
+    if(dbUser){
+      content.dashboardId=activeBoard
+      axios.post('/api/tile/tile', content ).then((res)=>{
+        setTileCordinates([...tileCordinates , res.data])
+      })
+    }
+    else{
+      let items = [...tileCordinates, content]
+      setTileCordinates(items)
+      updateTilesInLocalstorage(items)
+    }
+  }
+
+
   const changeDashboardName =(e) =>{
     setDashBoardName(e.target.value)
   }
@@ -669,12 +687,36 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
   const setBoardPosition = (list) =>{
-    setBoards(list)
+    if (dbUser) {
+      setBoards(list)
+      let listArray = list.map((item, index) => {
+        return { position: index + 1 , _id: item._id }
+      })
+      if (list.length > 1) {
+        axios.patch('/api/dashboard/addDashboard', listArray).then((res) => {
+          console.log("isUp", res.data)
+        })
+      }
+    }
+    else {
+      if(list.length > 1){
+        setBoards(list)
+        localStorage.setItem('Dasify',JSON.stringify(list))
+      }
+    }
   }
 
   return (
     <div className="main_grid_container">
       <div className='board_nav'>
+      <ReactSortable
+        filter=".dashboard_btn"
+        dragClass="sortableDrag"
+        list={boards}
+        setList={(list) => setBoardPosition(list)}
+        animation="200"
+        easing="ease-out" 
+        className='dashboard_drag'>
         {boards.map((board, index) => {
           return (
             <List key={board._id}>
@@ -695,11 +737,13 @@ export default function GridTiles( {defaultDashboard} ) {
             </List>
           )
         })}
-        <Button sx={{ p: '11px' }} onClick={() => {
+        </ReactSortable>
+        
+        <Button className='dashboard_btn' sx={{ p: '11px' }} onClick={() => {
           setShowDashboardModel(true); 
           setDashboardUpdateId(null) ;
           setDashBoardName('')}}>+ New</Button>
-      </div>
+          </div>
       <div className="add_tiles" onClick={addTiles}>
         <AddSharpIcon />
       </div>
@@ -708,7 +752,6 @@ export default function GridTiles( {defaultDashboard} ) {
         {tileCordinates.map((tile, index) => (
             <Rnd
               key={index}
-              onMouseEnter={() => setShowOption(`tiles_${index}`)}
               onMouseLeave={() => setShowOption(null)}
               className='tile'
               style={style(index)}
@@ -721,12 +764,12 @@ export default function GridTiles( {defaultDashboard} ) {
               minHeight = {120}
               id={tile._id}
               bounds="window"
-            >
+            > 
               {tileCordinates[index].tileImage ? '' : changedTitlehandle(index)}
               {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" style={{ width: '100%', height: '100%', borderRadius: '10px' }} />}
-              {showOption === `tiles_${index}` && <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
+              <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
-              </div>}
+              </div>
             </Rnd>
         )
         )}
@@ -808,6 +851,10 @@ export default function GridTiles( {defaultDashboard} ) {
               <li>
                 <span onClick={() => deleteTile(selectedTile)}><DeleteSweepSharpIcon /></span>
                 <span onClick={() => deleteTile(selectedTile)}>Delete</span>
+              </li>
+              <li>
+                <span onClick={() => tileClone(selectedTile)}><DifferenceIcon /></span>
+                <span onClick={() => tileClone(selectedTile)}>Clone</span>
               </li>
             </ul>
             <button className="bg-blue-500 text-base hover:bg-blue-700 text-white font-bold py-3 px-8 rounded border-0" onClick={(index) => handleSave(`tiles_${selectedTile}`)}>Save</button>
