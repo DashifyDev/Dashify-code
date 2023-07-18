@@ -1,11 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-const QuillEditor = dynamic(() => import('react-quill').then((mod) => mod.default || mod), {
+import 'suneditor/dist/css/suneditor.min.css'; // Import Sun Editor's CSS File
+
+const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-import 'react-quill/dist/quill.snow.css';
+// import 'react-quill/dist/quill.snow.css';
 import { Dialog, DialogTitle, DialogContent ,DialogActions , Button} from '@mui/material';
+
+const defaultFonts = [
+  "Arial",
+  "Comic Sans MS",
+  "Courier New",
+  "Impact",
+  "Georgia",
+  "Tahoma",
+  "Trebuchet MS",
+  "Verdana"
+];
 
 const  TextEditor = ({ open, onClose , content, onSave,label }) => {
   const [ editorContent, setEditorContent] = useState();
@@ -14,6 +27,24 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
     setEditorContent(content)
   },[content])
 
+  const sortedFontOptions = [
+    "Logical",
+    "Salesforce Sans",
+    "Garamond",
+    "Sans-Serif",
+    "Serif",
+    "Times New Roman",
+    "Helvetica",
+    ...defaultFonts
+  ].sort();
+
+
+  const labelChange = () => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(label, 'text/html');
+    let content = doc.getElementsByTagName('p')[0].innerText;
+    return content
+  }
 
   const handleEditorChange = (value) => {
     setEditorContent(value);
@@ -27,44 +58,42 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
     onSave(editorContent)
   }
 
-  const editorStyle = {
-    height: '400px', 
-    width : '100%'
-  };
-
-  const quillModules = {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike' ,'link' ,'image'], 
-      ['blockquote', 'code-block'],
-
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ script: 'sub' }, { script: 'super' }], 
-      [{ indent: '-1' }, { indent: '+1' }], 
-      [{ direction: 'rtl' }], 
-
-      [{ size: ['small', false, 'large', 'huge'] }], 
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }], 
-      [{ font: [] }],
-      [{ align: [] }],
-      ['clean'], 
-    ],    
-    
-  };
-
   return (
-      <Dialog open={open} onClose={handleClose}>
-          <DialogTitle>{label ? label : 'Tile'}</DialogTitle>
+      <Dialog open={open} >
+          <DialogTitle>{label ? labelChange() : 'Tile'}</DialogTitle>
           <span className="absolute top-4 right-7 cursor-pointer"
                 onClick={handleClose}>
               <CloseSharpIcon />
           </span>
-          <DialogContent sx={{ width: '600px', height: '500px' }}>
-              <QuillEditor 
-                value={editorContent} 
+          <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}>
+              <SunEditor 
+                defaultValue={content} 
                 onChange={handleEditorChange} 
-                style={editorStyle}
-                modules={quillModules}
+                setOptions={{
+                  buttonList: [
+                    ["undo", "redo"],
+                    [
+                      "bold",
+                      "underline",
+                      "italic",
+                      "strike",
+                      "subscript",
+                      "superscript"
+                    ],
+                    ["font", "fontSize"],
+                    ["removeFormat"],
+                    ["fontColor", "hiliteColor"],
+                    ["align", "list", "lineHeight"],
+                    ["outdent", "indent"],
+        
+                    ["table", "horizontalRule", "link", "image", "video"],
+                    ["preview", "print"],
+                  ],
+                  minHeight: "370px",
+                  maxHeight: "370px",
+                  showPathLabel: false,
+                  font: sortedFontOptions
+                }}
               />
           </DialogContent>
           <DialogActions>

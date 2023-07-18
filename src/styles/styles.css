@@ -2,7 +2,8 @@
     display: inline-block;
     text-align: left;
     float: left;
-    width: 100%;
+    width: 99%;
+    height: calc(100vh - 75px)
 }
 .add_tiles {
     width: auto;
@@ -18,7 +19,6 @@
 .tiles_container {
     display: inline-block;
     width: 100%;
-    /* padding-left: 5%; */
     vertical-align: top;
     min-height: 100px;
 }

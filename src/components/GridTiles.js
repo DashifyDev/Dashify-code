@@ -1,6 +1,7 @@
 "use client";
 'use strict'
 import AddSharpIcon from '@mui/icons-material/AddSharp';
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import '../styles/styles.css'
 import { Rnd } from "react-rnd";
@@ -27,6 +28,15 @@ import axios from 'axios';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { userContext } from '@/context/userContext';
 import { v4 as uuidv4 } from 'uuid';
+import isDblTouchTap from '@/hooks/isDblTouchTap';
+import 'suneditor/dist/css/suneditor.min.css'; 
+const SunEditor = dynamic(() => import("suneditor-react"), {
+  ssr: false,
+});
+
+const defaultFonts = ["Arial","Comic Sans MS","Courier New","Impact",
+  "Georgia", "Tahoma","Trebuchet MS","Verdana"
+];
 
 export default function GridTiles( {defaultDashboard} ) {
   const [tilesCount, setTilesCount] = useState([""]);
@@ -57,6 +67,11 @@ export default function GridTiles( {defaultDashboard} ) {
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
   const { isLoading,user } = useUser()
+
+  const sortedFontOptions = ["Logical","Salesforce Sans","Garamond",
+    "Sans-Serif","Serif","Times New Roman","Helvetica",...defaultFonts
+  ].sort();
+
   useEffect(() => {
     if(defaultDashboard){
       setBoards([defaultDashboard])
@@ -90,8 +105,6 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const addTiles = () => {
-    // const naturalNumberx = Math.floor(Math.random() * 1000);
-    // const naturalNumbery = Math.floor(Math.random() * 350)
     const newtile = {
       dashboardId: activeBoard,
       width: '200px',
@@ -145,7 +158,7 @@ export default function GridTiles( {defaultDashboard} ) {
 
   const enterText = (e) => {
     const values = formValue
-    values.tileText = e.target.value
+    values.tileText = e
     setFormValue(values)
   }
   const enterLink = (e) => {
@@ -264,7 +277,7 @@ export default function GridTiles( {defaultDashboard} ) {
     setFormValue(values)
   }
 
-  const style = (index) => {
+  const style = (index,tile) => {
     const stylevalue = {
       display: "flex",
       alignItems: "center",
@@ -274,7 +287,7 @@ export default function GridTiles( {defaultDashboard} ) {
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
-      //margin: '10px 20px'
+      fontSize : 4 + ( parseInt(tile.width, 10) +  parseInt(tile.height, 10)) / 20 + 'px'
     }
 
     return stylevalue
@@ -283,16 +296,22 @@ export default function GridTiles( {defaultDashboard} ) {
 
   const changedTitlehandle = (index) => {
     let tileText = tileCordinates[index].tileText
-    const titleVal = tileCordinates[index].tileText ? tileText : "Tiles"
+    let content
+    if(tileText){
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(tileText, 'text/html');
+      content = doc.getElementsByTagName('p')[0].innerText;
+    }
+    const titleVal = content ? tileText : "Tiles"
     return titleVal
   }
 
 
-  const setLinkRedirection = (e, link, tileContent, tile ,index, isPod) => {
-    if (e.detail == 2 && link) {
+  const onDoubleTap = (e, link, tileContent, tile ,index, isPod) => {
+    if ((e.type === "touchstart" || e.detail == 2) && link) {
       window.open(link, '_blank');
     }
-    else if (e.detail == 2 && !link) {
+    else if ((e.type === "touchstart" || e.detail == 2) && !link) {
       let label = tile.tileText
       setEditorLabel(label)
       setOpenTextEdior(true)
@@ -622,7 +641,7 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const selectBoard = (e,dashboardId , board , index) => {
-    if (e.detail == 2 && !board.default) {
+    if ((e.type === "touchstart" || e.detail == 2) && !board.default) {
       setDashboardUpdateId(dashboardId);
       setDashBoardName(board.name)
       setShowDashboardModel(true)
@@ -723,7 +742,11 @@ export default function GridTiles( {defaultDashboard} ) {
               <ListItem button 
               onMouseEnter={()=>setShowIcon(board._id) } 
               onMouseLeave={() => setShowIcon(null)}
-              onClick={(e) => { selectBoard(e, board._id ,board , index) }} >
+              onClick={(e) => { selectBoard(e, board._id ,board , index) }}
+              onTouchStart={(e) => {if (isDblTouchTap(e)) {
+                selectBoard(e, board._id ,board , index)
+              }
+              }} >
                 <ListItemText primary={board.name} 
                 primaryTypographyProps={{
                   style: { fontWeight: board._id === activeBoard ? 'bold' : 'normal' },
@@ -754,22 +777,34 @@ export default function GridTiles( {defaultDashboard} ) {
               key={index}
               onMouseLeave={() => setShowOption(null)}
               className='tile'
-              style={style(index)}
+              style={style(index,tile)}
               size={{ width: tile.width, height: tile.height }}
               position={{ x: tile.x, y: tile.y }}
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
-              onClick={(e) => setLinkRedirection(e, tile.tileLink, tile.tileContent,tile, index, null)}
+              onDoubleClick={(e) => onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)}
               minWidth = {120}
               minHeight = {120}
               id={tile._id}
-              bounds="window"
+              bounds=".main_grid_container"
+              dragGrid={[50,50]}
+              onTouchStart={ (e) => {
+                if (isDblTouchTap(e)) {
+                  onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)
+                }
+                else{
+                  setShowOption(`tile_${index}`)
+                }
+              }}
             > 
-              {tileCordinates[index].tileImage ? '' : changedTitlehandle(index)}
+              {!tile.tileImage && <div dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
               {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" style={{ width: '100%', height: '100%', borderRadius: '10px' }} />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>
+              {showOption == `tile_${index}` && <div className="absolute top-0 right-2 cursor-pointer " onTouchStart={(e) => openModel(e, index, null)}>
+                <MoreHorizSharpIcon />
+              </div>} {/* For Mobile view port  */}
             </Rnd>
         )
         )}
@@ -826,10 +861,20 @@ export default function GridTiles( {defaultDashboard} ) {
                 <li>
                   <span><TitleSharpIcon /></span>
                   <span>Tile Title</span>
-                  <input type="text"
+                  <SunEditor 
                     value={formValue.tileText}
                     defaultValue={selectedTileDetail.tileText}
-                    onChange={enterText} />
+                    onChange={enterText}
+                    setOptions={{
+                      buttonList: [
+                        ["font", "fontSize"],
+                        ["fontColor"],
+                      ],
+                      font: sortedFontOptions,
+                      showPathLabel: false,
+                    }} 
+                      width='50%'
+                    />
                 </li>}
               {textLink === 'link' &&
                 <li>
