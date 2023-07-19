@@ -42,7 +42,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
   const labelChange = () => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(label, 'text/html');
-    let content = doc.getElementsByTagName('p')[0].innerText;
+    let content = doc.getElementsByTagName('div')[0].innerText;
     return content
   }
 

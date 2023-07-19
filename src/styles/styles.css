@@ -193,5 +193,5 @@ a.sign_btn {
   }
   
 .tile:hover .showOptions {
-    display: block;
+    display: flex;
 }

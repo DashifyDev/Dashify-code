@@ -61,8 +61,10 @@ export default function GridTiles( {defaultDashboard} ) {
   const [showDeshboardModel, setShowDashboardModel] = useState(false)
   const [activeBoard, setActiveBoard] = useState('')
   const [showIcon , setShowIcon] = useState(null)
-  const [dashbardUpdateId, setDashboardUpdateId] = useState(null)
+  const [selectedDashboard, setSelectedDashboard] = useState(null)
   const [editorLabel, setEditorLabel] = useState()
+  const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
+  const [selectedDashIndex , setSelectedDashIndex] = useState(null)
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
@@ -300,7 +302,7 @@ export default function GridTiles( {defaultDashboard} ) {
     if(tileText){
       const parser = new DOMParser();
       const doc = parser.parseFromString(tileText, 'text/html');
-      content = doc.getElementsByTagName('p')[0].innerText;
+      content = doc.getElementsByTagName('div')[0].innerText;
     }
     const titleVal = content ? tileText : "Tiles"
     return titleVal
@@ -621,28 +623,44 @@ export default function GridTiles( {defaultDashboard} ) {
 
   const tileClone = (index) => {
     let content = tileCordinates[index]
+
+    const newTileWidth = parseInt(content.width); 
+    const newTileMargin = 5;
+    const windowWidth = window.innerWidth;
+    const maxTileX = windowWidth - newTileWidth - newTileMargin-10;
+    let newTileX = content.x + newTileWidth + newTileMargin;
+
+    if (newTileX > maxTileX) {
+      newTileX = content.x-newTileWidth-newTileMargin;
+    }
+  
+    const newTile = {
+      ...content,
+      x: newTileX,
+      y: content.y
+    };
+  
     setShowModel(false)
     if(dbUser){
-      content.dashboardId=activeBoard
-      axios.post('/api/tile/tile', content ).then((res)=>{
+      newTile.dashboardId=activeBoard
+      axios.post('/api/tile/tile', newTile ).then((res)=>{
         setTileCordinates([...tileCordinates , res.data])
       })
     }
     else{
-      let items = [...tileCordinates, content]
+      let items = [...tileCordinates, newTile]
       setTileCordinates(items)
       updateTilesInLocalstorage(items)
     }
   }
-
 
   const changeDashboardName =(e) =>{
     setDashBoardName(e.target.value)
   }
 
   const selectBoard = (e,dashboardId , board , index) => {
-    if ((e.type === "touchstart" || e.detail == 2) && !board.default) {
-      setDashboardUpdateId(dashboardId);
+    if (e && (e.type === "touchstart" || e.detail == 2) && !board.default) {
+      setSelectedDashboard(dashboardId);
       setDashBoardName(board.name)
       setShowDashboardModel(true)
     } else {
@@ -667,7 +685,7 @@ export default function GridTiles( {defaultDashboard} ) {
       name: dashBoardName,
     }
     if (dbUser) {
-      axios.patch(`api/dashboard/${dashbardUpdateId}`, data).then((res) => {
+      axios.patch(`api/dashboard/${selectedDashboard}`, data).then((res) => {
         if (res) {
           const updatedList = boards.map(board => {
             if (board._id === res.data._id) {
@@ -681,7 +699,7 @@ export default function GridTiles( {defaultDashboard} ) {
     }
     else {
       let items = boards
-      let boardIndex = items.findIndex(obj => obj._id === dashbardUpdateId);
+      let boardIndex = items.findIndex(obj => obj._id === selectedDashboard);
       let item = items[boardIndex]
       item = {...item , name: dashBoardName}
       items[boardIndex] = item
@@ -689,12 +707,15 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
-  const deletDashboard = ( id , index) =>{
+  const deleteDashboard = ( id , index) =>{
+    let isLastIndex = index == boards.length-1 ? true : false
+    console.log(isLastIndex)
     if (dbUser) {
       axios.delete(`api/dashboard/${id}`).then((res) => {
         if (res) {
           boards.splice(index, 1)
           setBoards(boards)
+          setDash(isLastIndex, index)
         }
       })
     }
@@ -703,8 +724,18 @@ export default function GridTiles( {defaultDashboard} ) {
       items.splice(index, 1)
       setBoards(items)
       localStorage.setItem("Dasify",JSON.stringify(items))
+      setDash(isLastIndex, index)
     }
+    setOpenDashDeleteModel(false)
+    setSelectedDashIndex(null)
   }
+
+  const setDash = (isLastIndex, index ) => {
+    isLastIndex
+       ? selectBoard(null, boards[index - 1]._id, boards[index - 1], index - 1)
+       : selectBoard(null, boards[index]._id, boards[index], index)
+  }
+
   const setBoardPosition = (list) =>{
     if (dbUser) {
       setBoards(list)
@@ -753,7 +784,10 @@ export default function GridTiles( {defaultDashboard} ) {
                 }}
                 />
                 {(showIcon === board._id && !board.default && board._id !== activeBoard ) &&
-                <span className="cross" onClick={()=>{deletDashboard(board._id , index)}}>
+                <span className="cross" 
+                onClick={()=>{setOpenDashDeleteModel(true),
+                setSelectedDashboard(board._id)
+                setSelectedDashIndex(index)}}>
                   x
                 </span>}
               </ListItem>
@@ -764,7 +798,7 @@ export default function GridTiles( {defaultDashboard} ) {
         
         <Button className='dashboard_btn' sx={{ p: '11px' }} onClick={() => {
           setShowDashboardModel(true); 
-          setDashboardUpdateId(null) ;
+          setSelectedDashboard(null) ;
           setDashBoardName('')}}>+ New</Button>
           </div>
       <div className="add_tiles" onClick={addTiles}>
@@ -787,7 +821,7 @@ export default function GridTiles( {defaultDashboard} ) {
               minHeight = {120}
               id={tile._id}
               bounds=".main_grid_container"
-              dragGrid={[50,50]}
+              dragGrid={[20,20]}
               onTouchStart={ (e) => {
                 if (isDblTouchTap(e)) {
                   onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)
@@ -865,15 +899,18 @@ export default function GridTiles( {defaultDashboard} ) {
                     value={formValue.tileText}
                     defaultValue={selectedTileDetail.tileText}
                     onChange={enterText}
+                    
                     setOptions={{
                       buttonList: [
                         ["font", "fontSize"],
                         ["fontColor"],
+                        ["align"],
                       ],
+                      defaultTag: "div",
                       font: sortedFontOptions,
                       showPathLabel: false,
                     }} 
-                      width='50%'
+                      width='51%'
                     />
                 </li>}
               {textLink === 'link' &&
@@ -899,7 +936,7 @@ export default function GridTiles( {defaultDashboard} ) {
               </li>
               <li>
                 <span onClick={() => tileClone(selectedTile)}><DifferenceIcon /></span>
-                <span onClick={() => tileClone(selectedTile)}>Clone</span>
+                <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
               </li>
             </ul>
             <button className="bg-blue-500 text-base hover:bg-blue-700 text-white font-bold py-3 px-8 rounded border-0" onClick={(index) => handleSave(`tiles_${selectedTile}`)}>Save</button>
@@ -931,8 +968,21 @@ export default function GridTiles( {defaultDashboard} ) {
           />
         </DialogContent> 
         <DialogActions>
-         { dashbardUpdateId ? <Button onClick={()=>{updatedDashBoard()}} >Update</Button>
+         { selectedDashboard ? <Button onClick={()=>{updatedDashBoard()}} >Update</Button>
           : <Button onClick={()=>{addBoard()}}>Save</Button>}
+        </DialogActions>
+      </Dialog>
+
+        {/* Delete DashBoard Model */}
+      <Dialog open={openDashDeleteModel}>
+        <DialogContent sx={{width:"320px"}}>
+          “Are you sure you want to delete?
+        </DialogContent> 
+        <DialogActions>
+          <Button onClick={()=>{setOpenDashDeleteModel(false),setSelectedDashIndex(null)}}>Cancel</Button>
+          <Button variant="contained" 
+          onClick={()=>{deleteDashboard(selectedDashboard,selectedDashIndex)}}>
+          Delete</Button>
         </DialogActions>
       </Dialog>
     </div >

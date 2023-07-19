@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import '../styles/styles.css'
 import { Alert } from '@mui/material'
+import CloseSharpIcon from '@mui/icons-material/CloseSharp';
+import Collapse from '@mui/material/Collapse';
 
 function WarningPrompt() {
     const [showPopup, setShowPopup] = useState(false);
@@ -43,11 +45,15 @@ function WarningPrompt() {
 
   return (
     <>
-      {showPopup && (
+      {/* {showPopup && ( */}
         <div className="waring-popup">
-             <Alert severity="error">Please Sign up! You loss your work</Alert> 
+          <Collapse in={showPopup}>
+             <Alert severity="error"  onClose={() => {setShowPopup(false)}}>Feel free to play around as long as you like, 
+             just remember to Sign In if you want to save your work.
+             </Alert> 
+          </Collapse>
         </div>
-      )}
+      {/* )}  */}
     </>
   )
 }
