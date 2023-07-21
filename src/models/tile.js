@@ -44,6 +44,10 @@ const tileSchema = new Schema({
     isInsidePod: { 
         type: Boolean, 
         'default': false 
+    },
+    
+    showTitleWithImage: { 
+        type: Boolean, 
     }
 
 });

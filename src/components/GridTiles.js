@@ -20,7 +20,7 @@ import { ChromePicker } from 'react-color';
 import ColorPicker from './ColorPicker';
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { Button, Dialog, DialogActions, DialogContent, Slider,
+import { Button, Dialog, DialogActions, DialogContent, Checkbox,
   DialogTitle, List, ListItem, ListItemText, } from '@mui/material';
 import TextEditor from './TextEditor';
 import { ReactSortable } from "react-sortablejs";
@@ -107,12 +107,60 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const addTiles = () => {
+    const tileWidth = 135; 
+  const tileHeight = 135; 
+  const tileMargin = 10; 
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+
+  // Check if there's an available space in the first row
+  let foundEmptySpace = false;
+  let newRowY = -50;
+  let newX = 100;
+
+  for (let x = 100; x <= windowWidth - tileWidth; x += tileWidth + tileMargin) {
+    const occupiedTile = tileCordinates.find(tile => tile.x === x && tile.y === newRowY);
+
+    if (!occupiedTile) {
+      foundEmptySpace = true;
+      newX = x;
+      break;
+    }
+  }
+
+  let newY;
+  if (foundEmptySpace) {
+    newY = newRowY;
+  } else {
+    const lastTile = tileCordinates[tileCordinates.length - 1];
+    if (lastTile) {
+      newX = 50;
+      newY = 95
+
+      if (newY + tileHeight > windowHeight) {
+        newX = 100;
+        newY = -50;
+      }
+    } else {
+      newX = 100;
+      newY = -50;
+    }
+  }
+  if (newX + tileWidth > windowWidth) {
+    newX = 50;
+    newY += tileHeight + tileMargin;
+    if (newY + tileHeight > windowHeight) {
+      newX = 100;
+      newY = -50;
+    }
+  }
+  
     const newtile = {
       dashboardId: activeBoard,
-      width: '200px',
-      height: '200px',
-      x: 100,
-      y: -50
+      width: '135px',
+      height: '135px',
+      x: newX,
+      y: newY
     }
     if(dbUser){
       axios.post('/api/tile/tile', newtile ).then((res)=>{
@@ -169,13 +217,20 @@ export default function GridTiles( {defaultDashboard} ) {
     setFormValue(values)
   }
 
+  const showTitleWithImage = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, showTitleWithImage : e.target.checked})
+    let value = formValue
+    setFormValue({...value, showTitleWithImage : e.target.checked})
+  }
+
   const handleSave = (index) => {
     let formData = new FormData;
     let payload = formValue
-
-    for (let key in payload) {
-      formData.append(key, payload[key]);
+    if(payload.tileImage instanceof File){
+      formData.append('tileImage', payload.tileImage)
+      delete payload.tileImage
     }
+    formData.append('formValue',JSON.stringify(payload))
 
     if (selectedPod) {
       let podIndex = selectedPod.podIndex
@@ -821,7 +876,7 @@ export default function GridTiles( {defaultDashboard} ) {
               minHeight = {120}
               id={tile._id}
               bounds=".main_grid_container"
-              dragGrid={[20,20]}
+              dragGrid={[10,10]}
               onTouchStart={ (e) => {
                 if (isDblTouchTap(e)) {
                   onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)
@@ -831,8 +886,9 @@ export default function GridTiles( {defaultDashboard} ) {
                 }
               }}
             > 
-              {!tile.tileImage && <div dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
-              {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" style={{ width: '100%', height: '100%', borderRadius: '10px' }} />}
+              {(!tile.tileImage || (tile.tileImage && tile.showTitleWithImage)) && 
+              <div className='text_overlay' dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
+              {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>
@@ -918,10 +974,24 @@ export default function GridTiles( {defaultDashboard} ) {
                   <span><AddLinkSharpIcon /></span>
                   <span>Tile Link</span>
                   <input type="text"
-                    value={formValue.tileLink}
-                    defaultValue={selectedTileDetail.tileLink}
+                    value={selectedTileDetail.tileLink}
                     onChange={enterLink} />
                 </li>}
+
+              {colorImage == 'image' &&
+                <li>
+                  <FormControlLabel sx={{ marginLeft: 0 }}
+                    control={
+                      <Checkbox
+                        checked={selectedTileDetail.showTitleWithImage}
+                        onChange={showTitleWithImage}
+                        disabled={!formValue.tileImage && !selectedTileDetail.tileImage}
+                      />
+                    }
+                    label="Display Title"
+                  />
+                </li>}
+
               {colorImage == 'image' &&
                 <li>
                   <span onClick={handleImageInput}><AddPhotoAlternateIcon /></span>
@@ -930,6 +1000,7 @@ export default function GridTiles( {defaultDashboard} ) {
                   <input type="file" accept="image/*" ref={hiddenFileInput}
                     style={{ display: "none" }} onChange={handleImageChange} />
                 </li>}
+               
               <li>
                 <span onClick={() => deleteTile(selectedTile)}><DeleteSweepSharpIcon /></span>
                 <span onClick={() => deleteTile(selectedTile)}>Delete</span>
@@ -961,7 +1032,6 @@ export default function GridTiles( {defaultDashboard} ) {
           <DialogContent sx={{width:"300px"}}>
           <input type="text"
             value={dashBoardName}
-            defaultValue={dashBoardName}
             placeholder='Enter Dashboard Name'
             onChange={changeDashboardName}
             style={{ height:'40px', width:'100%'}}
@@ -976,7 +1046,7 @@ export default function GridTiles( {defaultDashboard} ) {
         {/* Delete DashBoard Model */}
       <Dialog open={openDashDeleteModel}>
         <DialogContent sx={{width:"320px"}}>
-          “Are you sure you want to delete?
+          Are you sure you want to delete?
         </DialogContent> 
         <DialogActions>
           <Button onClick={()=>{setOpenDashDeleteModel(false),setSelectedDashIndex(null)}}>Cancel</Button>
