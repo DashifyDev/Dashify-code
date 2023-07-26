@@ -204,4 +204,24 @@ a.sign_btn {
 
 .text_overlay {
     position: absolute;
+    padding: 5px;
+}
+
+.highlight_text {
+    padding: 10px 15px;
+    display: block;
+}
+
+/* text editor  fixed */
+.sun-editor .se-list-layer.se-list-font-family {
+    min-width: 156px;
+    max-height: 260px;
+}
+
+.sun-editor .se-list-layer .se-selector-color .se-color-pallet li {
+    padding: 0;
+}
+
+.all_options ul li .sun-editor span {
+    padding: 0;
 }

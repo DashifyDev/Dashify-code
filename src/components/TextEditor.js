@@ -1,24 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import 'suneditor/dist/css/suneditor.min.css'; // Import Sun Editor's CSS File
-
+import 'suneditor/dist/css/suneditor.min.css';
+import '../styles/styles.css'
+import { fonts,colors } from '@/constants/textEditorConstant';
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-// import 'react-quill/dist/quill.snow.css';
 import { Dialog, DialogTitle, DialogContent ,DialogActions , Button} from '@mui/material';
 
-const defaultFonts = [
-  "Arial",
-  "Comic Sans MS",
-  "Courier New",
-  "Impact",
-  "Georgia",
-  "Tahoma",
-  "Trebuchet MS",
-  "Verdana"
-];
 
 const  TextEditor = ({ open, onClose , content, onSave,label }) => {
   const [ editorContent, setEditorContent] = useState();
@@ -26,17 +16,6 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
   useEffect(()=>{
     setEditorContent(content)
   },[content])
-
-  const sortedFontOptions = [
-    "Logical",
-    "Salesforce Sans",
-    "Garamond",
-    "Sans-Serif",
-    "Serif",
-    "Times New Roman",
-    "Helvetica",
-    ...defaultFonts
-  ].sort();
 
 
   const labelChange = () => {
@@ -89,10 +68,11 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
                     ["table", "horizontalRule", "link", "image", "video"],
                     ["preview", "print"],
                   ],
+                  colorList :colors,
                   minHeight: "370px",
                   maxHeight: "370px",
                   showPathLabel: false,
-                  font: sortedFontOptions
+                  font: fonts
                 }}
               />
           </DialogContent>

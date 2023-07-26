@@ -30,13 +30,10 @@ import { userContext } from '@/context/userContext';
 import { v4 as uuidv4 } from 'uuid';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import 'suneditor/dist/css/suneditor.min.css'; 
+import { fonts,colors } from '@/constants/textEditorConstant';
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
-
-const defaultFonts = ["Arial","Comic Sans MS","Courier New","Impact",
-  "Georgia", "Tahoma","Trebuchet MS","Verdana"
-];
 
 export default function GridTiles( {defaultDashboard} ) {
   const [tilesCount, setTilesCount] = useState([""]);
@@ -69,10 +66,6 @@ export default function GridTiles( {defaultDashboard} ) {
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
   const { isLoading,user } = useUser()
-
-  const sortedFontOptions = ["Logical","Salesforce Sans","Garamond",
-    "Sans-Serif","Serif","Times New Roman","Helvetica",...defaultFonts
-  ].sort();
 
   useEffect(() => {
     if(defaultDashboard){
@@ -195,7 +188,6 @@ export default function GridTiles( {defaultDashboard} ) {
 
   const openModel = (e, index, isPod) => {
     e.stopPropagation();
-    setColorImage('color')
     setShowModel(true);
     if (isPod) {
       setSelectedPod(isPod)
@@ -344,7 +336,6 @@ export default function GridTiles( {defaultDashboard} ) {
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
-      fontSize : 4 + ( parseInt(tile.width, 10) +  parseInt(tile.height, 10)) / 20 + 'px'
     }
 
     return stylevalue
@@ -811,6 +802,22 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
+  const onResize = (index,e,direction, ref, delta, position) => {
+    console.log(e)
+    const tile = tileCordinates[index];
+    if (tile && ref) {
+      const contentElement = ref.querySelector('.text_overlay')
+      const contentWidth = contentElement.scrollWidth;
+      const contentHeight = contentElement.scrollHeight;
+      const boxWidth = parseInt(ref.style.width); 
+      const boxHeight = parseInt(ref.style.height);
+      if(contentWidth >= boxWidth || contentHeight >= boxHeight){
+        ref.style.width = contentWidth + 'px'
+        ref.style.height = contentHeight + 'px'
+      }
+    }
+  }
+
   return (
     <div className="main_grid_container">
       <div className='board_nav'>
@@ -872,11 +879,11 @@ export default function GridTiles( {defaultDashboard} ) {
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
               onDoubleClick={(e) => onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)}
-              minWidth = {120}
-              minHeight = {120}
+              minWidth = {50}
+              minHeight = {50}
               id={tile._id}
               bounds=".main_grid_container"
-              dragGrid={[10,10]}
+              dragGrid={[5,5]}
               onTouchStart={ (e) => {
                 if (isDblTouchTap(e)) {
                   onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)
@@ -915,7 +922,7 @@ export default function GridTiles( {defaultDashboard} ) {
 
               <RadioGroup
                 aria-labelledby="demo-radio-buttons-group-label"
-                defaultValue="color"
+                defaultValue={colorImage}
                 name="radio-buttonsColor"
                 onChange={handleColorImage}
               >
@@ -951,6 +958,7 @@ export default function GridTiles( {defaultDashboard} ) {
                 <li>
                   <span><TitleSharpIcon /></span>
                   <span>Tile Title</span>
+                  <span className='highlight_text'>(Highlight text to edit)</span>
                   <SunEditor 
                     value={formValue.tileText}
                     defaultValue={selectedTileDetail.tileText}
@@ -958,15 +966,15 @@ export default function GridTiles( {defaultDashboard} ) {
                     
                     setOptions={{
                       buttonList: [
-                        ["font", "fontSize"],
-                        ["fontColor"],
-                        ["align"],
+                        [ "bold","underline","italic","strike",],
+                        ["font", "fontSize","fontColor"],
                       ],
                       defaultTag: "div",
-                      font: sortedFontOptions,
+                      font: fonts,
+                      colorList :colors,
                       showPathLabel: false,
                     }} 
-                      width='51%'
+                      width='71%'
                     />
                 </li>}
               {textLink === 'link' &&

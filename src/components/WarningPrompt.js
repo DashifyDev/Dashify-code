@@ -10,7 +10,7 @@ function WarningPrompt() {
     useEffect(()=> {
         const popupTimeout1 = setTimeout(() => {
             setShowPopup(true);
-          }, (30 * 1000)); 
+          }, (2* 60 * 1000)); 
         
           const popupTimeout2 = setTimeout(() => {
             setShowPopup(true);
