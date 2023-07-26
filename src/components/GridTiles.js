@@ -802,22 +802,7 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
-  const onResize = (index,e,direction, ref, delta, position) => {
-    console.log(e)
-    const tile = tileCordinates[index];
-    if (tile && ref) {
-      const contentElement = ref.querySelector('.text_overlay')
-      const contentWidth = contentElement.scrollWidth;
-      const contentHeight = contentElement.scrollHeight;
-      const boxWidth = parseInt(ref.style.width); 
-      const boxHeight = parseInt(ref.style.height);
-      if(contentWidth >= boxWidth || contentHeight >= boxHeight){
-        ref.style.width = contentWidth + 'px'
-        ref.style.height = contentHeight + 'px'
-      }
-    }
-  }
-
+ 
   return (
     <div className="main_grid_container">
       <div className='board_nav'>

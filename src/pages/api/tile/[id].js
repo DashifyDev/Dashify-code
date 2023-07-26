@@ -26,7 +26,13 @@ const tileData = async (req, res) => {
                         return res.status(500).send('An error occurred');
                     }
 
-                    updatedData = JSON.parse(fields.formValue)
+                    if(fields.formValue){
+                        updatedData = JSON.parse(fields.formValue) 
+                    }
+                    else{
+                        updatedData = fields
+                    }
+                    
                     if(files && files.tileImage){
                        let  tileImage = await imageUpload(files)
                        updatedData.tileImage = tileImage
@@ -40,7 +46,7 @@ const tileData = async (req, res) => {
                         res.status(200).json(updated)
                     }
                     else {
-                        res.status(200).json({ message: 'Error At update' })
+                        res.status(400).json({ message: 'Error At update' })
                     }
     
                 })
