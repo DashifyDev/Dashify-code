@@ -62,6 +62,8 @@ export default function GridTiles( {defaultDashboard} ) {
   const [editorLabel, setEditorLabel] = useState()
   const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
   const [selectedDashIndex , setSelectedDashIndex] = useState(null)
+  const [minHeightWidth, setMinHeightWidth] = useState([]);
+  const [resizeCount, setResizeCount] = useState(0)
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
@@ -89,6 +91,10 @@ export default function GridTiles( {defaultDashboard} ) {
     }
     
   }, [dbUser, defaultDashboard,isLoading]);
+
+  useEffect(()=>{
+    setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
+  },[tileCordinates])
 
   const getDataFromSession = () => {
     let boards = JSON.parse(localStorage.getItem('Dasify'))
@@ -802,7 +808,30 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
- 
+  const onResize = (index,e,direction, ref, delta, position) => {
+    const tile = tileCordinates[index];
+    if (tile && ref) {
+      const contentElement = ref.querySelector('.text_overlay')
+      const contentWidth = contentElement.scrollWidth;
+      const contentHeight = contentElement.scrollHeight;
+      const boxWidth = parseInt(ref.style.width); 
+      const boxHeight = parseInt(ref.style.height);
+      console.log(contentHeight, boxHeight);
+      if((resizeCount == 0 ) && (contentHeight >= boxHeight || contentWidth >= boxWidth )){
+        console.log("===>>>true");
+        setResizeCount((prevCount) => {
+          return prevCount +1
+        })
+
+        setMinHeightWidth((prevSizes) => {
+          const newSizes = [...prevSizes];
+          newSizes[index] = { width: contentWidth, height: contentHeight };
+          return newSizes;
+        });
+      }
+    }
+  }
+  
   return (
     <div className="main_grid_container">
       <div className='board_nav'>
@@ -864,9 +893,13 @@ export default function GridTiles( {defaultDashboard} ) {
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
               onDoubleClick={(e) => onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)}
-              minWidth = {50}
-              minHeight = {50}
+              minWidth = {minHeightWidth[index]?.width || 50}
+              minHeight = {minHeightWidth[index]?.height || 50}
+              onResize={(e, direction, ref, delta, position) =>
+                onResize(index, e,direction, ref, delta, position)
+              }
               id={tile._id}
+              onResizeStart={()=>setResizeCount(0)}
               bounds=".main_grid_container"
               dragGrid={[5,5]}
               onTouchStart={ (e) => {
@@ -952,14 +985,16 @@ export default function GridTiles( {defaultDashboard} ) {
                     setOptions={{
                       buttonList: [
                         [ "bold","underline","italic","strike",],
-                        ["font", "fontSize","fontColor"],
+                        ["font"],
+                        ["fontSize","fontColor"]
                       ],
                       defaultTag: "div",
                       font: fonts,
                       colorList :colors,
+                      minHeight:'230px',
                       showPathLabel: false,
                     }} 
-                      width='71%'
+                      width='87%'
                     />
                 </li>}
               {textLink === 'link' &&

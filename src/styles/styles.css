@@ -225,3 +225,7 @@ a.sign_btn {
 .all_options ul li .sun-editor span {
     padding: 0;
 }
+
+.all_options ul li .sun-editor .se-btn-select.se-btn-tool-font {
+    width: 180px;
+}
