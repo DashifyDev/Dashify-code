@@ -159,7 +159,9 @@ export default function GridTiles( {defaultDashboard} ) {
       width: '135px',
       height: '135px',
       x: newX,
-      y: newY
+      y: newY,
+      titleX:2,
+      titleY:2,
     }
     if(dbUser){
       axios.post('/api/tile/tile', newtile ).then((res)=>{
@@ -216,10 +218,24 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const showTitleWithImage = (e) => {
-    setSelectedTileDetail({...selectedTileDetail, showTitleWithImage : e.target.checked})
     let value = formValue
     setFormValue({...value, showTitleWithImage : e.target.checked})
   }
+
+  const handleChangePositionX = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, titleX : e.target.value})
+    const values = formValue
+    values.titleX = parseInt(e.target.value)
+    setFormValue(values)
+  }
+
+  const handleChangePositionY = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, titleY : e.target.value})
+    const values = formValue
+    values.titleY = parseInt(e.target.value)
+    setFormValue(values)
+  }
+
 
   const handleSave = (index) => {
     let formData = new FormData;
@@ -812,26 +828,37 @@ export default function GridTiles( {defaultDashboard} ) {
     const tile = tileCordinates[index];
     if (tile && ref) {
       const contentElement = ref.querySelector('.text_overlay')
-      const contentWidth = contentElement.scrollWidth;
-      const contentHeight = contentElement.scrollHeight;
-      const boxWidth = parseInt(ref.style.width); 
-      const boxHeight = parseInt(ref.style.height);
-      console.log(contentHeight, boxHeight);
-      if((resizeCount == 0 ) && (contentHeight >= boxHeight || contentWidth >= boxWidth )){
-        console.log("===>>>true");
-        setResizeCount((prevCount) => {
-          return prevCount +1
-        })
+      if (contentElement) {
+        const contentWidth = contentElement.scrollWidth;
+        const contentHeight = contentElement.scrollHeight;
+        const boxWidth = parseInt(ref.style.width);
+        const boxHeight = parseInt(ref.style.height);
+        if ((resizeCount == 0) && (contentHeight >= boxHeight || contentWidth >= boxWidth)) {
+          setResizeCount((prevCount) => {
+            return prevCount + 1
+          })
 
-        setMinHeightWidth((prevSizes) => {
-          const newSizes = [...prevSizes];
-          newSizes[index] = { width: contentWidth, height: contentHeight };
-          return newSizes;
-        });
+          setMinHeightWidth((prevSizes) => {
+            const newSizes = [...prevSizes];
+            newSizes[index] = { width: contentWidth, height: contentHeight };
+            return newSizes;
+          });
+        }
       }
     }
   }
   
+ 
+  const TitlePositionStyle = (tile) => {
+    let style ={
+      top : tile.titleY == 1 ? 0 : 'auto',
+      bottom : tile.titleY == 3 ? 0 : 'auto',
+      left : tile.titleX == 1 ? 0 : 'auto',
+      right : tile.titleX == 3 ? 0 : 'auto'
+    }
+    return style
+  }
+
   return (
     <div className="main_grid_container">
       <div className='board_nav'>
@@ -900,7 +927,6 @@ export default function GridTiles( {defaultDashboard} ) {
               }
               id={tile._id}
               onResizeStart={()=>setResizeCount(0)}
-              bounds=".main_grid_container"
               dragGrid={[5,5]}
               onTouchStart={ (e) => {
                 if (isDblTouchTap(e)) {
@@ -912,7 +938,7 @@ export default function GridTiles( {defaultDashboard} ) {
               }}
             > 
               {(!tile.tileImage || (tile.tileImage && tile.showTitleWithImage)) && 
-              <div className='text_overlay' dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
+              <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
               {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
@@ -986,7 +1012,8 @@ export default function GridTiles( {defaultDashboard} ) {
                       buttonList: [
                         [ "bold","underline","italic","strike",],
                         ["font"],
-                        ["fontSize","fontColor"]
+                        ["fontSize","fontColor"],
+                        ['align'],
                       ],
                       defaultTag: "div",
                       font: fonts,
@@ -997,6 +1024,24 @@ export default function GridTiles( {defaultDashboard} ) {
                       width='87%'
                     />
                 </li>}
+                {textLink === 'text' &&
+                <li>
+                  <span>Title position</span>
+                  <div style={{margin:10}}>
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
+                      <option value={1}>Left</option>
+                      <option value={2}>Center</option>
+                      <option value={3}>Right</option>
+                    </select>
+
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
+                      <option value={1}>Top</option>
+                      <option value={2}>Center</option>
+                      <option value={3}>Bottom</option>
+                    </select>
+                  </div>
+                </li>    
+                }
               {textLink === 'link' &&
                 <li>
                   <span><AddLinkSharpIcon /></span>

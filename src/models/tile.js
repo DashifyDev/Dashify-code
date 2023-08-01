@@ -48,7 +48,13 @@ const tileSchema = new Schema({
     
     showTitleWithImage: { 
         type: Boolean, 
-    }
+    },
+    titleX:{
+        type:Number
+    },
+    titleY:{
+        type : Number
+    },
 
 });
 

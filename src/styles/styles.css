@@ -2,7 +2,7 @@
     display: inline-block;
     text-align: left;
     float: left;
-    width: 99%;
+    width:100%;
     height: calc(100vh - 75px)
 }
 .add_tiles {
@@ -88,6 +88,13 @@
     margin-top: 14px;
     width: 50%;
 }
+
+.all_options ul li select{
+    margin-left: 10px;
+    width: 100px;
+    height: 40px;
+} 
+
 .height_width{
     display: flex;
     align-items: center
@@ -116,13 +123,6 @@
     position: relative;
 }
 
-/* .innerTile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    margin: 0 5px;
-} */
 
 .showPodTileOptions {
     position: absolute;
