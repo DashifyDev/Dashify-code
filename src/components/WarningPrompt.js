@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import '../styles/styles.css'
-import { Alert, Dialog, DialogContent } from '@mui/material'
-import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-import Collapse from '@mui/material/Collapse';
+import { Button, Dialog, DialogActions, DialogTitle } from '@mui/material'
 
 function WarningPrompt() {
     const [showPopup, setShowPopup] = useState(false);
@@ -30,14 +28,20 @@ function WarningPrompt() {
 
   return (
     <Dialog open={showPopup}>
-      <span className="absolute top-4 right-7 cursor-pointer"
-        onClick={() => { setShowPopup(false) }}>
-        <CloseSharpIcon />
-      </span>
-      <DialogContent sx={{padding : "80px 25px"}}>
-        Feel free to play around as long as you like,
-        just remember to Sign In if you want to save your work.
-      </DialogContent>
+      <DialogTitle sx={{width:'300px'}}>
+          Don’t forget to log in if you want to save your work.
+      </DialogTitle>
+      <DialogActions>
+        <Button 
+        sx={{background:'#63899e',
+        color:'#fff',  
+        '&:hover': {
+          backgroundColor: '#63899e',
+        }}} 
+        onClick={()=>setShowPopup(false)}>
+        Ok
+      </Button>
+      </DialogActions>
     </Dialog>
   )
 }

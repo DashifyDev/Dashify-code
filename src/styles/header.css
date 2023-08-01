@@ -1,0 +1,75 @@
+.left_content{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.right_header{
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.add_tiles {
+    width: auto;
+    padding: 3px;
+    background: #63899e;
+    display: inline-block;
+    box-sizing: border-box;
+    line-height: 15px;
+    border-radius: 5px;
+    color: white;
+}
+
+.board_nav {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.vertical {
+    border-left: 2px solid black;
+    margin: 0px 15px 0px 20px;
+    height: 24px;
+}
+
+.cross{
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+.dashboard_drag {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+a.sign_btn {
+    background: #63899e;
+    color: #fff;
+    border: 2px solid #63899e;
+    border-radius: 5px;
+    padding: 5px 15px;
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 15px;
+}
+
+a:focus {
+    opacity: 0.5;
+}
+
+.logo{
+    height : 40px;
+    width : 140px;
+}
+
+.button_filled{
+    background-color: #63899e;
+    color: #fff
+}
+.button_cancel{
+    color: #63899e;
+}
+

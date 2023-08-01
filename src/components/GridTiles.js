@@ -1,6 +1,5 @@
 "use client";
 'use strict'
-import AddSharpIcon from '@mui/icons-material/AddSharp';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import '../styles/styles.css'
@@ -10,24 +9,17 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
-import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
 import TitleSharpIcon from '@mui/icons-material/TitleSharp';
 import AddLinkSharpIcon from '@mui/icons-material/AddLinkSharp';
 import DeleteSweepSharpIcon from '@mui/icons-material/DeleteSweepSharp';
 import DifferenceIcon from '@mui/icons-material/Difference';
-import { ChromePicker } from 'react-color';
 import ColorPicker from './ColorPicker';
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { Button, Dialog, DialogActions, DialogContent, Checkbox,
-  DialogTitle, List, ListItem, ListItemText, } from '@mui/material';
+import { Dialog, DialogContent, Checkbox} from '@mui/material';
 import TextEditor from './TextEditor';
-import { ReactSortable } from "react-sortablejs";
 import axios from 'axios';
-import { useUser } from '@auth0/nextjs-auth0/client';
 import { userContext } from '@/context/userContext';
-import { v4 as uuidv4 } from 'uuid';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import 'suneditor/dist/css/suneditor.min.css'; 
 import { fonts,colors } from '@/constants/textEditorConstant';
@@ -35,149 +27,32 @@ const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 
-export default function GridTiles( {defaultDashboard} ) {
-  const [tilesCount, setTilesCount] = useState([""]);
+export default function GridTiles({tileCordinates, setTileCordinates,activeBoard}) {
   const [showOption, setShowOption] = useState(null);
-  const [displayColorPicker, setDisplayColorPicker] = useState(null);
   const [showModel, setShowModel] = useState(false);
   const [selectedTile, setSelectedTile] = useState(null);
   const [selectedPod, setSelectedPod] = useState(null)
-  const [changedTitle, setChangedTitle] = useState('Tiles');
-  const [tileCordinates, setTileCordinates] = useState([])
   const [colorImage, setColorImage] = useState('color')
   const [textLink, setTextLink] = useState('text')
   const [imageFileName, setImageFileName] = useState(null)
   const [formValue, setFormValue] = useState({})
-  const [boards, setBoards] = useState([]);
   const [pods, setPods] = useState([])
   const [openTextEditor, setOpenTextEdior] = useState(false)
   const [selectedTileDetail, setSelectedTileDetail] = useState({})
-  const [dashBoardName, setDashBoardName] = useState('')
   const [textEditorContent, setTextEditorContent] = useState()
-  const [disableDrag, setDisableDrag] = useState(false);
-  const [showDeshboardModel, setShowDashboardModel] = useState(false)
-  const [activeBoard, setActiveBoard] = useState('')
-  const [showIcon , setShowIcon] = useState(null)
-  const [selectedDashboard, setSelectedDashboard] = useState(null)
   const [editorLabel, setEditorLabel] = useState()
-  const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
-  const [selectedDashIndex , setSelectedDashIndex] = useState(null)
   const [minHeightWidth, setMinHeightWidth] = useState([]);
   const [resizeCount, setResizeCount] = useState(0)
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
-  const { isLoading,user } = useUser()
-
-  useEffect(() => {
-    if(defaultDashboard){
-      setBoards([defaultDashboard])
-    }
-    if(dbUser){
-      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res) => {
-        if (res.data.length >= 1) {
-          setBoards(res.data);
-          setActiveBoard(res.data[0]._id)
-          axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
-            setTileCordinates(res.data.tiles)
-            setPods(res.data.pods)
-          })
-        }
-      })
-    }
-    else{
-      if(!isLoading)
-      getDataFromSession()
-    }
-    
-  }, [dbUser, defaultDashboard,isLoading]);
 
   useEffect(()=>{
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   },[tileCordinates])
 
-  const getDataFromSession = () => {
-    let boards = JSON.parse(localStorage.getItem('Dasify'))
-    if(boards){
-      setActiveBoard(boards[0]._id)
-      setBoards(boards)
-      setTileCordinates(boards[0].tiles)
-    }
-  }
-
-  const addTiles = () => {
-    const tileWidth = 135; 
-  const tileHeight = 135; 
-  const tileMargin = 10; 
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-
-  // Check if there's an available space in the first row
-  let foundEmptySpace = false;
-  let newRowY = -50;
-  let newX = 100;
-
-  for (let x = 100; x <= windowWidth - tileWidth; x += tileWidth + tileMargin) {
-    const occupiedTile = tileCordinates.find(tile => tile.x === x && tile.y === newRowY);
-
-    if (!occupiedTile) {
-      foundEmptySpace = true;
-      newX = x;
-      break;
-    }
-  }
-
-  let newY;
-  if (foundEmptySpace) {
-    newY = newRowY;
-  } else {
-    const lastTile = tileCordinates[tileCordinates.length - 1];
-    if (lastTile) {
-      newX = 50;
-      newY = 95
-
-      if (newY + tileHeight > windowHeight) {
-        newX = 100;
-        newY = -50;
-      }
-    } else {
-      newX = 100;
-      newY = -50;
-    }
-  }
-  if (newX + tileWidth > windowWidth) {
-    newX = 50;
-    newY += tileHeight + tileMargin;
-    if (newY + tileHeight > windowHeight) {
-      newX = 100;
-      newY = -50;
-    }
-  }
-  
-    const newtile = {
-      dashboardId: activeBoard,
-      width: '135px',
-      height: '135px',
-      x: newX,
-      y: newY,
-      titleX:2,
-      titleY:2,
-    }
-    if(dbUser){
-      axios.post('/api/tile/tile', newtile ).then((res)=>{
-        console.log("====>>>",res.data)
-        setTileCordinates([...tileCordinates , res.data])
-      })
-    }
-    else{
-      let items = [...tileCordinates,newtile]
-      updateTilesInLocalstorage(items)
-      setTileCordinates(items)
-    }
-  }
-
   const updateTilesInLocalstorage= (tileArray) => {
-    let items = boards
+    let items = JSON.parse(localStorage.getItem('Dasify'))
     let boardIndex = items.findIndex(obj => obj._id === activeBoard);
     let item = items[boardIndex]
     item.tiles = tileArray
@@ -218,6 +93,7 @@ export default function GridTiles( {defaultDashboard} ) {
   }
 
   const showTitleWithImage = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, showTitleWithImage : e.target.checked})
     let value = formValue
     setFormValue({...value, showTitleWithImage : e.target.checked})
   }
@@ -558,32 +434,6 @@ export default function GridTiles( {defaultDashboard} ) {
     })
   }
 
-
-  const addBoard = () => {
-    setShowDashboardModel(false)
-    let payload
-    if(dbUser){
-      payload={
-        name: dashBoardName,
-        userId: dbUser._id
-      }
-      axios.post('/api/dashboard/addDashboard', payload ).then((res)=> {
-        setBoards([...boards, res.data])
-      })  
-    }
-    else {
-      payload={
-        _id : uuidv4(),
-        name: dashBoardName,
-        tiles : []
-      }
-      let items = boards
-      items = [...items , payload]
-      localStorage.setItem("Dasify",JSON.stringify(items))
-      setBoards(items)
-    }
-  }
-
   const handleCloseTextEditor = (content) => {
     setOpenTextEdior(false)
     setTextEditorContent(null)
@@ -722,108 +572,6 @@ export default function GridTiles( {defaultDashboard} ) {
     }
   }
 
-  const changeDashboardName =(e) =>{
-    setDashBoardName(e.target.value)
-  }
-
-  const selectBoard = (e,dashboardId , board , index) => {
-    if (e && (e.type === "touchstart" || e.detail == 2) && !board.default) {
-      setSelectedDashboard(dashboardId);
-      setDashBoardName(board.name)
-      setShowDashboardModel(true)
-    } else {
-      if (dbUser) {
-        axios.get(`api/dashboard/${dashboardId}`).then((res) => {
-          setTileCordinates(res.data.tiles)
-          setPods(res.data.pods)
-          setActiveBoard(dashboardId)
-        })
-      }
-      else{
-        let tiles = boards[index].tiles
-        setTileCordinates(tiles)
-        setActiveBoard(dashboardId)
-      }
-    }
-  }
-  
-  const updatedDashBoard = () => {
-    setShowDashboardModel(false)
-    const data= {
-      name: dashBoardName,
-    }
-    if (dbUser) {
-      axios.patch(`api/dashboard/${selectedDashboard}`, data).then((res) => {
-        if (res) {
-          const updatedList = boards.map(board => {
-            if (board._id === res.data._id) {
-              return res.data;
-            }
-            return board;
-          });
-          setBoards(updatedList)
-        }
-      })
-    }
-    else {
-      let items = boards
-      let boardIndex = items.findIndex(obj => obj._id === selectedDashboard);
-      let item = items[boardIndex]
-      item = {...item , name: dashBoardName}
-      items[boardIndex] = item
-      localStorage.setItem("Dasify", JSON.stringify(items))
-    }
-  }
-
-  const deleteDashboard = ( id , index) =>{
-    let isLastIndex = index == boards.length-1 ? true : false
-    console.log(isLastIndex)
-    if (dbUser) {
-      axios.delete(`api/dashboard/${id}`).then((res) => {
-        if (res) {
-          boards.splice(index, 1)
-          setBoards(boards)
-          setDash(isLastIndex, index)
-        }
-      })
-    }
-    else{
-      let items = boards
-      items.splice(index, 1)
-      setBoards(items)
-      localStorage.setItem("Dasify",JSON.stringify(items))
-      setDash(isLastIndex, index)
-    }
-    setOpenDashDeleteModel(false)
-    setSelectedDashIndex(null)
-  }
-
-  const setDash = (isLastIndex, index ) => {
-    isLastIndex
-       ? selectBoard(null, boards[index - 1]._id, boards[index - 1], index - 1)
-       : selectBoard(null, boards[index]._id, boards[index], index)
-  }
-
-  const setBoardPosition = (list) =>{
-    if (dbUser) {
-      setBoards(list)
-      let listArray = list.map((item, index) => {
-        return { position: index + 1 , _id: item._id }
-      })
-      if (list.length > 1) {
-        axios.patch('/api/dashboard/addDashboard', listArray).then((res) => {
-          console.log("isUp", res.data)
-        })
-      }
-    }
-    else {
-      if(list.length > 1){
-        setBoards(list)
-        localStorage.setItem('Dasify',JSON.stringify(list))
-      }
-    }
-  }
-
   const onResize = (index,e,direction, ref, delta, position) => {
     const tile = tileCordinates[index];
     if (tile && ref) {
@@ -861,53 +609,6 @@ export default function GridTiles( {defaultDashboard} ) {
 
   return (
     <div className="main_grid_container">
-      <div className='board_nav'>
-      <ReactSortable
-        filter=".dashboard_btn"
-        dragClass="sortableDrag"
-        list={boards}
-        setList={(list) => setBoardPosition(list)}
-        animation="200"
-        easing="ease-out" 
-        className='dashboard_drag'>
-        {boards.map((board, index) => {
-          return (
-            <List key={board._id}>
-              <ListItem button 
-              onMouseEnter={()=>setShowIcon(board._id) } 
-              onMouseLeave={() => setShowIcon(null)}
-              onClick={(e) => { selectBoard(e, board._id ,board , index) }}
-              onTouchStart={(e) => {if (isDblTouchTap(e)) {
-                selectBoard(e, board._id ,board , index)
-              }
-              }} >
-                <ListItemText primary={board.name} 
-                primaryTypographyProps={{
-                  style: { fontWeight: board._id === activeBoard ? 'bold' : 'normal' },
-                }}
-                />
-                {(showIcon === board._id && !board.default && board._id !== activeBoard ) &&
-                <span className="cross" 
-                onClick={()=>{setOpenDashDeleteModel(true),
-                setSelectedDashboard(board._id)
-                setSelectedDashIndex(index)}}>
-                  x
-                </span>}
-              </ListItem>
-            </List>
-          )
-        })}
-        </ReactSortable>
-        
-        <Button className='dashboard_btn' sx={{ p: '11px' }} onClick={() => {
-          setShowDashboardModel(true); 
-          setSelectedDashboard(null) ;
-          setDashBoardName('')}}>+ New</Button>
-          </div>
-      <div className="add_tiles" onClick={addTiles}>
-        <AddSharpIcon />
-      </div>
-
       <div className="tiles_container">
         {tileCordinates.map((tile, index) => (
             <Rnd
@@ -1095,39 +796,6 @@ export default function GridTiles( {defaultDashboard} ) {
         label={editorLabel}
       />
 
-      {/* DashBoard Model */}
-      <Dialog open={showDeshboardModel}  >
-          <DialogTitle>Add Dashboard</DialogTitle>
-          <span className="absolute top-4 right-7 cursor-pointer"
-            onClick={()=> setShowDashboardModel(false)}>
-            <CloseSharpIcon />
-          </span>
-          <DialogContent sx={{width:"300px"}}>
-          <input type="text"
-            value={dashBoardName}
-            placeholder='Enter Dashboard Name'
-            onChange={changeDashboardName}
-            style={{ height:'40px', width:'100%'}}
-          />
-        </DialogContent> 
-        <DialogActions>
-         { selectedDashboard ? <Button onClick={()=>{updatedDashBoard()}} >Update</Button>
-          : <Button onClick={()=>{addBoard()}}>Save</Button>}
-        </DialogActions>
-      </Dialog>
-
-        {/* Delete DashBoard Model */}
-      <Dialog open={openDashDeleteModel}>
-        <DialogContent sx={{width:"320px"}}>
-          Are you sure you want to delete?
-        </DialogContent> 
-        <DialogActions>
-          <Button onClick={()=>{setOpenDashDeleteModel(false),setSelectedDashIndex(null)}}>Cancel</Button>
-          <Button variant="contained" 
-          onClick={()=>{deleteDashboard(selectedDashboard,selectedDashIndex)}}>
-          Delete</Button>
-        </DialogActions>
-      </Dialog>
     </div >
   );
 }

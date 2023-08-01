@@ -1,5 +1,4 @@
 "use client";
-import { Button, Grid, Stack } from "@mui/material";
 import GridTiles from '../components/GridTiles';
 import Header from "../components/Header";
 import { userContext } from "@/context/userContext";
@@ -12,6 +11,8 @@ import WarningPrompt from "@/components/WarningPrompt";
 export default function Home() {
   const [dbUser, setUser] = useState()
   const [defaultDashboard, setDefaultDashBoard ] = useState()
+  const [tiles, setTiles] = useState([])
+  const [activeBoard, setActiveBoard] = useState('')
   const {user, isLoading} = useUser()
   
   useEffect(()=>{
@@ -58,9 +59,19 @@ export default function Home() {
   
   return (
     <userContext.Provider value={{ dbUser }}>
-        <Header />  
-        {!user && <WarningPrompt/>}
-        <GridTiles defaultDashboard={defaultDashboard}/>  
+      <Header 
+        defaultDashboard={defaultDashboard} 
+        tileCordinates={tiles} 
+        setTileCordinates={setTiles} 
+        activeBoard = {activeBoard}
+        setActiveBoard={setActiveBoard}
+      />
+      {!user && <WarningPrompt />}
+      <GridTiles 
+        tileCordinates={tiles} 
+        setTileCordinates={setTiles} 
+        activeBoard = {activeBoard}
+      />
     </userContext.Provider>
   );
 }

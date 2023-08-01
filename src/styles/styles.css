@@ -3,18 +3,6 @@
     text-align: left;
     float: left;
     width:100%;
-    height: calc(100vh - 75px)
-}
-.add_tiles {
-    width: auto;
-    padding: 10px;
-    background: #bbb;
-    display: inline-block;
-    box-sizing: border-box;
-    line-height: 15px;
-    border-radius: 5px;
-    color: black;
-    margin-left: 20px;
 }
 .tiles_container {
     display: inline-block;
@@ -112,17 +100,6 @@
     cursor: pointer;
 }
 
-.board_nav {
-    width: '100Px';
-    margin: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    align-items: center;
-    justify-content: 'flex-start';
-    position: relative;
-}
-
 
 .showPodTileOptions {
     position: absolute;
@@ -142,11 +119,6 @@
     display: contents;
 }
 
-.cross{
-    position: absolute;
-    top: 0px;
-    right: 5px;
-}
 
 .sketch-picker{
     height: 360px;
@@ -158,17 +130,6 @@
 a.login_btn {
     color: #000;
 }
-a.sign_btn {
-    background: #45819e;
-    color: #fff;
-    margin-right: 5px;
-    border: 2px solid #45818e;
-    border-radius: 5px;
-    padding: 5px 15px;
-    font-size: 14px;
-    text-decoration: none;
-    font-weight: 600;
-}
 .login a {
     margin-right: 5px;
     border: 2px solid #45818e;
@@ -178,15 +139,7 @@ a.sign_btn {
     text-decoration: none;
     font-weight: 600;
 }
-.login a:focus {
-    opacity: 0.5;
-}
 
-.dashboard_drag {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
 
 .showOptions {
     display: none;

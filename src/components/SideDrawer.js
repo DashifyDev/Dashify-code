@@ -9,14 +9,22 @@ function SideDrawer({open , close ,user}) {
       sx={{
         width: '200px',
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: { width: '200px', boxSizing: 'border-box',paddingTop:"55px" },
+        [`& .MuiDrawer-paper`]:
+        { width: '200px', 
+        boxSizing: 'border-box',
+        paddingTop:"55px",
+        background:'#63899e',
+        color:'#fff', },
       }}>
         <List>
           <ListItem button>
-            <ListItemText primary="About" />
+            <ListItemText primary="About Boardzy" />
           </ListItem>
           <ListItem button>
-            <ListItemText primary="How to use" />
+            <ListItemText primary="How to use Boardzy" />
+          </ListItem>
+          <ListItem button>
+            <ListItemText primary="Dashboard Your life" />
           </ListItem>
           <ListItem button>
             <ListItemText primary="Contact Us" />
@@ -24,7 +32,7 @@ function SideDrawer({open , close ,user}) {
          {user && <ListItem button>
             <a href="/api/auth/logout" style={{
               textDecoration: 'none',
-              color: 'black'
+              color: '#fff'
             }}>Log out</a>
           </ListItem>}
         </List>
