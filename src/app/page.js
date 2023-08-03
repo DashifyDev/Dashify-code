@@ -13,6 +13,7 @@ export default function Home() {
   const [defaultDashboard, setDefaultDashBoard ] = useState()
   const [tiles, setTiles] = useState([])
   const [activeBoard, setActiveBoard] = useState('')
+  const [boards, setBoards] = useState([]);
   const {user, isLoading} = useUser()
   
   useEffect(()=>{
@@ -56,21 +57,35 @@ export default function Home() {
     setDefaultDashBoard(data)
   }
 
+  const updateTilesInLocalstorage= (tileArray) => {
+    let items = boards
+    let boardIndex = items.findIndex(obj => obj._id === activeBoard);
+    let item = items[boardIndex]
+    item.tiles = tileArray
+    items[boardIndex] = item
+    setBoards(items)
+    localStorage.setItem("Dasify",JSON.stringify(items))
+  }
+
   
   return (
     <userContext.Provider value={{ dbUser }}>
-      <Header 
+      <Header
+        boards={boards} 
+        setBoards={setBoards}
         defaultDashboard={defaultDashboard} 
         tileCordinates={tiles} 
         setTileCordinates={setTiles} 
         activeBoard = {activeBoard}
         setActiveBoard={setActiveBoard}
+        updateTilesInLocalstorage={updateTilesInLocalstorage}
       />
       {!user && <WarningPrompt />}
       <GridTiles 
         tileCordinates={tiles} 
         setTileCordinates={setTiles} 
         activeBoard = {activeBoard}
+        updateTilesInLocalstorage={updateTilesInLocalstorage}
       />
     </userContext.Provider>
   );

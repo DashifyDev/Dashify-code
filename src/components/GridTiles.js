@@ -9,25 +9,24 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import TitleSharpIcon from '@mui/icons-material/TitleSharp';
-import AddLinkSharpIcon from '@mui/icons-material/AddLinkSharp';
-import DeleteSweepSharpIcon from '@mui/icons-material/DeleteSweepSharp';
-import DifferenceIcon from '@mui/icons-material/Difference';
+import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import ColorPicker from './ColorPicker';
-import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { Dialog, DialogContent, Checkbox} from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Dialog, Button} from '@mui/material';
 import TextEditor from './TextEditor';
 import axios from 'axios';
 import { userContext } from '@/context/userContext';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import 'suneditor/dist/css/suneditor.min.css'; 
 import { fonts,colors } from '@/constants/textEditorConstant';
+import imageUpload from '../assets/imageUpload.jpg'
+
+import Image from 'next/image';
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 
-export default function GridTiles({tileCordinates, setTileCordinates,activeBoard}) {
+export default function GridTiles({tileCordinates, setTileCordinates,activeBoard ,updateTilesInLocalstorage}) {
   const [showOption, setShowOption] = useState(null);
   const [showModel, setShowModel] = useState(false);
   const [selectedTile, setSelectedTile] = useState(null);
@@ -50,16 +49,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   useEffect(()=>{
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   },[tileCordinates])
-
-  const updateTilesInLocalstorage= (tileArray) => {
-    let items = JSON.parse(localStorage.getItem('Dasify'))
-    let boardIndex = items.findIndex(obj => obj._id === activeBoard);
-    let item = items[boardIndex]
-    item.tiles = tileArray
-    items[boardIndex] = item
-    localStorage.setItem("Dasify",JSON.stringify(items))
-  }
-
 
   const handleColorImage = (e) => {
     setColorImage(e.target.value)
@@ -230,7 +219,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       alignItems: "center",
       justifyContent: "center",
       border: "solid 1px #ddd",
-      background: tileCordinates[index].tileColor ? tileCordinates[index].tileColor : "pink",
+      padding:'10px',
+     // background: tileCordinates[index].tileColor ? tileCordinates[index].tileColor : "pink",
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
@@ -607,6 +597,22 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     return style
   }
 
+  const tileContentStyle = (tile,index) => {
+    let style ={
+      position:'relative',
+      width: '100%',
+      height: '100%',
+      background: tile.tileColor ? tile.tileColor : "pink",      
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '10px',
+      minWidth: minHeightWidth[index]?.width,
+      minHeight: minHeightWidth[index]?.height
+    }
+    return style
+  } 
+
   return (
     <div className="main_grid_container">
       <div className="tiles_container">
@@ -621,11 +627,12 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
               onDoubleClick={(e) => onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)}
-              minWidth = {minHeightWidth[index]?.width || 50}
-              minHeight = {minHeightWidth[index]?.height || 50}
+              minWidth = {minHeightWidth[index]?.width +20 || 50}
+              minHeight = {minHeightWidth[index]?.height+20 || 50}
               onResize={(e, direction, ref, delta, position) =>
                 onResize(index, e,direction, ref, delta, position)
               }
+              bounds='.main_grid_container'
               id={tile._id}
               onResizeStart={()=>setResizeCount(0)}
               dragGrid={[5,5]}
@@ -638,156 +645,153 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                 }
               }}
             > 
+            <div className='tile_contant' style={tileContentStyle(tile, index)}>
               {(!tile.tileImage || (tile.tileImage && tile.showTitleWithImage)) && 
               <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
               {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" />}
-              <div className="showOptions absolute top-0 right-2 cursor-pointer " onClick={(e) => openModel(e, index, null)}>
+              <div className="showOptions absolute top-0 right-2 cursor-pointer" onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>
               {showOption == `tile_${index}` && <div className="absolute top-0 right-2 cursor-pointer " onTouchStart={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>} {/* For Mobile view port  */}
+            </div>
             </Rnd>
         )
         )}
     </div>
 
       {/* Tiles Property Model */ }
-      <Dialog  open={showModel} id={`model_${selectedTile}`}>
-        <DialogContent sx={{width:'600px'}}>
-          <h3>Choose to customize your tiles
-            <span onClick={() => {
+      <Dialog  open={showModel} onClose={() => {
               setShowModel(false); setSelectedPod(null);
               setFormValue({}); setSelectedTile(null); setImageFileName(null)
-            }}
-              className="absolute top-4 right-7 cursor-pointer"><CloseSharpIcon />
-            </span></h3>
-          <div className="radiosets">
-            <FormControl>
-
-              <RadioGroup
-                aria-labelledby="demo-radio-buttons-group-label"
-                defaultValue={colorImage}
-                name="radio-buttonsColor"
-                onChange={handleColorImage}
-              >
-                <FormControlLabel value="color" control={<Radio />} label="Color" />
-                <FormControlLabel value="image" control={<Radio />} label="Image" />
-
-              </RadioGroup>
-            </FormControl>
-          </div>
-          <div className="radiosets">
-            <FormControl>
-
-              <RadioGroup
-                aria-labelledby="demo-radio-buttons-group-label"
-                defaultValue={textLink}
-                name="radio-buttonsLink"
-                onChange={handleTextLink}
-              >
-                <FormControlLabel value="link" control={<Radio />} label="Link" />
-                <FormControlLabel value="text" control={<Radio />} label="Text" />
-
-              </RadioGroup>
-            </FormControl>
-          </div>
-
-          <div className="all_options">
-            <ul>
-              {colorImage === 'color' &&
-                <li>
-                  <ColorPicker handleColorChange={handleColorChange} />
-                </li>}
-              {textLink === 'text' &&
-                <li>
-                  <span><TitleSharpIcon /></span>
-                  <span>Tile Title</span>
-                  <span className='highlight_text'>(Highlight text to edit)</span>
-                  <SunEditor 
-                    value={formValue.tileText}
-                    defaultValue={selectedTileDetail.tileText}
-                    onChange={enterText}
-                    
-                    setOptions={{
-                      buttonList: [
-                        [ "bold","underline","italic","strike",],
-                        ["font"],
-                        ["fontSize","fontColor"],
-                        ['align'],
-                      ],
-                      defaultTag: "div",
-                      font: fonts,
-                      colorList :colors,
-                      minHeight:'230px',
-                      showPathLabel: false,
-                    }} 
-                      width='87%'
+            }} id={`model_${selectedTile}`}>
+        <div className='all_options'>
+          <ul>
+            <li>
+              <h3 className='menu_header'>Tile Background</h3>
+              <div className='radio_menu'>
+                <div className="radiosets">
+                  <FormControl>
+                    <RadioGroup
+                      aria-labelledby="demo-radio-buttons-group-label"
+                      defaultValue={colorImage}
+                      name="radio-buttonsColor"
+                      onChange={handleColorImage}
+                    >
+                      <FormControlLabel value="color" control={<Radio />} label="Select Color" />
+                      <FormControlLabel value="image" control={<Radio />} label="Upload Image" />
+                    </RadioGroup>
+                  </FormControl>
+                </div>
+                <div>
+                  {colorImage === 'color' &&
+                    <ColorPicker handleColorChange={handleColorChange} />
+                  }
+                  {colorImage === 'image' &&
+                    <Image
+                    src={imageUpload}
+                    alt="image"
+                    width={60} height={60}
+                    onClick={handleImageInput}
+                  />
+                  } 
+                  <input type="file" accept="image/*" ref={hiddenFileInput}
+                    style={{ display: "none" }} onChange={handleImageChange} /> 
+                </div>
+              </div>
+            </li>
+            <li>
+              <h3 className='menu_header'>Tile Action</h3>
+              <div className='radio_control'>
+                <div className="radiosets">
+                  <FormControl>
+                    <RadioGroup
+                      aria-labelledby="demo-radio-buttons-group-label"
+                      defaultValue={textLink}
+                      name="radio-buttonsLink"
+                      onChange={handleTextLink}
+                    >
+                      <FormControlLabel value="link" control={<Radio />} label="Opens Link" />
+                      <FormControlLabel value="text" control={<Radio />} label="Opens Text Editor" />
+                      <FormControlLabel value="No_Action" control={<Radio />} label="No Action" />
+                    </RadioGroup>
+                  </FormControl>
+                  <input type="text" className='url_text'
+                      value={selectedTileDetail.tileLink}
+                      onChange={enterLink} 
+                      placeholder='Add URL here'
+                      disabled={textLink !== 'link'}
                     />
-                </li>}
-                {textLink === 'text' &&
-                <li>
-                  <span>Title position</span>
-                  <div style={{margin:10}}>
+                </div>
+              </div>
+            </li>
+            <li>
+              <h3 className='menu_header'>Tile Title</h3>
+              <div className='title_editor'>
+                <SunEditor
+                  value={formValue.tileText}
+                  defaultValue={selectedTileDetail.tileText}
+                  onChange={enterText}
+                  setOptions={{
+                    buttonList: [
+                      [ "bold","underline","italic"],
+                      ["font", "fontSize"],
+                      ["fontColor"],
+                    ],
+                    defaultTag: "div",
+                    font: fonts,
+                    colorList: colors,
+                    showPathLabel: false,
+                  }}
+                  width='100%'
+                  disable={textLink !== 'text'}
+                />
+                <div className='display_title'>
+                  <div className='display_title_check'>
+                    <input
+                      type="checkbox"
+                      checked={selectedTileDetail.showTitleWithImage}
+                      onChange={showTitleWithImage}
+                      disabled={!formValue.tileImage && !selectedTileDetail.tileImage} />
+                    <label>Dispaly Title</label>
+                  </div>
+                  <div className='position'>
                     <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-
                     <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
                     </select>
                   </div>
-                </li>    
-                }
-              {textLink === 'link' &&
-                <li>
-                  <span><AddLinkSharpIcon /></span>
-                  <span>Tile Link</span>
-                  <input type="text"
-                    value={selectedTileDetail.tileLink}
-                    onChange={enterLink} />
-                </li>}
-
-              {colorImage == 'image' &&
-                <li>
-                  <FormControlLabel sx={{ marginLeft: 0 }}
-                    control={
-                      <Checkbox
-                        checked={selectedTileDetail.showTitleWithImage}
-                        onChange={showTitleWithImage}
-                        disabled={!formValue.tileImage && !selectedTileDetail.tileImage}
-                      />
-                    }
-                    label="Display Title"
-                  />
-                </li>}
-
-              {colorImage == 'image' &&
-                <li>
-                  <span onClick={handleImageInput}><AddPhotoAlternateIcon /></span>
-                  <span onClick={handleImageInput}>Add Image</span>
-                  <span style={{ fontSize: '13px' }}>{imageFileName}</span>
-                  <input type="file" accept="image/*" ref={hiddenFileInput}
-                    style={{ display: "none" }} onChange={handleImageChange} />
-                </li>}
-               
-              <li>
-                <span onClick={() => deleteTile(selectedTile)}><DeleteSweepSharpIcon /></span>
-                <span onClick={() => deleteTile(selectedTile)}>Delete</span>
-              </li>
-              <li>
-                <span onClick={() => tileClone(selectedTile)}><DifferenceIcon /></span>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <div className='line_break'></div>
+          <div className='menu_action'>
+            <div>
+              <div className='delete_duplicate_action'>
+                <span onClick={() => tileClone(selectedTile)}><DifferenceOutlinedIcon /></span>
                 <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
-              </li>
-            </ul>
-            <button className="bg-blue-500 text-base hover:bg-blue-700 text-white font-bold py-3 px-8 rounded border-0" onClick={(index) => handleSave(`tiles_${selectedTile}`)}>Save</button>
+              </div>
+              <div  className='delete_duplicate_action'>
+                <span onClick={() => deleteTile(selectedTile)}><DeleteOutlineIcon /></span>
+                <span onClick={() => deleteTile(selectedTile)}>Delete</span>
+              </div>
+            </div>
+            <div>
+            <Button className='button_filled' 
+              sx={{ '&:hover': {
+              backgroundColor: '#63899e',
+              }}}  onClick={(index) => handleSave(`tiles_${selectedTile}`)} >Save</Button>
+            </div>
           </div>
-
-        </DialogContent>
+        </div>
       </Dialog>
       <TextEditor open={openTextEditor}
         onClose={handleCloseTextEditor}

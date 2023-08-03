@@ -17,9 +17,9 @@ import logo from "../assets/logo.png";
 import Image from 'next/image';
 
 
-function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard}) {
+function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
+                  boards, setBoards, updateTilesInLocalstorage}) {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
-  const [boards, setBoards] = useState([]);
   const [showIcon , setShowIcon] = useState(null)
   const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
   const [selectedDashIndex , setSelectedDashIndex] = useState(null)
@@ -61,14 +61,6 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
     }
   }
 
-  const updateTilesInLocalstorage= (tileArray) => {
-    let items = boards
-    let boardIndex = items.findIndex(obj => obj._id === activeBoard);
-    let item = items[boardIndex]
-    item.tiles = tileArray
-    items[boardIndex] = item
-    localStorage.setItem("Dasify",JSON.stringify(items))
-  }
 
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
@@ -169,7 +161,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   }
 
   const selectBoard = (e,dashboardId , board , index) => {
-    if (e && (e.type === "touchstart" || e.detail == 2) && !board.default) {
+    if (e && (e.type === "touchstart" || e.detail == 2)) {
       setSelectedDashboard(dashboardId);
       setDashBoardName(board.name)
       setShowDashboardModel(true)

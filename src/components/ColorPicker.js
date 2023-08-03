@@ -5,6 +5,8 @@ import reactCSS from 'reactcss'
 import { SketchPicker } from 'react-color';
 import ColorizeSharpIcon from '@mui/icons-material/ColorizeSharp';
 import '../styles/styles.css'
+import color from '../assets/color.png'
+import Image from 'next/image';
 
 class ColorPicker extends React.Component {
   state = {
@@ -68,16 +70,15 @@ class ColorPicker extends React.Component {
 
     return (
       <div>
-       {/* // <div style={ styles.swatch } onClick={ this.handleClick }>
-        //   <div style={ styles.color } />
-        // </div>*/}
-        <span onClick={ this.handleClick }><ColorizeSharpIcon/></span>
-        <span onClick={ this.handleClick }>Tile Color</span>
-        <span style={{fontSize:'13px'}}>{this.state.selectedHex}</span>
-        <span></span>
+        <Image
+          src={color}
+          alt="color"
+          width={60} height={60}
+          onClick={ this.handleClick }
+        />
         { this.state.displayColorPicker ? <div style={ styles.popover }>
           <div style={ styles.cover } onClick={ this.handleClose }/>
-          <SketchPicker color={ this.state.color } onChange={ this.handleChange } />
+          <SketchPicker color={ this.state.color } onChange={ this.handleChange } width='165px'/>
         </div> : null }
 
       </div>

@@ -1,8 +1,9 @@
-.main_grid_container {
+.main_grid_container{
     display: inline-block;
     text-align: left;
     float: left;
-    width:100%;
+    width:99%;
+    height: calc(100vh - 75px)
 }
 .tiles_container {
     display: inline-block;
@@ -21,6 +22,7 @@
     border-radius: 10px;
     text-transform: capitalize;
 }
+
 .tiles_popup {
     width: 650px;
     background:  white;
@@ -34,16 +36,35 @@
      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
      backdrop-filter: blur(10px);
 }
-.tiles_popup h3 {
-    color: black;
-    text-align: center;
+
+.all_options {
+    display: inline-block;
+    width: 380px;
+    padding: 15px;
+}
+.all_options ul {
+    list-style: none;
+    padding: 0;
+    margin : 0;
+}
+.menu_header {
+    padding: 5px;
+    color: #fff;
+    background: #63899e;
+    width: 100%;
+    margin: 0;
+}
+.radio_menu {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+}
+.radio_menu img{
+    margin-left: 50px;
+    cursor: pointer;
 }
 .radiosets {
-    display: inline-block;
-    width: 47%;
-    float: left;
-    border-right: 1px solid #aaa;
-    margin-right: 3%;
+    margin-left: 15px;
 }
 .radiosets:nth-child(3){
     border-right: 0 none;
@@ -52,36 +73,45 @@
 .radiosets .MuiButtonBase-root .MuiSvgIcon-root {
     color:  black;
 }
-
-.all_options {
-    display: inline-block;
+.radio_control{
     width: 100%;
-    padding: 30px 0;
-    list-style: none;
 }
-.all_options ul {
-    list-style: none;
-    padding: 0;
+
+.title_editor{
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
 }
-.all_options ul li{
-    padding-bottom: 20px;
+.title_editor .display_title {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+    align-items: center;
 }
-.all_options ul li svg {
-    font-size: 35px;
+.display_title_check{
+    display: flex;
+    font-size: 13px;
 }
-.all_options ul li input {
-    display: block;
-    height: 40px;
-    margin-left: 21px;
-    margin-top: 14px;
-    width: 50%;
+.display_title_check input{
+    margin-right: 10px;
 }
 
 .all_options ul li select{
     margin-left: 10px;
     width: 100px;
-    height: 40px;
+    height: 30px;
+    cursor: pointer;
+    border-radius: 3px;
 } 
+
+ 
+.url_text  {
+    width: 185px;
+    height: 28px;
+    position: absolute;
+    right: 33px;
+    top: 183px;
+}
 
 .height_width{
     display: flex;
@@ -93,13 +123,25 @@
     margin: 10px;
 }
 
-.all_options ul li span {
-    vertical-align: middle;
-    padding-left: 15px;
-    font-size: 18px;
+.line_break{
+    border-bottom: 5px solid #63889e;
+    margin: 11px 8px;
+}
+.menu_action {
+    padding: 8px 8px 0px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.delete_duplicate_action{
+    display: flex;
+}
+.delete_duplicate_action svg{
+    margin-right: 12px;
+}
+.delete_duplicate_action span:hover{
     cursor: pointer;
 }
-
 
 .showPodTileOptions {
     position: absolute;
@@ -121,7 +163,7 @@
 
 
 .sketch-picker{
-    height: 360px;
+    height: auto;
 }
 .flexbox-fix {
     margin-right: 17px;
@@ -145,7 +187,7 @@ a.login_btn {
     display: none;
   }
   
-.tile:hover .showOptions {
+.tile_contant:hover .showOptions {
     display: flex;
 }
 
@@ -168,17 +210,22 @@ a.login_btn {
 /* text editor  fixed */
 .sun-editor .se-list-layer.se-list-font-family {
     min-width: 156px;
-    max-height: 260px;
+    max-height: 200px;
 }
 
 .sun-editor .se-list-layer .se-selector-color .se-color-pallet li {
     padding: 0;
 }
 
-.all_options ul li .sun-editor span {
-    padding: 0;
+
+.all_options ul li .sun-editor .se-btn-select.se-btn-tool-size {
+    width: 60px;
+}
+.all_options ul li .sun-editor .se-list-layer.se-list-font-size {
+    min-width: 124px;
+    max-height: 300px;
 }
 
-.all_options ul li .sun-editor .se-btn-select.se-btn-tool-font {
-    width: 180px;
-}
+/* .all_options ul li .sun-editor .se-btn-select.se-btn-tool-font {
+    width: 122px;
+} */
