@@ -786,7 +786,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
             </div>
             <div>
             <Button className='button_filled' 
-              sx={{ '&:hover': {
+              sx={{ background:'#63899e',
+                color:'#fff',
+                '&:hover': {
               backgroundColor: '#63899e',
               }}}  onClick={(index) => handleSave(`tiles_${selectedTile}`)} >Save</Button>
             </div>

@@ -360,15 +360,21 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
           Are you sure you want to delete?
         </DialogTitle>
         <DialogActions>
-          <Button className='button_cancel' onClick={() => { 
+          <Button className='button_cancel'
+          sx={{ color: '#63899e' }}
+           onClick={() => { 
             setOpenDashDeleteModel(false), 
             setSelectedDashIndex(null) }}>
               Cancel
           </Button>
           <Button className='button_filled'
-            sx={{ '&:hover': {
-              backgroundColor: '#63899e',
-              }}}
+            sx={{
+              background: '#63899e',
+              color: '#fff',
+              '&:hover': {
+                backgroundColor: '#63899e',
+              }
+            }}  
             onClick={() => { deleteDashboard(selectedDashboard, selectedDashIndex) }}>
             Delete
           </Button>
@@ -387,16 +393,26 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
           />
         </DialogContent> 
         <DialogActions>
-          <Button className='button_cancel' onClick={()=> setShowDashboardModel(false)}>Cancel</Button>
+          <Button className='button_cancel' sx={{ color: '#63899e' }}
+           onClick={()=> setShowDashboardModel(false)}>Cancel</Button>
          { selectedDashboard 
-          ? <Button className='button_filled' 
-            sx={{ '&:hover': {
-              backgroundColor: '#63899e',
-            }}}  onClick={()=>{updatedDashBoard()}} >Save</Button>
-          : <Button className='button_filled' 
-            sx={{ '&:hover': {
-              backgroundColor: '#63899e',
-            }}}  onClick={()=>{addBoard()}}>Save</Button>}
+            ? <Button className='button_filled'
+              sx={{
+                background: '#63899e',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: '#63899e',
+                }
+              }} onClick={()=>{updatedDashBoard()}} >Save</Button>
+            : <Button className='button_filled'
+              sx={{
+                background: '#63899e',
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: '#63899e',
+                }
+              }}  
+            onClick={()=>{addBoard()}}>Save</Button>}
         </DialogActions>
       </Dialog>
     </Box>
