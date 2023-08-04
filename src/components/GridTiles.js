@@ -753,7 +753,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       type="checkbox"
                       checked={selectedTileDetail.showTitleWithImage}
                       onChange={showTitleWithImage}
-                      disabled={!(formValue.tileBackground instanceof File) && 
+                      disabled={!( typeof formValue.tileBackground == 'object') && 
                         !(isBackgroundImage(selectedTileDetail.tileBackground))
                       } 
                     />
