@@ -35,7 +35,7 @@ const tileData = async (req, res) => {
                     
                     if(files && files.tileImage){
                        let  tileImage = await imageUpload(files)
-                       updatedData.tileImage = tileImage
+                       updatedData.tileBackground = tileImage
                     
                     }
                     const updated = await Tile.findByIdAndUpdate(

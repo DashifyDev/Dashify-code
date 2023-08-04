@@ -1,9 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
 const tileSchema = new Schema({
-    tileColor: {
-        type : String
-    },
 
     tileLink: {
         type : String
@@ -17,7 +14,11 @@ const tileSchema = new Schema({
         type : String,
     },
 
-    tileImage: {
+    tileBackground: {
+        type : String
+    },
+
+    action : {
         type : String
     },
 

@@ -24,7 +24,7 @@ const updateTile = async (req, res) => {
             updatedData = JSON.parse(fields.formValue)
             if (files && files.tileImage) {
                 let tileImage = await imageUpload(files)
-                updatedData.tileImage = tileImage
+                updatedData.tileBackground = tileImage
                 if (tileImage) {
                     return res.status(200).json(updatedData)
                 }

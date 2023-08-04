@@ -76,6 +76,7 @@ class ColorPicker extends React.Component {
           width={60} height={60}
           onClick={ this.handleClick }
         />
+        {/* <span style={{fontSize:'9px'}}>{this.state.selectedHex}</span> */}
         { this.state.displayColorPicker ? <div style={ styles.popover }>
           <div style={ styles.cover } onClick={ this.handleClose }/>
           <SketchPicker color={ this.state.color } onChange={ this.handleChange } width='165px'/>

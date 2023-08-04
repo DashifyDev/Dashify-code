@@ -29,9 +29,11 @@ const getDashboardData = async(req,res) =>{
                 break;
 
             case 'DELETE':
-                const isDelete = await Dashboard.deleteOne({_id:id})
-                if(isDelete.acknowledged){
-                    res.status(200).json(isDelete)
+                const DeletedDashboard = await Dashboard.findOneAndDelete({_id:id})
+                let tilesTodelete = DeletedDashboard.tiles
+                let tilesDelete = await Tile.deleteMany({ _id: { $in: tilesTodelete }})
+                if(DeletedDashboard ){
+                    res.status(200).json(DeletedDashboard)
                 }
                 else{
                     res.status(200).json({message : 'Error At delete'})

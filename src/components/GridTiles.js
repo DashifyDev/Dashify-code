@@ -54,8 +54,11 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setColorImage(e.target.value)
   }
 
-  const handleTextLink = (e) => {
-    setTextLink(e.target.value)
+  const changeAction = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, action : e.target.value})
+    const values = formValue
+    values.action = e.target.value
+    setFormValue(values)
   }
 
   const openModel = (e, index, isPod) => {
@@ -76,6 +79,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setFormValue(values)
   }
   const enterLink = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, tileLink : e.target.value})
     const values = formValue
     values.tileLink = e.target.value
     setFormValue(values)
@@ -105,9 +109,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const handleSave = (index) => {
     let formData = new FormData;
     let payload = formValue
-    if(payload.tileImage instanceof File){
-      formData.append('tileImage', payload.tileImage)
-      delete payload.tileImage
+    if(payload.tileBackground instanceof File){
+      formData.append('tileImage', payload.tileBackground)
+      delete payload.tileBackground
     }
     formData.append('formValue',JSON.stringify(payload))
 
@@ -199,7 +203,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     const selectedImage = e.target.files[0];
     setImageFileName(selectedImage.name)
     const values = formValue
-    values.tileImage = selectedImage
+    values.tileBackground = selectedImage
     setFormValue(values)
   };
 
@@ -209,18 +213,22 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
   const handleColorChange = (color) => {
     const values = formValue
-    values.tileColor = color.hex
+    values.tileBackground = color.hex
     setFormValue(values)
   }
 
   const style = (index,tile) => {
+    let isImageBackground 
+    if(tile.tileBackground){
+      isImageBackground = isBackgroundImage(tile.tileBackground)
+    }
+
     const stylevalue = {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       border: "solid 1px #ddd",
-      padding:'10px',
-     // background: tileCordinates[index].tileColor ? tileCordinates[index].tileColor : "pink",
+      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : "pink",
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
@@ -243,11 +251,13 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   }
 
 
-  const onDoubleTap = (e, link, tileContent, tile ,index, isPod) => {
-    if ((e.type === "touchstart" || e.detail == 2) && link) {
-      window.open(link, '_blank');
+  const onDoubleTap = (e, action, tileContent, tile ,index, isPod) => {
+    if ((e.type === "touchstart" || e.detail == 2) && action=='link') {
+      if(tile.tileLink){
+        window.open(tile.tileLink, '_blank');
+      }
     }
-    else if ((e.type === "touchstart" || e.detail == 2) && !link) {
+    else if ((e.type === "touchstart" || e.detail == 2) && action=='textEditor') {
       let label = tile.tileText
       setEditorLabel(label)
       setOpenTextEdior(true)
@@ -597,21 +607,14 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     return style
   }
 
-  const tileContentStyle = (tile,index) => {
-    let style ={
-      position:'relative',
-      width: '100%',
-      height: '100%',
-      background: tile.tileColor ? tile.tileColor : "pink",      
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: '10px',
-      minWidth: minHeightWidth[index]?.width,
-      minHeight: minHeightWidth[index]?.height
+  const isBackgroundImage = (url) => {
+    if(url){
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      let isImage = imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+      return isImage
     }
-    return style
-  } 
+  }
+
 
   return (
     <div className="main_grid_container">
@@ -626,9 +629,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               position={{ x: tile.x, y: tile.y }}
               onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
               onResizeStop={(e, direction, ref, delta, position) => handleResizeStop(e, direction, ref, delta, position, index)}
-              onDoubleClick={(e) => onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)}
-              minWidth = {minHeightWidth[index]?.width +20 || 50}
-              minHeight = {minHeightWidth[index]?.height+20 || 50}
+              onDoubleClick={(e) => onDoubleTap(e, tile.action, tile.tileContent,tile, index, null)}
+              minWidth = {minHeightWidth[index]?.width || 50}
+              minHeight = {minHeightWidth[index]?.height || 50}
               onResize={(e, direction, ref, delta, position) =>
                 onResize(index, e,direction, ref, delta, position)
               }
@@ -638,34 +641,29 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               dragGrid={[5,5]}
               onTouchStart={ (e) => {
                 if (isDblTouchTap(e)) {
-                  onDoubleTap(e, tile.tileLink, tile.tileContent,tile, index, null)
+                  onDoubleTap(e, tile.action, tile.tileContent,tile, index, null)
                 }
                 else{
                   setShowOption(`tile_${index}`)
                 }
               }}
             > 
-            <div className='tile_contant' style={tileContentStyle(tile, index)}>
-              {(!tile.tileImage || (tile.tileImage && tile.showTitleWithImage)) && 
+              {(!isBackgroundImage(tile.tileBackground) || (isBackgroundImage(tile.tileBackground) && tile.showTitleWithImage)) && 
               <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
-              {tileCordinates[index].tileImage && <img draggable="false" src={tileCordinates[index].tileImage} alt="Preview" />}
+              {isBackgroundImage(tile.tileBackground) && <img draggable="false" src={tile.tileBackground} alt="Preview" />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer" onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>
               {showOption == `tile_${index}` && <div className="absolute top-0 right-2 cursor-pointer " onTouchStart={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
               </div>} {/* For Mobile view port  */}
-            </div>
             </Rnd>
         )
         )}
     </div>
 
       {/* Tiles Property Model */ }
-      <Dialog  open={showModel} onClose={() => {
-              setShowModel(false); setSelectedPod(null);
-              setFormValue({}); setSelectedTile(null); setImageFileName(null)
-            }} id={`model_${selectedTile}`}>
+      <Dialog  open={showModel} id={`model_${selectedTile}`}>
         <div className='all_options'>
           <ul>
             <li>
@@ -686,15 +684,18 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                 </div>
                 <div>
                   {colorImage === 'color' &&
-                    <ColorPicker handleColorChange={handleColorChange} />
+                      <ColorPicker handleColorChange={handleColorChange} />
                   }
                   {colorImage === 'image' &&
+                  <div className='image_value'>
                     <Image
                     src={imageUpload}
                     alt="image"
                     width={60} height={60}
                     onClick={handleImageInput}
                   />
+                    {/* <span style={{ fontSize: '9px' }}>{imageFileName}</span> */}
+                  </div>
                   } 
                   <input type="file" accept="image/*" ref={hiddenFileInput}
                     style={{ display: "none" }} onChange={handleImageChange} /> 
@@ -708,20 +709,20 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                   <FormControl>
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
-                      defaultValue={textLink}
+                      defaultValue= {selectedTileDetail.action}
                       name="radio-buttonsLink"
-                      onChange={handleTextLink}
+                      onChange={changeAction}
                     >
                       <FormControlLabel value="link" control={<Radio />} label="Opens Link" />
-                      <FormControlLabel value="text" control={<Radio />} label="Opens Text Editor" />
-                      <FormControlLabel value="No_Action" control={<Radio />} label="No Action" />
+                      <FormControlLabel value="textEditor" control={<Radio />} label="Opens Text Editor" />
+                      <FormControlLabel value="noAction" control={<Radio />} label="No Action" />
                     </RadioGroup>
                   </FormControl>
                   <input type="text" className='url_text'
                       value={selectedTileDetail.tileLink}
                       onChange={enterLink} 
                       placeholder='Add URL here'
-                      disabled={textLink !== 'link'}
+                      disabled={selectedTileDetail.action !== 'link'}
                     />
                 </div>
               </div>
@@ -745,7 +746,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     showPathLabel: false,
                   }}
                   width='100%'
-                  disable={textLink !== 'text'}
                 />
                 <div className='display_title'>
                   <div className='display_title_check'>
@@ -753,7 +753,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       type="checkbox"
                       checked={selectedTileDetail.showTitleWithImage}
                       onChange={showTitleWithImage}
-                      disabled={!formValue.tileImage && !selectedTileDetail.tileImage} />
+                      disabled={!(formValue.tileBackground instanceof File) && 
+                        !(isBackgroundImage(selectedTileDetail.tileBackground))
+                      } 
+                    />
                     <label>Dispaly Title</label>
                   </div>
                   <div className='position'>
@@ -785,12 +788,20 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               </div>
             </div>
             <div>
-            <Button className='button_filled' 
-              sx={{ background:'#63899e',
-                color:'#fff',
-                '&:hover': {
-              backgroundColor: '#63899e',
-              }}}  onClick={(index) => handleSave(`tiles_${selectedTile}`)} >Save</Button>
+              <Button className='button_cancel' sx={{ color: '#63899e', marginRight:'3px' }}
+                onClick={() =>{
+                  setShowModel(false); setSelectedPod(null);
+                  setFormValue({}); setSelectedTile(null); setImageFileName(null)
+                }}>Cancel
+              </Button>
+              <Button className='button_filled'
+                sx={{
+                  background: '#63899e',
+                  color: '#fff',
+                  '&:hover': {
+                    backgroundColor: '#63899e',
+                  }
+                }} onClick={(index) => handleSave(`tiles_${selectedTile}`)} >Save</Button>
             </div>
           </div>
         </div>
