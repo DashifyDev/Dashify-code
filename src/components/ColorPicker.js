@@ -57,6 +57,8 @@ class ColorPicker extends React.Component {
         popover: {
           position: 'absolute',
           zIndex: '6',
+          right : '1px',
+          top : '124px'
         },
         cover: {
           position: 'fixed',
@@ -69,20 +71,21 @@ class ColorPicker extends React.Component {
     });
 
     return (
-      <div>
+      <>
+      <div className='color_value'>
         <Image
           src={color}
           alt="color"
           width={60} height={60}
           onClick={ this.handleClick }
         />
-        {/* <span style={{fontSize:'9px'}}>{this.state.selectedHex}</span> */}
+        <span style={{fontSize:'13px'}}>{this.state.selectedHex}</span>
+      </div>
         { this.state.displayColorPicker ? <div style={ styles.popover }>
           <div style={ styles.cover } onClick={ this.handleClose }/>
           <SketchPicker color={ this.state.color } onChange={ this.handleChange } width='165px'/>
         </div> : null }
-
-      </div>
+     </>
     )
   }
 }

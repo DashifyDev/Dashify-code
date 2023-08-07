@@ -122,7 +122,8 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
       y: newY,
       titleX:2,
       titleY:2,
-      action : 'noAction'
+      action : 'textEditor',
+      displayTitle:true
     }
     if(dbUser){
       axios.post('/api/tile/tile', newtile ).then((res)=>{

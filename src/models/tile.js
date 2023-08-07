@@ -47,7 +47,7 @@ const tileSchema = new Schema({
         'default': false 
     },
     
-    showTitleWithImage: { 
+    displayTitle: { 
         type: Boolean, 
     },
     titleX:{

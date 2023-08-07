@@ -55,12 +55,10 @@
     margin: 0;
 }
 .radio_menu {
-    display: inline-flex;
-    align-items: center;
+    display: flex;
     width: 100%;
 }
 .radio_menu img{
-    margin-left: 50px;
     cursor: pointer;
 }
 .radiosets {
@@ -72,6 +70,26 @@
 }
 .radiosets .MuiButtonBase-root .MuiSvgIcon-root {
     color:  black;
+}
+.color_value{
+    display: flex;
+    align-items : center;
+    margin-left : 10px;
+    width : min-content;
+}
+.color_value span {
+    font-size: 13px;
+    margin-left: 10px
+}
+.image_value{
+    display: flex;
+    align-items : center;
+    margin-left : 10px;
+    width : min-content;
+}
+.image_value span {
+    font-size: 10px;
+    margin-left: 10px
 }
 .radio_control{
     width: 100%;

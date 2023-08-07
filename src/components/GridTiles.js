@@ -85,10 +85,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setFormValue(values)
   }
 
-  const showTitleWithImage = (e) => {
-    setSelectedTileDetail({...selectedTileDetail, showTitleWithImage : e.target.checked})
+  const displayTitle = (e) => {
+    setSelectedTileDetail({...selectedTileDetail, displayTitle : e.target.checked})
     let value = formValue
-    setFormValue({...value, showTitleWithImage : e.target.checked})
+    setFormValue({...value, displayTitle : e.target.checked})
   }
 
   const handleChangePositionX = (e) => {
@@ -228,7 +228,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       alignItems: "center",
       justifyContent: "center",
       border: "solid 1px #ddd",
-      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : "pink",
+      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : "#deedf0ff",
       color: 'black',
       overflowWrap: 'anywhere',
       borderRadius: '10px',
@@ -238,7 +238,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
   }
 
-  const changedTitlehandle = (index) => {
+  const changedTitlehandle = (index,tile) => {
     let tileText = tileCordinates[index].tileText
     let content
     if(tileText){
@@ -246,7 +246,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       const doc = parser.parseFromString(tileText, 'text/html');
       content = doc.getElementsByTagName('div')[0].innerText;
     }
-    const titleVal = content ? tileText : "Tiles"
+    const titleVal = content && tile.displayTitle ? tileText : !content && tile.displayTitle ? " New Tile" : ''
     return titleVal
   }
 
@@ -602,7 +602,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       top : tile.titleY == 1 ? 0 : 'auto',
       bottom : tile.titleY == 3 ? 0 : 'auto',
       left : tile.titleX == 1 ? 0 : 'auto',
-      right : tile.titleX == 3 ? 0 : 'auto'
+      right : tile.titleX == 3 ? 0 : 'auto',
+      textAlign : tile.titleX == 3 ? 'right' :  tile.titleX == 2 ? 'center' : 'left',
     }
     return style
   }
@@ -648,8 +649,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                 }
               }}
             > 
-              {(!isBackgroundImage(tile.tileBackground) || (isBackgroundImage(tile.tileBackground) && tile.showTitleWithImage)) && 
-              <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index) }}></div>}
+              <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index,tile) }}></div>
               {isBackgroundImage(tile.tileBackground) && <img draggable="false" src={tile.tileBackground} alt="Preview" />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer" onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />
@@ -682,7 +682,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     </RadioGroup>
                   </FormControl>
                 </div>
-                <div>
                   {colorImage === 'color' &&
                       <ColorPicker handleColorChange={handleColorChange} />
                   }
@@ -694,12 +693,11 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     width={60} height={60}
                     onClick={handleImageInput}
                   />
-                    {/* <span style={{ fontSize: '9px' }}>{imageFileName}</span> */}
+                    <span>{imageFileName}</span>
                   </div>
                   } 
                   <input type="file" accept="image/*" ref={hiddenFileInput}
                     style={{ display: "none" }} onChange={handleImageChange} /> 
-                </div>
               </div>
             </li>
             <li>
@@ -751,11 +749,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                   <div className='display_title_check'>
                     <input
                       type="checkbox"
-                      checked={selectedTileDetail.showTitleWithImage}
-                      onChange={showTitleWithImage}
-                      disabled={!( typeof formValue.tileBackground == 'object') && 
-                        !(isBackgroundImage(selectedTileDetail.tileBackground))
-                      } 
+                      checked={selectedTileDetail.displayTitle}
+                      onChange={displayTitle}
                     />
                     <label>Dispaly Title</label>
                   </div>
