@@ -370,7 +370,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
               Cancel
           </Button>
           <Button className='button_filled'
-            sx={{
+            sx={{ 
               background: '#63899e',
               color: '#fff',
               '&:hover': {
