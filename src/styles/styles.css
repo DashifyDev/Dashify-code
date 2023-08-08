@@ -87,7 +87,12 @@
     margin-left : 10px;
     width : min-content;
 }
-.image_value span {
+.file_Name {
+    word-break: break-word;
+    display: flex;
+    width: 100px;
+}
+.file_Name span {
     font-size: 10px;
     margin-left: 10px
 }

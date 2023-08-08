@@ -29,12 +29,6 @@ function SideDrawer({open , close ,user}) {
           <ListItem button>
             <ListItemText primary="Contact Us" />
           </ListItem>
-         {user && <ListItem button>
-            <a href="/api/auth/logout" style={{
-              textDecoration: 'none',
-              color: '#fff'
-            }}>Log out</a>
-          </ListItem>}
         </List>
       </Drawer>
     </div>
