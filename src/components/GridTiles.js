@@ -42,6 +42,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [editorLabel, setEditorLabel] = useState()
   const [minHeightWidth, setMinHeightWidth] = useState([]);
   const [resizeCount, setResizeCount] = useState(0)
+  const [colorBackground, setColorBackground] = useState()
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
@@ -70,6 +71,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     } else {
       setSelectedTile(index)
       setSelectedTileDetail(tileCordinates[index])
+      currentBackground(tileCordinates[index])
     }
   }
 
@@ -136,6 +138,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     let tileId = items[selectedTile]._id
     setFormValue({})
     setImageFileName(null)
+    setColorBackground(null)
     setShowModel(false)
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, formData
@@ -616,6 +619,27 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     }
   }
 
+  const currentBackground = (tile) => {
+    if(tile.tileBackground){
+      if(isBackgroundImage(tile.tileBackground)){
+        const segments = tile.tileBackground.split('/');
+        const imageName = segments[segments.length - 1];
+        setImageFileName(imageName)
+      }
+      else{
+        setColorBackground(tile.tileBackground)
+      }
+    }
+    else{
+      setColorBackground("#deedf0ff")
+    }
+  }
+
+  const handleDrag = (e, data) => {
+
+
+  };
+
 
   return (
     <div className="main_grid_container">
@@ -636,7 +660,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               onResize={(e, direction, ref, delta, position) =>
                 onResize(index, e,direction, ref, delta, position)
               }
-              bounds='.main_grid_container'
+              //bounds={{left : 0}}
+              onDrag={(e,d)=>handleDrag(e,d)}
               id={tile._id}
               onResizeStart={()=>setResizeCount(0)}
               dragGrid={[5,5]}
@@ -683,7 +708,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                   </FormControl>
                 </div>
                   {colorImage === 'color' &&
-                      <ColorPicker handleColorChange={handleColorChange} />
+                      <ColorPicker handleColorChange={handleColorChange} colorBackground={colorBackground}/>
                   }
                   {colorImage === 'image' &&
                   <div className='image_value'>
@@ -693,7 +718,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     width={60} height={60}
                     onClick={handleImageInput}
                   />
-                    <span>{imageFileName}</span>
+                    <div className='file_Name'>
+                      <span>{imageFileName}</span>
+                    </div>
                   </div>
                   } 
                   <input type="file" accept="image/*" ref={hiddenFileInput}
@@ -744,6 +771,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     showPathLabel: false,
                   }}
                   width='100%'
+                  setDefaultStyle= "font-size : Times New Roman"
                 />
                 <div className='display_title'>
                   <div className='display_title_check'>
@@ -785,7 +813,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
             <div>
               <Button className='button_cancel' sx={{ color: '#63899e', marginRight:'3px' }}
                 onClick={() =>{
-                  setShowModel(false); setSelectedPod(null);
+                  setShowModel(false); setSelectedPod(null);setColorBackground(null)
                   setFormValue({}); setSelectedTile(null); setImageFileName(null)
                 }}>Cancel
               </Button>

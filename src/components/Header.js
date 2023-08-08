@@ -4,7 +4,7 @@ import {  AppBar,  Toolbar,  Grid, Typography, Box, List , ListItem,ListItemText
   Dialog, DialogTitle ,DialogContent, DialogActions, CardMedia } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CssBaseline from '@mui/material/CssBaseline';
-import { IconButton, Avatar, Button } from '@mui/material';
+import { IconButton, Avatar, Button, Menu, MenuItem } from '@mui/material';
 import SideDrawer from './SideDrawer';
 import { userContext } from '@/context/userContext';
 import { ReactSortable } from "react-sortablejs";
@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import '../styles/header.css'
 import logo from "../assets/logo.png";
 import Image from 'next/image';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 
 
 function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
@@ -26,6 +27,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   const [selectedDashboard, setSelectedDashboard] = useState(null)
   const [showDeshboardModel, setShowDashboardModel] = useState(false)
   const [dashBoardName, setDashBoardName] = useState('')
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const { dbUser } = useContext(userContext)
   const { user, error, isLoading } = useUser();
@@ -263,6 +265,14 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
        : selectBoard(null, boards[index]._id, boards[index], index)
   }
 
+  const handlePicClick = (event) => {
+      setAnchorEl(event.currentTarget);
+  }
+
+  const handleLogout = () => {
+    router.push("/api/auth/logout")
+  }
+
 
   return (
     <Box >
@@ -344,12 +354,31 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
               >
                 <MenuIcon sx={{ color: '#45818e' }} />
               </IconButton>
-              {user ?
-                <Button>
-                  <Avatar src={user.picture}></Avatar>
-                </Button>
-                : <a href="/api/auth/login" className='sign_btn'>Sign up</a>
-              }
+              {user ?    
+               <div>
+               <Button onClick={(e)=>handlePicClick(e)}>
+                 <Avatar src={user.picture}></Avatar>
+               </Button>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={() => { setAnchorEl(null) }}
+                  >
+                    <div>{user.email}</div>
+                    <div className='horizonLine'></div>
+                    <div ><a href="/api/auth/logout" style={{
+                      textDecoration: 'none',
+                      color: 'black',
+                      display : 'flex',
+                      justifyContent: 'space-between',
+                      '&:hover': {
+                        opacity : 5
+                      }
+                    }}>Log out <LogoutOutlinedIcon /></a> </div>
+                  </Menu>
+             </div>
+                 : <a href="/api/auth/login" className='sign_btn'>Sign up</a>
+                }
             </Grid>
           </Grid>
         </Toolbar>

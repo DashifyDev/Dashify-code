@@ -73,3 +73,18 @@ a:focus {
     color: #63899e;
 }
 
+.css-6hp17o-MuiList-root-MuiMenu-list {
+    list-style: none;
+    margin: 8px;
+    padding: 8px;
+    position: relative;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    outline: 0;
+}
+
+.horizonLine{
+    border-bottom: 1px solid black;
+    margin : 10px 0px
+}
+

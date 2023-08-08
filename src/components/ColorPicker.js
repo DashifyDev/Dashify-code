@@ -17,7 +17,7 @@ class ColorPicker extends React.Component {
       b: '19',
       a: '1',
     },
-    selectedHex : null
+    selectedHex : this.props.colorBackground
   };
 
   handleClick = () => {

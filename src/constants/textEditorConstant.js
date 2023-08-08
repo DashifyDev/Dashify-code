@@ -3,7 +3,7 @@ export const colors = [
     ['#ccc', '#dedede', 'SlateGray', 'BurlyWood', 'RoyalBlue', 'SaddleBrown'],
     ['#FF00FF','#00FFFF', '#FFA500','#800080', '#A52A2A',  '#008080'],     
     ['#808080', '#FFC0CB', '#F0E68C', '#FFD700', '#D2691E',  '#2E8B57'],
-    [ "#89d534", "#d36647",  '#FF4500', '#BDB76B', '#4682B4', '#FF69B4'], 
+    [ "#89d534", "#d36647",  '#FF4500', '#BDB76B', '#434343', '#FF69B4'], 
     [ '#556B2F', '#1E90FF', '#DB7093', '#20B2AA', '#9932CC', '#3CB371'],
 ]
 
