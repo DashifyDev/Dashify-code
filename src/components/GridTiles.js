@@ -355,10 +355,16 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
   
   const handleDragStop = (e, data, tile, index) => {
-      const { x, y } = data;
+      let { x, y } = data;
       e.preventDefault();
       let items = [...tileCordinates];
       let tileId = tileCordinates[index]._id
+      if(x<0){
+        x=0
+      }
+      if(y<0){
+        y=0
+      }
       let toUpdate = {
         x: x,
         y: y
@@ -635,10 +641,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     }
   }
 
-  const handleDrag = (e, data) => {
-
-
-  };
 
 
   return (
@@ -660,8 +662,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               onResize={(e, direction, ref, delta, position) =>
                 onResize(index, e,direction, ref, delta, position)
               }
-              //bounds={{left : 0}}
-              onDrag={(e,d)=>handleDrag(e,d)}
               id={tile._id}
               onResizeStart={()=>setResizeCount(0)}
               dragGrid={[5,5]}

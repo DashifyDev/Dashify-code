@@ -364,20 +364,18 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                     open={Boolean(anchorEl)}
                     onClose={() => { setAnchorEl(null) }}
                   >
-                    <div>{user.email}</div>
+                    <div className='email'>{user.email}</div>
                     <div className='horizonLine'></div>
-                    <div ><a href="/api/auth/logout" style={{
-                      textDecoration: 'none',
-                      color: 'black',
-                      display : 'flex',
-                      justifyContent: 'space-between',
-                      '&:hover': {
-                        opacity : 5
-                      }
-                    }}>Log out <LogoutOutlinedIcon /></a> </div>
+                    <div className='logout' >
+                      <a href="/api/auth/logout" >Log out</a> 
+                    </div>
                   </Menu>
              </div>
-                 : <a href="/api/auth/login" className='sign_btn'>Sign up</a>
+                 : 
+                <div>
+                  <a href="/api/auth/login" className='sign_btn'>Sign up</a>
+                  <a href="/api/auth/login"className='login_btn'>Login</a>
+                </div>
                 }
             </Grid>
           </Grid>

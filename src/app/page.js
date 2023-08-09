@@ -7,6 +7,7 @@ import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from "react";
 import WarningPrompt from "@/components/WarningPrompt";
+import { welcomeBoardzy } from '@/constants/defaultDashboard';
 
 export default function Home() {
   const [dbUser, setUser] = useState()
@@ -47,13 +48,16 @@ export default function Home() {
       return
     }
 
-    var data = {
-      _id : uuidv4(),
-      name: 'My Dashboard',
-      default: true,
-      tiles:[]
-    }
-    localStorage.setItem("Dasify",JSON.stringify([data]))
+    var data = [
+      welcomeBoardzy,
+      {
+        _id: uuidv4(),
+        name: 'My Dashboard',
+        default: true,
+        tiles: []
+      }
+    ]
+    localStorage.setItem("Dasify",JSON.stringify(data))
     setDefaultDashBoard(data)
   }
 
