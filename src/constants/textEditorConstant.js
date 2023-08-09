@@ -9,6 +9,6 @@ export const colors = [
 
 export const fonts = [
     "Arial","Comic Sans MS", "Courier New", "Impact","Georgia",
-    "Tahoma","Trebuchet MS","Verdana","Logical","Salesforce Sans",
+    "Tahoma","Trebuchet MS","Verdana","Monospace","Salesforce Sans",
     "Garamond","Sans-Serif","Serif","Times New Roman","Helvetica",
 ].sort()
