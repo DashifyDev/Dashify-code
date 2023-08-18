@@ -1,8 +1,18 @@
+"use client";
+'use strict'
 import { Drawer, ListItem, ListItemText,List } from '@mui/material'
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 function SideDrawer({open , close ,user}) {
+
+  const router = useRouter()
+
+  const reDirectToInfo = () => {
+    router.push('/info')
+  }
+  
   return (
     <div className='appDrawer'>
       <Drawer anchor="right" open={open} onClose={close}
@@ -28,6 +38,9 @@ function SideDrawer({open , close ,user}) {
           </ListItem>
           <ListItem button>
             <ListItemText primary="Contact Us" />
+          </ListItem>
+          <ListItem button onClick={() => reDirectToInfo()}>
+            <ListItemText primary="Info"/>
           </ListItem>
         </List>
       </Drawer>
