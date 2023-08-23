@@ -12,7 +12,7 @@ import FormControl from '@mui/material/FormControl';
 import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import ColorPicker from './ColorPicker';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { Dialog, Button} from '@mui/material';
+import { Dialog, Button, DialogContent, DialogActions} from '@mui/material';
 import TextEditor from './TextEditor';
 import axios from 'axios';
 import { userContext } from '@/context/userContext';
@@ -43,6 +43,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [minHeightWidth, setMinHeightWidth] = useState([]);
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
+  const [editorOpen, setEditorOpen] = useState(false)
 
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
@@ -75,9 +76,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     }
   }
 
-  const enterText = (e) => {
+  const enterText = (value) => {
+    setSelectedTileDetail({...selectedTileDetail, tileText : value})
     const values = formValue
-    values.tileText = e
+    values.tileText = value
     setFormValue(values)
   }
   const enterLink = (e) => {
@@ -243,13 +245,15 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
   const changedTitlehandle = (index,tile) => {
     let tileText = tileCordinates[index].tileText
-    let content
+    let content = tileText
     if(tileText){
       const parser = new DOMParser();
       const doc = parser.parseFromString(tileText, 'text/html');
-      content = doc.getElementsByTagName('div')[0].innerText;
+      if(tileText === '<div><br></div>'){
+        content = ''
+      }
     }
-    const titleVal = content && tile.displayTitle ? tileText : !content && tile.displayTitle ? " New Tile" : ''
+    const titleVal = content && tile.displayTitle ? tileText : !content && tile.displayTitle ? " New Tile" : 'New Tile'
     return titleVal
   }
 
@@ -642,7 +646,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   }
 
 
-
   return (
     <div className="main_grid_container">
       <div className="tiles_container">
@@ -755,24 +758,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
             <li>
               <h3 className='menu_header'>Tile Title</h3>
               <div className='title_editor'>
-                <SunEditor
-                  value={formValue.tileText}
-                  defaultValue={selectedTileDetail.tileText}
-                  onChange={enterText}
-                  setOptions={{
-                    buttonList: [
-                      [ "bold","underline","italic"],
-                      ["font", "fontSize"],
-                      ["fontColor"],
-                    ],
-                    defaultTag: "div",
-                    font: fonts,
-                    colorList: colors,
-                    showPathLabel: false,
-                  }}
-                  width='100%'
-                  setDefaultStyle= "font-size : Times New Roman"
-                />
+                <button onClick={()=> setEditorOpen(true)}>Open Tile Title Editor</button>
                 <div className='display_title'>
                   <div className='display_title_check'>
                     <input
@@ -829,6 +815,48 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
           </div>
         </div>
       </Dialog>
+
+
+      <Dialog open={editorOpen}>
+          <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}>
+              <SunEditor 
+                value={formValue.tileText}
+                defaultValue={selectedTileDetail.tileText}
+                onChange={enterText} 
+                setOptions={{
+                  buttonList: [
+                    ["undo", "redo"],
+                    [
+                      "bold", "underline", "italic",
+                      "strike", "subscript", "superscript",
+                    ],
+                    ["formatBlock"],
+                    ["removeFormat"],
+                    ["fontColor", "hiliteColor"],
+                    ["lineHeight"],
+                    ["font", "fontSize"],
+                    ["align", "list"],
+                    ["outdent", "indent"],
+        
+                    ["table", "horizontalRule", "link"],
+                    ['paragraphStyle', 'blockquote'],
+                  ],
+                  defaultTag: "div",
+                  colorList :colors,
+                  minHeight: "370px",
+                  maxHeight : "370px",
+                  showPathLabel: false,
+                  font: fonts
+                }}
+                width = "100%"
+              />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditorOpen(false)}>close</Button>
+          </DialogActions>
+      </Dialog>
+
+
       <TextEditor open={openTextEditor}
         onClose={handleCloseTextEditor}
         content={textEditorContent}
