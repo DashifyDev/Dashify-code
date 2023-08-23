@@ -8,18 +8,23 @@ function Info() {
       <div className='wlcm_boardzy'>
         <div className='wlcm_boardzyContant'>
           <h2>Welcome to Boardzy!</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
+          <ul className='wlcm-boardzyContant-listStyle'>
+            <li>A place to organize.</li>
+            <li>To show who you are.</li>
+            <li>To track what you do.</li>
+            <li>To focus.</li>
+          </ul>
+          <h5>A place to create your own boardzy</h5>
         </div>
       </div>
       <div className='about_boardzy'>
         <div className='about_boardzyContant'>
-          <h2>What is Boardzy?</h2>
+          <h2 className='section-heading'>What is Boardzy?</h2>
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-            quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          Boardzy is an app for creating “dashboards”.
+          </p>
+          <p>
+          Dashboards centralize ideas & info. With Boardzy, create beautiful dashboards for your life, work, project, hobby, interests, ideas, lists, brainstorms, notes, etc.
           </p>
         </div>
         <div className='board_image'>
@@ -30,21 +35,30 @@ function Info() {
 
         </div>
         <div className='use_boardzyContant'>
-          <h2>How to use Boardzy</h2>
+          <h2 className='section-heading'>How to use Boardzy</h2>
           <p>
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-            sunt in culpa qui officia deserunt mollit anim id est laborum.
+          Check out the Library to make some of our examples your own.
           </p>
+          <p>
+          Or create a new board from scratch:
+          </p>
+          <ol type='number'>
+            <li>
+            Create +New Dashboard
+            </li>
+<li>Add Tiles.</li>
+<li>Dress Tiles with Image or Colors</li>
+<li>Clicking Tiles opens Text Editor or Link. </li>
+
+          </ol>
         </div>
       </div>
       <div className='checkout_templates'>
         <div className='checkout_templatesContant'>
-          <h2>Check out the Templates</h2>
+          <h2 className='section-heading'>Browse Boards</h2>
           <p>
-            Click below to browse our pre-made Boardzy boards!
+          Click here to check out our collection of pre-made boards.
           </p>
-        </div>
         <ul className='checkout_templatesLink'>
           <li>
             <a href='#'><ChevronRightOutlinedIcon/>Welcome Boardzy</a>
@@ -56,6 +70,21 @@ function Info() {
             <a href='#'><ChevronRightOutlinedIcon/>Kidz Boards</a>
           </li>
         </ul>
+        </div>
+        <img className='checkout-template-image'></img>
+      </div>
+      
+      <div className='dashboard_Life'>
+        
+        <div className='dashboard-image'></div>
+        <div className='dashboard_LifeContant'>
+          <h2 className='section-heading'>Also: ‘Dashboard Your Life’</h2>
+          <p>
+          Looking for a framework to help organize life?
+            </p>
+             <p>Check out the <b>‘DYL’ Framework.</b></p>
+        </div>
+
       </div>
       <div className='contact_us'>
         <div className='contact_usContant'>
@@ -65,16 +94,6 @@ function Info() {
             Submit New Feature Ideas: 
             <a href='https://boardzy.canny.io/boardzy-feature-requests' target='_blank'>Boardzy Feature Requests</a>
           </p>
-        </div>
-      </div>
-      <div className='dashboard_Life'>
-        <div className='dashboard_LifeContant'>
-          <h2>Also: ‘Dashboard Your Life’</h2>
-          <p>
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu 
-             fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-             sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
         </div>
       </div>
     </div>
