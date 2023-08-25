@@ -1,9 +1,7 @@
 .main_grid_container{
     display: inline-block;
-    text-align: left;
-    float: left;
-    width:99%;
-    height: calc(100vh - 75px)
+    width : 100%
+   
 }
 .tiles_container {
     display: inline-block;
@@ -105,6 +103,19 @@
     flex-direction: column;
     padding-top: 20px;
 }
+
+.title_editor button{
+    color: #63899e;
+    max-inline-size: max-content;
+    align-self: center;
+    height: 30px;
+    font-size: medium;
+    padding: 5px 30px;
+    background: #fff;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
 .title_editor .display_title {
     display: flex;
     justify-content: space-between;

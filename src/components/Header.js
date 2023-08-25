@@ -1,4 +1,4 @@
-import {useState, React, useContext , useEffect, use} from 'react'
+import {useState, React, useContext , useEffect, use, useRef} from 'react'
 import AddSharpIcon from '@mui/icons-material/AddSharp';
 import {  AppBar,  Toolbar,  Grid, Typography, Box, List , ListItem,ListItemText,
   Dialog, DialogTitle ,DialogContent, DialogActions, CardMedia } from '@mui/material';
@@ -15,8 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 import '../styles/header.css'
 import logo from "../assets/logo.png";
 import Image from 'next/image';
-import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
                   boards, setBoards, updateTilesInLocalstorage}) {
@@ -31,6 +31,33 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
 
   const { dbUser } = useContext(userContext)
   const { user, error, isLoading } = useUser();
+  const divRef = useRef(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+
+  useEffect(() => {
+    const divElement = divRef.current.ref.current;
+    console.log(divElement);
+    if (divElement) {
+      if (divElement.scrollWidth > divElement.clientWidth) {
+        setIsOverflowing(true);
+      } else {
+        setIsOverflowing(false);
+      }
+    }
+  }, [boards]);
+
+  const handleScroll = (direction) => {
+    const divElement = divRef.current.ref.current;
+
+    if (divElement) {
+      if (direction === 'left') {
+        divElement.scrollLeft -= 100; 
+      } else if (direction === 'right') {
+        divElement.scrollLeft += 100; 
+      }
+    }
+  };
 
   useEffect(() => {
     if(defaultDashboard){
@@ -290,7 +317,13 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
               </div>
               <div className = "vertical"></div>
               <div className='board_nav'>
+              {isOverflowing && (
+                  <div className="scroll-buttons">
+                    <button onClick={() => handleScroll('left')}><ArrowLeftIcon/></button>
+                  </div>
+                )}
                 <ReactSortable
+                  ref={divRef}
                   filter=".dashboard_btn"
                   dragClass="sortableDrag"
                   list={boards}
@@ -329,6 +362,11 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                     )
                   })}
                 </ReactSortable>
+                {isOverflowing && (
+                  <div className="scroll-buttons">
+                    <button onClick={() => handleScroll('right')}><ArrowRightIcon/></button>
+                  </div>
+                )}
 
                 <Button className='dashboard_btn' sx={{ p: '11px' }} onClick={() => {
                   setShowDashboardModel(true);

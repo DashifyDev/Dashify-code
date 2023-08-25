@@ -42,8 +42,18 @@
 .dashboard_drag {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    text-wrap: nowrap;
+    overflow-x: hidden;
+    max-width: 900px;
 }
+.scroll-buttons button{
+    height: 47px;
+    border: none;
+    padding: 0;
+    background: rgba(0,0,0,0.2);
+    color: #fff
+}
+
 a.sign_btn {
     background: #63899e;
     color: #fff;
@@ -116,4 +126,11 @@ a:focus {
 .logout a{
     text-decoration: none;
     color: #63899e;
+}
+
+@media screen and (max-width : 600px) {
+    .dashboard_drag {
+        max-width : 500px
+    }
+
 }
