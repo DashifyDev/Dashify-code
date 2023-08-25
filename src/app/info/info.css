@@ -35,14 +35,16 @@
 .about_boardzy{
     display: flex;
     padding: 50px 50px 0px;
+    gap:8rem;
 }
-.board_image{
+.board_image {
     background-image: url('../../assets/whatBoard.jpg');
-    background-size: cover;
-    background-position: center;
+    background-size: contain;
+    /* background-position: center; */
     background-repeat: no-repeat;
-    height: 400px;
-    width: 150%;
+    height: 350px;
+    width: 76%;
+    /* flex-grow: 1; */
 }
 .about_boardzyContant{
     display: flex;
@@ -50,20 +52,21 @@
     flex-direction: column;
     text-align: right;
     /* background: lavender; */
-    padding: 50px;
+    /* padding: 50px; */
 }
 
 .use_boardzy{
     display: flex;
     padding: 50px 50px 0px;
+    gap: 7rem;
 }
-.use_image{
-    background-image: url('../../assets/utf.jpg');
-    background-size: cover;
+.use_image {
+    background-image: url("../../assets/decorativeWall.jpg");
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    /* height: 430px; */
-    width: 50%;
+    height: 359px;
+    width: 40%;
 }
 .use_boardzyContant {
     display: flex;
@@ -71,12 +74,22 @@
     flex-direction: column;
     text-align: left;
     /* background: aliceblue; */
-    padding: 50px;
+    /* padding: 0px 50px; */
 }
-
+.use_boardzyContant h2{
+    margin-bottom: 0px;
+}
+.use_boardzyContant p{
+    margin-bottom: 0px;
+}
+.use_boardzyContant ol{
+    font-size: small;
+}
 .checkout_templates {
     display: flex;
     padding: 50px 50px 0px;
+    gap:7rem;
+    justify-content: space-around;
 }
 
 .checkout_templatesContant {
@@ -93,13 +106,13 @@
     width: 100%;
     justify-content: space-evenly;
 }
-.checkout-template-image{
-    background-image: url('../../assets/museum.jpg');
+.checkout-template-image {
+    background-image: url('../../assets/clientImage.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    height: 400px;
-    width: 55%;
+    height: 354px;
+    width: 40%;
 }
 
 .checkout_templates li a {
@@ -121,22 +134,108 @@
     text-align: right;
     /* background: seashell; */
     display: flex;
+    gap:8rem
 }
-.dashboard-image{
-    background-image: url('../../assets/dashboardLife.jpg');
-    background-size: cover;
+.dashboard-image {
+    background-image: url("../../assets/dashboardLife.jpg");
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    height: 400px;
-    width: 55%;
-    
+    height: 350px;
+    width: 40%;
+    /* flex-grow: 1; */
 }
 .dashboard_LifeContant{
     
-        padding: 50px;
+        padding: 50px 0px;
         display: flex;
         flex-direction: column;
         text-align: left;
     
+}
+@media screen and (max-width: 600px)  {
+    .wlcm_boardzy {
+        height: 390px;
+        font-size: 17px;
+        padding: 20px;
+    }
+
+    .wlcm-boardzyContant-listStyle{
+        font-size: medium;
+        padding-left: 10px;
+    }
+
+    .use_image {
+        /* background-image: url(/_next/static/media/decorativeWall.5f04cc11.jpg); */
+        height: 220px;
+        width: 100%;
+        background-size: cover;
+        background-position: center;
+    }
+    .board_image {
+        width: 100%;
+        height: 220px;
+        background-size: cover;
+        background-position: center;
+    }
+    .about_boardzy{
+        gap:0rem;
+        flex-direction: column;
+        padding: 30px 30px 0px;
+    }
+    .about_boardzyContant{
+        padding: 20px;
+        text-align: left;
+    }
+    .use_boardzy{
+        flex-direction: column-reverse;
+        padding: 30px 30px 0px;
+        gap:0rem;
+
+    }
+    .checkout_templates{
+        flex-direction: column;
+        padding: 30px 30px 0px;
+        gap:0rem
+    }
+    .checkout-template-image{
+        width: 100%;
+        height: 220px;
+    }
+    .dashboard-image {
+        width: 100%;
+        height: 220px;
+        background-size: cover;
+        background-position: center;
+    }
+    .dashboard_Life{
+        flex-direction: column-reverse;
+        padding: 30px 30px 30px;
+        gap:0rem
+    }
+    .use_boardzyContant{
+        padding: 10px;
+    }
+    .checkout_templatesContant{
+        padding: 20px;
+        align-items: center;
+        text-align: left;
+    }
+    .checkout_templatesLink{
+        padding-left: 0px;
+    }
+    .dashboard_LifeContant{
+        padding: 20px;
+
+    }
+    .section-heading{
+        font-size: x-large;
+        margin-bottom: auto;
+        text-align: center;
+    }
+    .contact_us{
+      padding: 35px;
+      font-size: medium;  
+    }
 }
 
