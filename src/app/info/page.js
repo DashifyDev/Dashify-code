@@ -1,11 +1,33 @@
 "use client";
 import './info.css'
 import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
+import { useSearchParams, useRouter} from 'next/navigation';
+import { useEffect } from 'react';
+import Image from 'next/image';
+import logo from '../../assets/whiteLogo.png'
+
 
 function Info() {
+  const searchParmas = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    let section = searchParmas.get('sectionId')
+    if (section) {
+      const sectionElement = document.getElementById(section);
+      if (sectionElement) {
+        sectionElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, []);
+
+
   return (
     <div className='information'>
-      <div className='wlcm_boardzy'>
+      <section className='wlcm_boardzy' id='1qw'>
+        <div className='boardzy_logo'>
+          <Image src={logo} alt='image' onClick={()=>router.push('/')}/>
+        </div>
         <div className='wlcm_boardzyContant'>
           <h2>Welcome to Boardzy!</h2>
           <ul className='wlcm-boardzyContant-listStyle'>
@@ -16,8 +38,8 @@ function Info() {
           </ul>
           <h5>A place to create your own boardzy</h5>
         </div>
-      </div>
-      <div className='about_boardzy'>
+      </section>
+      <section className='about_boardzy'  id='2qw'>
         <div className='about_boardzyContant'>
           <h2 className='section-heading'>What is Boardzy?</h2>
           <p>
@@ -29,8 +51,8 @@ function Info() {
         </div>
         <div className='board_image'>
         </div>
-      </div>
-      <div className='use_boardzy'>
+      </section>
+      <section className='use_boardzy' id='3qw'>
         <div className='use_image'>
 
         </div>
@@ -44,16 +66,16 @@ function Info() {
           </p>
           <ol type='number'>
             <li>
-            Create +New Dashboard
+              Create +New Dashboard
             </li>
-<li>Add Tiles.</li>
-<li>Dress Tiles with Image or Colors</li>
-<li>Clicking Tiles opens Text Editor or Link. </li>
+            <li>Add Tiles.</li>
+            <li>Dress Tiles with Image or Colors</li>
+            <li>Clicking Tiles opens Text Editor or Link. </li>
 
           </ol>
         </div>
-      </div>
-      <div className='checkout_templates'>
+      </section>
+      <section className='checkout_templates' id='4qw'>
         <div className='checkout_templatesContant'>
           <h2 className='section-heading'>Browse Boards</h2>
           <p>
@@ -72,9 +94,9 @@ function Info() {
         </ul>
         </div>
         <img className='checkout-template-image'></img>
-      </div>
+      </section>
       
-      <div className='dashboard_Life'>
+      <section className='dashboard_Life' id='5qw'>
         
         <div className='dashboard-image'></div>
         <div className='dashboard_LifeContant'>
@@ -85,8 +107,8 @@ function Info() {
              <p>Check out the <b>‘DYL’ Framework.</b></p>
         </div>
 
-      </div>
-      <div className='contact_us'>
+      </section>
+      <section className='contact_us' id='6qw'>
         <div className='contact_usContant'>
           <h2>Contact Us</h2>
           <p>
@@ -95,7 +117,7 @@ function Info() {
             <a href='https://boardzy.canny.io/boardzy-feature-requests' target='_blank'>Boardzy Feature Requests</a>
           </p>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

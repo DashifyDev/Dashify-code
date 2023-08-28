@@ -19,26 +19,36 @@
     background-position: center;
     background-repeat: no-repeat;
     height: 570px;
-    display: flex;
-    /* justify-content: center; */
-    align-items: center;
     font-size: 30px;
     padding: 50px;
     color: #fff;
     background-color: #63899e;
 }
 
+.boardzy_logo {
+    display: flex;
+    justify-content: end;
+}
+
+.boardzy_logo img {
+    color: transparent;
+    width: 250px;
+    height: 60px;
+    cursor: pointer;
+}
+
 .wlcm_boardzy h2{
     color: #fff;
+    margin-top: 0;
 }
 
 .about_boardzy{
     display: flex;
-    padding: 50px 50px 0px;
+    padding: 110px 50px 0px;
     gap:8rem;
 }
 .board_image {
-    background-image: url('../../assets/whatBoard.jpg');
+    background-image: url('../../assets/What\ is\ Boardzy.jpg');
     background-size: contain;
     /* background-position: center; */
     background-repeat: no-repeat;
@@ -57,11 +67,11 @@
 
 .use_boardzy{
     display: flex;
-    padding: 50px 50px 0px;
+    padding: 110px 50px 0px;
     gap: 7rem;
 }
 .use_image {
-    background-image: url("../../assets/decorativeWall.jpg");
+    background-image: url("../../assets/How\ to\ use\ Boardzy.jpg");
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -87,7 +97,7 @@
 }
 .checkout_templates {
     display: flex;
-    padding: 50px 50px 0px;
+    padding: 110px 50px 0px;
     gap:7rem;
     justify-content: space-around;
 }
@@ -107,7 +117,7 @@
     justify-content: space-evenly;
 }
 .checkout-template-image {
-    background-image: url('../../assets/clientImage.png');
+    background-image: url('../../assets/Browse\ Boards.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -130,14 +140,14 @@
 }
 
 .dashboard_Life{
-    padding: 50px;
+    padding: 110px 50px;
     text-align: right;
     /* background: seashell; */
     display: flex;
     gap:8rem
 }
 .dashboard-image {
-    background-image: url("../../assets/dashboardLife.jpg");
+    background-image: url("../../assets/dasbhoard\ your\ life.jpg");
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;

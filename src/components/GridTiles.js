@@ -253,7 +253,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
         content = ''
       }
     }
-    const titleVal = content && tile.displayTitle ? tileText : !content && tile.displayTitle ? " New Tile" : 'New Tile'
+    const titleVal = content && tile.displayTitle ? tileText : !content && tile.displayTitle ? " New Tile" : ''
     return titleVal
   }
 
