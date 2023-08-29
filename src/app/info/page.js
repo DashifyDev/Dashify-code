@@ -93,7 +93,7 @@ function Info() {
           </li>
         </ul>
         </div>
-        <img className='checkout-template-image'></img>
+        <div className='checkout-template-image'></div>
       </section>
       
       <section className='dashboard_Life' id='5qw'>

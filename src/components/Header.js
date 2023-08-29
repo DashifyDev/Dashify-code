@@ -15,8 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 import '../styles/header.css'
 import logo from "../assets/logo.png";
 import Image from 'next/image';
-import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import leftArrow from "../assets/leftArrow1.svg"
+import rightArrow from "../assets/rightArrow.svg"
 
 function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
                   boards, setBoards, updateTilesInLocalstorage}) {
@@ -37,7 +37,6 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
 
   useEffect(() => {
     const divElement = divRef.current.ref.current;
-    console.log(divElement);
     if (divElement) {
       if (divElement.scrollWidth > divElement.clientWidth) {
         setIsOverflowing(true);
@@ -302,26 +301,31 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
 
 
   return (
-    <Box >
-      <AppBar position="relative" color='transparent' 
-        sx={{ 
-          zIndex: (theme) => {return theme.zIndex.drawer + 1} ,
-          backgroundColor: '#FFFFFF',
-          }}>
-        <CssBaseline/>
+    <Box>
+      <AppBar
+        position="relative"
+        color="transparent"
+        sx={{
+          zIndex: (theme) => {
+            return theme.zIndex.drawer + 1;
+          },
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        <CssBaseline />
         <Toolbar>
-          <Grid container display='flex' justifyContent='space-between'>
-            <Grid item className='left_content'>
+          <Grid container display="flex" justifyContent="space-between">
+            <Grid item className="left_content">
               <div className="add_tiles" onClick={addTiles}>
                 <AddSharpIcon />
               </div>
-              <div className = "vertical"></div>
-              <div className='board_nav'>
-              {isOverflowing && (
+              <div className="vertical"></div>
+              <div className="board_nav">
+                {/* {isOverflowing && (
                   <div className="scroll-buttons">
                     <button onClick={() => handleScroll('left')}><ArrowLeftIcon/></button>
                   </div>
-                )}
+                )} */}
                 <ReactSortable
                   ref={divRef}
                   filter=".dashboard_btn"
@@ -330,59 +334,84 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                   setList={(list) => setBoardPosition(list)}
                   animation="200"
                   easing="ease-out"
-                  className='dashboard_drag'>
+                  className="dashboard_drag"
+                >
                   {boards.map((board, index) => {
                     return (
                       <List key={board._id}>
-                        <ListItem button
+                        <ListItem
+                          button
                           onMouseEnter={() => setShowIcon(board._id)}
                           onMouseLeave={() => setShowIcon(null)}
-                          onClick={(e) => { selectBoard(e, board._id, board, index) }}
+                          onClick={(e) => {
+                            selectBoard(e, board._id, board, index);
+                          }}
                           onTouchStart={(e) => {
                             if (isDblTouchTap(e)) {
-                              selectBoard(e, board._id, board, index)
+                              selectBoard(e, board._id, board, index);
                             }
-                          }} >
-                          <ListItemText primary={board.name}
+                          }}
+                        >
+                          <ListItemText
+                            primary={board.name}
                             primaryTypographyProps={{
-                              style: { fontWeight: board._id === activeBoard ? 'bold' : 'normal' },
+                              style: {
+                                fontWeight:
+                                  board._id === activeBoard ? "bold" : "normal",
+                              },
                             }}
                           />
-                          {(showIcon === board._id && !board.default && board._id !== activeBoard) &&
-                            <span className="cross"
-                              onClick={() => {
-                                setOpenDashDeleteModel(true),
-                                setSelectedDashboard(board._id)
-                                setSelectedDashIndex(index)
-                              }}>
-                              x
-                            </span>}
+                          {showIcon === board._id &&
+                            !board.default &&
+                            board._id !== activeBoard && (
+                              <span
+                                className="cross"
+                                onClick={() => {
+                                  setOpenDashDeleteModel(true),
+                                    setSelectedDashboard(board._id);
+                                  setSelectedDashIndex(index);
+                                }}
+                              >
+                                x
+                              </span>
+                            )}
                         </ListItem>
                       </List>
-                    )
+                    );
                   })}
                 </ReactSortable>
                 {isOverflowing && (
-                  <div className="scroll-buttons">
-                    <button onClick={() => handleScroll('right')}><ArrowRightIcon/></button>
+                  <div className="scroll-bar">
+                    <div className="vertical"></div>
+                    <div className="scroll-buttons">
+                      <Image
+                        src={leftArrow}
+                        onClick={() => handleScroll("left")}
+                      />
+                      <Image
+                        src={rightArrow}
+                        onClick={() => handleScroll("right")}
+                      />
+                    </div>
+                    <div className="vertical"></div>
                   </div>
                 )}
 
-                <Button className='dashboard_btn' sx={{ p: '11px' }} onClick={() => {
-                  setShowDashboardModel(true);
-                  setSelectedDashboard(null);
-                  setDashBoardName('')
-                }}>+ New</Button>
+                <Button
+                  className="dashboard_btn"
+                  sx={{ p: "11px" }}
+                  onClick={() => {
+                    setShowDashboardModel(true);
+                    setSelectedDashboard(null);
+                    setDashBoardName("");
+                  }}
+                >
+                  + New
+                </Button>
               </div>
-
-              
             </Grid>
-            <Grid item className='right_header'>
-              <Image 
-                className='logo'
-                src={logo}
-                alt="logo"
-              />
+            <Grid item className="right_header">
+              <Image className="logo" src={logo} alt="logo" />
               <IconButton
                 size="large"
                 edge="end"
@@ -390,100 +419,135 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                 aria-label="menu"
                 onClick={toggleDrawer}
               >
-                <MenuIcon sx={{ color: '#45818e' }} />
+                <MenuIcon sx={{ color: "#45818e" }} />
               </IconButton>
-              {user ?    
-               <div>
-               <Button onClick={(e)=>handlePicClick(e)}>
-                 <Avatar src={user.picture}></Avatar>
-               </Button>
+              {user ? (
+                <div>
+                  <Button onClick={(e) => handlePicClick(e)}>
+                    <Avatar src={user.picture}></Avatar>
+                  </Button>
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
-                    onClose={() => { setAnchorEl(null) }}
+                    onClose={() => {
+                      setAnchorEl(null);
+                    }}
                   >
-                    <div className='email'>{user.email}</div>
-                    <div className='horizonLine'></div>
-                    <div className='logout' >
-                      <a href="/api/auth/logout" >Log out</a> 
+                    <div className="email">{user.email}</div>
+                    <div className="horizonLine"></div>
+                    <div className="logout">
+                      <a href="/api/auth/logout">Log out</a>
                     </div>
                   </Menu>
-             </div>
-                 : 
-                <div>
-                  <a href="/api/auth/login" className='sign_btn'>Sign up</a>
-                  <a href="/api/auth/login"className='login_btn'>Login</a>
                 </div>
-                }
+              ) : (
+                <div>
+                  <a href="/api/auth/login" className="sign_btn">
+                    Sign up
+                  </a>
+                  <a href="/api/auth/login" className="login_btn">
+                    Login
+                  </a>
+                </div>
+              )}
             </Grid>
           </Grid>
         </Toolbar>
       </AppBar>
-      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={user}/>
+      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={user} />
 
       {/* Delete DashBoard Model */}
-      <Dialog open={openDashDeleteModel} className='model'>
+      <Dialog open={openDashDeleteModel} className="model">
         <DialogTitle sx={{ width: "270px" }}>
           Are you sure you want to delete?
         </DialogTitle>
         <DialogActions>
-          <Button className='button_cancel'
-          sx={{ color: '#63899e' }}
-           onClick={() => { 
-            setOpenDashDeleteModel(false), 
-            setSelectedDashIndex(null) }}>
-              Cancel
+          <Button
+            className="button_cancel"
+            sx={{ color: "#63899e" }}
+            onClick={() => {
+              setOpenDashDeleteModel(false), setSelectedDashIndex(null);
+            }}
+          >
+            Cancel
           </Button>
-          <Button className='button_filled'
-            sx={{ 
-              background: '#63899e',
-              color: '#fff',
-              '&:hover': {
-                backgroundColor: '#63899e',
-              }
-            }}  
-            onClick={() => { deleteDashboard(selectedDashboard, selectedDashIndex) }}>
+          <Button
+            className="button_filled"
+            sx={{
+              background: "#63899e",
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "#63899e",
+              },
+            }}
+            onClick={() => {
+              deleteDashboard(selectedDashboard, selectedDashIndex);
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-        {/* DashBoard Model */}
-        <Dialog open={showDeshboardModel}  >
-          <DialogTitle>{selectedDashboard ?'Update Dashboard' :'Add Dashboard'}</DialogTitle>
-          <DialogContent sx={{width:"300px"}}>
-          <input type="text"
+      {/* DashBoard Model */}
+      <Dialog open={showDeshboardModel}>
+        <DialogTitle>
+          {selectedDashboard ? "Update Dashboard" : "Add Dashboard"}
+        </DialogTitle>
+        <DialogContent sx={{ width: "300px" }}>
+          <input
+            type="text"
             value={dashBoardName}
-            placeholder='Enter Dashboard Name'
+            placeholder="Enter Dashboard Name"
             onChange={changeDashboardName}
-            style={{ height:'40px', width:'100%'}}
+            style={{ height: "40px", width: "100%" }}
           />
-        </DialogContent> 
+        </DialogContent>
         <DialogActions>
-          <Button className='button_cancel' sx={{ color: '#63899e' }}
-           onClick={()=> setShowDashboardModel(false)}>Cancel</Button>
-         { selectedDashboard 
-            ? <Button className='button_filled'
+          <Button
+            className="button_cancel"
+            sx={{ color: "#63899e" }}
+            onClick={() => setShowDashboardModel(false)}
+          >
+            Cancel
+          </Button>
+          {selectedDashboard ? (
+            <Button
+              className="button_filled"
               sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': {
-                  backgroundColor: '#63899e',
-                }
-              }} onClick={()=>{updatedDashBoard()}} >Save</Button>
-            : <Button className='button_filled'
+                background: "#63899e",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#63899e",
+                },
+              }}
+              onClick={() => {
+                updatedDashBoard();
+              }}
+            >
+              Save
+            </Button>
+          ) : (
+            <Button
+              className="button_filled"
               sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': {
-                  backgroundColor: '#63899e',
-                }
-              }}  
-            onClick={()=>{addBoard()}}>Save</Button>}
+                background: "#63899e",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#63899e",
+                },
+              }}
+              onClick={() => {
+                addBoard();
+              }}
+            >
+              Save
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
-  )
+  );
 }
 
 export default Header

@@ -100,8 +100,8 @@
 
 .title_editor{
     display: flex;
-    flex-direction: column;
-    padding-top: 20px;
+    /* flex-direction: column; */
+    padding: 15px 0px;
 }
 
 .title_editor button{
@@ -118,22 +118,33 @@
 
 .title_editor .display_title {
     display: flex;
-    justify-content: space-between;
-    padding-top: 10px;
-    align-items: center;
+    justify-content: space-around;
+    flex-direction: column;
+    /* gap: 0.8rem; */
+    width: 200px;
+    margin-left: 15px;
 }
-.display_title_check{
+img.text-editor-image {
+    height: 70px;
+    width: 70px;
+    margin-left: 1rem;
+    cursor: pointer;
+}
+.display_title_check {
     display: flex;
-    font-size: 13px;
+    /* font-size: 13px; */
+    justify-content: flex-start;
 }
 .display_title_check input{
-    margin-right: 10px;
+    /* margin-right: 10px; */
+    margin: 0px 5px 0px 0px;
+    width: 15px;
 }
 
 .all_options ul li select{
-    margin-left: 10px;
-    width: 100px;
-    height: 30px;
+    margin-right: 10px;
+    width: 75px;
+    height: 25px;
     cursor: pointer;
     border-radius: 3px;
 } 

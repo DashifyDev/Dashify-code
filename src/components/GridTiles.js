@@ -20,7 +20,7 @@ import isDblTouchTap from '@/hooks/isDblTouchTap';
 import 'suneditor/dist/css/suneditor.min.css'; 
 import { fonts,colors } from '@/constants/textEditorConstant';
 import imageUpload from '../assets/imageUpload.jpg'
-
+import text from'../assets/text.png'
 import Image from 'next/image';
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
@@ -756,9 +756,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               </div>
             </li>
             <li>
-              <h3 className='menu_header'>Tile Title</h3>
+              <h3 className='menu_header'>Tile Text</h3>
               <div className='title_editor'>
-                <button onClick={()=> setEditorOpen(true)}>Open Tile Title Editor</button>
                 <div className='display_title'>
                   <div className='display_title_check'>
                     <input
@@ -766,7 +765,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       checked={selectedTileDetail.displayTitle}
                       onChange={displayTitle}
                     />
-                    <label>Dispaly Title</label>
+                    <label>Display Text</label>
                   </div>
                   <div className='position'>
                     <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
@@ -781,6 +780,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     </select>
                   </div>
                 </div>
+                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image'/>
+
               </div>
             </li>
           </ul>
