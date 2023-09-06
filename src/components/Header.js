@@ -19,7 +19,7 @@ import leftArrow from "../assets/leftArrow1.svg"
 import rightArrow from "../assets/rightArrow.svg"
 
 function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
-                  boards, setBoards, updateTilesInLocalstorage}) {
+                  boards, setBoards, updateTilesInLocalstorage,isAdmin}) {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [showIcon , setShowIcon] = useState(null)
   const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
@@ -81,13 +81,15 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   }, [dbUser, defaultDashboard,isLoading]);
 
   const getDataFromSession = () => {
-    let boards = JSON.parse(localStorage.getItem('Dasify'))
-    if(boards){
-      setActiveBoard(boards[0]._id)
-      setBoards(boards)
-      setTileCordinates(boards[0].tiles)
+    let boards = JSON.parse(localStorage.getItem("Dasify"));
+    if (boards) {
+      if (boards.length > 0) {
+        setActiveBoard(boards[0]._id);
+        setBoards(boards);
+        setTileCordinates(boards[0].tiles);
+      }
     }
-  }
+  };
 
 
   const toggleDrawer = () => {
@@ -169,13 +171,21 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
     setShowDashboardModel(false)
     let payload
     if(dbUser){
-      payload={
-        name: dashBoardName,
-        userId: dbUser._id
+      if (isAdmin) {
+        payload = {
+          name: dashBoardName,
+          userId: dbUser._id,
+          hasAdminAdded: true,
+        };
+      } else {
+        payload = {
+          name: dashBoardName,
+          userId: dbUser._id,
+        };
       }
-      axios.post('/api/dashboard/addDashboard', payload ).then((res)=> {
-        setBoards([...boards, res.data])
-      })  
+        axios.post("/api/dashboard/addDashboard", payload).then((res) => {
+          setBoards([...boards, res.data]);
+        });
     }
     else {
       payload={
@@ -405,6 +415,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                     setSelectedDashboard(null);
                     setDashBoardName("");
                   }}
+                  disabled={isAdmin&&boards.length==4}
                 >
                   + New
                 </Button>

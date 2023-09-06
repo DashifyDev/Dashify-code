@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useState, useEffect } from "react";
 import WarningPrompt from "@/components/WarningPrompt";
 import { welcomeBoardzy } from '@/constants/defaultDashboard';
-
+import useAdmin from '@/hooks/isAdmin';
 export default function Home() {
   const [dbUser, setUser] = useState()
   const [defaultDashboard, setDefaultDashBoard ] = useState()
@@ -16,10 +16,13 @@ export default function Home() {
   const [activeBoard, setActiveBoard] = useState('')
   const [boards, setBoards] = useState([]);
   const {user, isLoading} = useUser()
-  
+  // const [isAdmin,setIsAdmin]=useState(false)
+  const isAdmin=useAdmin()
   useEffect(()=>{
     let localData  = JSON.parse(localStorage.getItem('Dasify'))
+    
     if (user) {
+  
       axios.post('/api/manage/getUser', user).then((res) => {
         setUser(res.data)
         if(localData){
@@ -32,8 +35,7 @@ export default function Home() {
       if(!isLoading)
         createDefaultDashboard()
       }
-
-  },[user,isLoading])
+  },[user,isLoading,isAdmin])
 
   const clearSessionData = (userId, localData) => {
     axios.post('/api/manage/addGuestData', {userId : userId , localData }).then((res) => {
@@ -47,18 +49,11 @@ export default function Home() {
     if(localData){
       return
     }
+    axios.get('/api/dashboard/defaultDashboard').then(res=>{
+      localStorage.setItem("Dasify",JSON.stringify(res.data))
+    setDefaultDashBoard(res.data)
+    })
 
-    var data = [
-      welcomeBoardzy,
-      {
-        _id: uuidv4(),
-        name: 'My Dashboard',
-        default: true,
-        tiles: []
-      }
-    ]
-    localStorage.setItem("Dasify",JSON.stringify(data))
-    setDefaultDashBoard(data)
   }
 
   const updateTilesInLocalstorage= (tileArray) => {
@@ -83,6 +78,7 @@ export default function Home() {
         activeBoard = {activeBoard}
         setActiveBoard={setActiveBoard}
         updateTilesInLocalstorage={updateTilesInLocalstorage}
+        isAdmin={isAdmin}
       />
       {!user && <WarningPrompt />}
       <GridTiles 

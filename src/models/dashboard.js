@@ -36,6 +36,9 @@ const dashboardSchema = new Schema({
     },
     position : {
         type : Number
+    },
+    hasAdminAdded:{
+        type:Boolean
     }
 });
 
