@@ -44,7 +44,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
-
+  const [selectedText,setSelectedText]=useState()
   const { dbUser } = useContext(userContext)
   const hiddenFileInput = useRef(null)
 
@@ -52,6 +52,22 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   },[tileCordinates])
 
+  const handleSelectedText = () => {
+    let items = tileCordinates;
+    let tileId = items[selectedTile]._id;
+    if (dbUser) {
+      axios
+        .patch(`/api/tile/${tileId}`, { editorHeading: selectedText })
+        .then((res) => {
+          let item={...items[selectedTile],...res.data}
+          items[selectedTile]=item
+        })
+    } else {
+      items[selectedTile].editorHeading = selectedText;
+      updateTilesInLocalstorage(items);
+    }
+  };
+  
   const handleColorImage = (e) => {
     setColorImage(e.target.value)
   }
@@ -266,7 +282,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     }
     else if ((e.type === "touchstart" || e.detail == 2) && action=='textEditor') {
       let label = tile.tileText
-      setEditorLabel(label)
+      setEditorLabel(tile.editorHeading)
       setOpenTextEdior(true)
       setTextEditorContent(tileContent)
       if (isPod) {
@@ -819,10 +835,16 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
 
       <Dialog open={editorOpen}>
-          <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}>
+          <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}
+          onMouseUp={()=>{
+            let selection=window.getSelection()
+            setSelectedText(selection.toString())
+          }}>
+          
               <SunEditor 
                 value={formValue.tileText}
                 defaultValue={selectedTileDetail.tileText}
+                
                 onChange={enterText} 
                 setOptions={{
                   buttonList: [
@@ -854,6 +876,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditorOpen(false)}>close</Button>
+            <Button onClick={()=>handleSelectedText()}>Make Heading</Button>
           </DialogActions>
       </Dialog>
 

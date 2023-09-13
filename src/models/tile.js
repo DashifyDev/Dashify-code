@@ -56,6 +56,9 @@ const tileSchema = new Schema({
     titleY:{
         type : Number
     },
+    editorHeading:{
+        type: String
+    }
 
 });
 

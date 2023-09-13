@@ -1,0 +1,126 @@
+.board_library {
+    display: flex;
+}
+
+.admin_board {
+    padding: 30px;
+    width: 100%;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 30px;
+    width: 100%;
+}
+
+tr.tableHead th {
+    border: 1px solid #dddddd;
+    color: #ffff;
+    font-weight: bold;
+    background: orange;
+}
+
+td {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+}
+
+td:nth-child(1) {
+    font-weight: bold;
+}
+
+form input {
+    width: 100%;
+    height: 40px;
+}
+
+form span {
+    color: red;
+    display: block;
+    font-size: 10px;
+}
+
+.add_keyword {
+    display: flex;
+}
+
+.add_keyword button {
+    margin-left: 4px;
+    color: #fff;
+    background: #63899e;
+    border: 1px solid #434343;
+    cursor: pointer;
+}
+
+.keyword_store {
+    width: 100%;
+    margin: 10px 0px;
+    border: 1px solid black;
+    padding: 8px;
+    min-height: 100px;
+}
+
+.keyword_store span {
+    color: #434343;
+    font-size: 13px;
+}
+
+.image_dropZone {
+    border: 1px solid black;
+    padding: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+.addBoard_action {
+    display: flex;
+    justify-content: end;
+}
+
+.drop-zone {
+    height: 100px;
+    width: 300px;
+    border: 1px grey dashed;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    color: #bdbdbd;
+    padding: 1rem;
+}
+
+.image-cell {
+    width: 200px;
+    height: 100px;
+}
+
+.image-cell-style {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.modal-div-style {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.9rem;
+}
+
+.modal-input-style {
+    padding: 0.8rem 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    color: #495057;
+}
+
+.modal-input-style:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+.modal-label-style {
+    margin: 0.9rem 0rem;
+}

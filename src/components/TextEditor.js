@@ -39,7 +39,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
 
   return (
       <Dialog open={open} >
-          <DialogTitle>{label ? labelChange() : 'Tile'}</DialogTitle>
+          <DialogTitle>{label ? label : 'Tile'}</DialogTitle>
           <span className="absolute top-4 right-7 cursor-pointer"
                 onClick={handleClose}>
               <CloseSharpIcon />
