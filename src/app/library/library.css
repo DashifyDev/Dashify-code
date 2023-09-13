@@ -1,0 +1,55 @@
+.library-body {
+    margin-left: 155px;
+    margin-top: 5rem;
+    margin-right: 155px;
+}
+
+.paraStyle{
+    font-weight: 700;
+}
+
+.library-Style-Filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.library-Style-Filter>p{
+    margin: 0px;
+}
+
+.filter-result{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap:3rem;
+    margin-left: 5rem;
+    padding: 1rem 0rem;
+}
+
+.filter-result img{
+    width: 200px;
+    height: 100px;
+}
+
+.paraStyle1 {
+    font-weight: 700;
+    font-size: xx-large;
+    margin: 1rem 0rem;
+}
+
+.input-style {
+    border: none;
+    border-bottom: dashed;
+    border-top: none;
+    border-left: none;
+    text-align: center;
+    width: 10rem;
+    padding-bottom: 0.4rem;
+    padding-top: 0.4rem;
+}
+
+.input-style:focus{
+    outline: none;
+}
