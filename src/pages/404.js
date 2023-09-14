@@ -5,7 +5,7 @@ const NotFoundPage = () => {
   const router = useRouter();
 
   useEffect(() => {  
-      router.push('/');
+      router.push('/dashboard');
   }, [router]);
 
 }

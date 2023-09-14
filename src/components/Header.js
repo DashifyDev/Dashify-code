@@ -1,3 +1,4 @@
+'use client'
 import {useState, React, useContext , useEffect, use, useRef} from 'react'
 import AddSharpIcon from '@mui/icons-material/AddSharp';
 import {  AppBar,  Toolbar,  Grid, Typography, Box, List , ListItem,ListItemText,
@@ -5,8 +6,9 @@ import {  AppBar,  Toolbar,  Grid, Typography, Box, List , ListItem,ListItemText
 import MenuIcon from '@mui/icons-material/Menu';
 import CssBaseline from '@mui/material/CssBaseline';
 import { IconButton, Avatar, Button, Menu, MenuItem } from '@mui/material';
+import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
 import SideDrawer from './SideDrawer';
-import { userContext } from '@/context/userContext';
+import { globalContext } from '@/context/globalContext';
 import { ReactSortable } from "react-sortablejs";
 import { useUser } from '@auth0/nextjs-auth0/client';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
@@ -17,9 +19,11 @@ import logo from "../assets/logo.png";
 import Image from 'next/image';
 import leftArrow from "../assets/leftArrow1.svg"
 import rightArrow from "../assets/rightArrow.svg"
+import { useRouter } from 'next/navigation';
+import useAdmin from '@/hooks/isAdmin';
+import { useParams } from 'next/navigation';
 
-function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,setActiveBoard,
-                  boards, setBoards, updateTilesInLocalstorage,isAdmin}) {
+function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [showIcon , setShowIcon] = useState(null)
   const [openDashDeleteModel, setOpenDashDeleteModel] = useState(false)
@@ -28,12 +32,16 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   const [showDeshboardModel, setShowDashboardModel] = useState(false)
   const [dashBoardName, setDashBoardName] = useState('')
   const [anchorEl, setAnchorEl] = useState(null);
-
-  const { dbUser } = useContext(userContext)
-  const { user, error, isLoading } = useUser();
+  // const [boards , setBoards] = useState([])
+ // const [activeBoard, setActiveBoard] = useState('')
+  const  {isLoading,user} = useUser()
+  const  {dbUser, tiles, setTiles, activeBoard, setActiveBoard, boards, setBoards}  = useContext(globalContext)
   const divRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-
+  const router = useRouter()
+  const isAdmin = useAdmin()
+  const {id} = useParams()
+  
 
   useEffect(() => {
     const divElement = divRef.current.ref.current;
@@ -59,37 +67,50 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   };
 
   useEffect(() => {
-    if(defaultDashboard){
-      setBoards([defaultDashboard])
-    }
-    if(dbUser){
+    if(dbUser && user){
       axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res) => {
         if (res.data.length >= 1) {
-          setBoards(res.data);
-          setActiveBoard(res.data[0]._id)
-          axios.get(`api/dashboard/${res.data[0]._id}`).then((res) => {
-                  setTileCordinates(res.data.tiles)
-                })
+          setBoards((prev) =>{
+            return [ ...res.data]
+          });
+          if(!id){
+            router.push(`/dashboard/${res.data[0]._id}`)
+          }
         }
       })
-    }
+     }
     else{
-      if(!isLoading)
-      getDataFromSession()
-    }
-    
-  }, [dbUser, defaultDashboard,isLoading]);
-
-  const getDataFromSession = () => {
-    let boards = JSON.parse(localStorage.getItem("Dasify"));
-    if (boards) {
-      if (boards.length > 0) {
-        setActiveBoard(boards[0]._id);
-        setBoards(boards);
-        setTileCordinates(boards[0].tiles);
+      if(!isLoading && !user){
+        getDefaultDashboard()
       }
     }
-  };
+    
+  }, [user,dbUser,isLoading]);
+
+
+  const getDefaultDashboard = async() => {
+    let localData  = JSON.parse(localStorage.getItem('Dasify'))
+
+    if(localData){
+      setBoards((prev)=> [...localData])
+      if(!id){
+        if(res.data.length > 0){
+          router.push(`/dashboard/${res.data[0]._id}`)
+        }
+      }
+      return
+    }
+
+    axios.get('/api/dashboard/defaultDashboard').then(res=>{
+      localStorage.setItem("Dasify",JSON.stringify(res.data))
+      setBoards((prev)=> [...res.data])
+      if(!id){
+        if(res.data.length > 0){
+          router.push(`/dashboard/${res.data[0]._id}`)
+        }
+      }
+    })
+  }
 
 
   const toggleDrawer = () => {
@@ -108,7 +129,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   let newX = 25;
 
   for (let x = 25; x <= windowWidth - tileWidth; x += tileWidth + tileMargin) {
-    const occupiedTile = tileCordinates.find(tile => tile.x === x && tile.y === newRowY);
+    const occupiedTile = tiles.find(tile => tile.x === x && tile.y === newRowY);
 
     if (!occupiedTile) {
       foundEmptySpace = true;
@@ -121,7 +142,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
   if (foundEmptySpace) {
     newY = newRowY;
   } else {
-    const lastTile = tileCordinates[tileCordinates.length - 1];
+    const lastTile = tiles[tiles.length - 1];
     if (lastTile) {
       newX = 25;
       newY = 170
@@ -157,13 +178,17 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
     }
     if(dbUser){
       axios.post('/api/tile/tile', newtile ).then((res)=>{
-        setTileCordinates([...tileCordinates , res.data])
+        setTiles([...tiles , res.data])
       })
     }
     else{
-      let items = [...tileCordinates,newtile]
-      updateTilesInLocalstorage(items)
-      setTileCordinates(items)
+      let index = boards.findIndex(obj=> obj._id === activeBoard)
+      let items = [...boards ] 
+      let tiles = items[index].tiles
+      tiles = [...tiles, newtile]
+      items[index].tiles = tiles
+      localStorage.setItem("Dasify",JSON.stringify(items))
+      setTiles(tiles)
     }
   }
 
@@ -206,17 +231,8 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
       setDashBoardName(board.name)
       setShowDashboardModel(true)
     } else {
-      if (dbUser) {
-        axios.get(`api/dashboard/${dashboardId}`).then((res) => {
-          setTileCordinates(res.data.tiles)
-          setActiveBoard(dashboardId)
-        })
-      }
-      else{
-        let tiles = boards[index].tiles
-        setTileCordinates(tiles)
-        setActiveBoard(dashboardId)
-      }
+      //setActiveBoard(dashboardId)
+      router.push(`/dashboard/${dashboardId}`)
     }
   }
 
@@ -226,7 +242,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
       name: dashBoardName,
     }
     if (dbUser) {
-      axios.patch(`api/dashboard/${selectedDashboard}`, data).then((res) => {
+      axios.patch(`/api/dashboard/${selectedDashboard}`, data).then((res) => {
         if (res) {
           const updatedList = boards.map(board => {
             if (board._id === res.data._id) {
@@ -276,7 +292,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
     let isLastIndex = index == boards.length-1 ? true : false
     console.log(isLastIndex)
     if (dbUser) {
-      axios.delete(`api/dashboard/${id}`).then((res) => {
+      axios.delete(`/api/dashboard/${id}`).then((res) => {
         if (res) {
           boards.splice(index, 1)
           setBoards(boards)
@@ -303,10 +319,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
 
   const handlePicClick = (event) => {
       setAnchorEl(event.currentTarget);
-  }
-
-  const handleLogout = () => {
-    router.push("/api/auth/logout")
+      navigator.clipboard.writeText(window.location.href)
   }
 
 
@@ -331,11 +344,6 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
               </div>
               <div className="vertical"></div>
               <div className="board_nav">
-                {/* {isOverflowing && (
-                  <div className="scroll-buttons">
-                    <button onClick={() => handleScroll('left')}><ArrowLeftIcon/></button>
-                  </div>
-                )} */}
                 <ReactSortable
                   ref={divRef}
                   filter=".dashboard_btn"
@@ -372,8 +380,8 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                             }}
                           />
                           {showIcon === board._id &&
-                            !board.default &&
-                            board._id !== activeBoard && (
+                          board._id !== activeBoard &&
+                           (
                               <span
                                 className="cross"
                                 onClick={() => {
@@ -415,7 +423,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                     setSelectedDashboard(null);
                     setDashBoardName("");
                   }}
-                  disabled={isAdmin&&boards.length==4}
+                  disabled={isAdmin && boards.length>=4}
                 >
                   + New
                 </Button>
@@ -432,10 +440,10 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
               >
                 <MenuIcon sx={{ color: "#45818e" }} />
               </IconButton>
-              {user ? (
+              {dbUser ? (
                 <div>
                   <Button onClick={(e) => handlePicClick(e)}>
-                    <Avatar src={user.picture}></Avatar>
+                    <Avatar src={dbUser.picture}></Avatar>
                   </Button>
                   <Menu
                     anchorEl={anchorEl}
@@ -444,7 +452,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
                       setAnchorEl(null);
                     }}
                   >
-                    <div className="email">{user.email}</div>
+                    <div className="email">{dbUser.email}</div>
                     <div className="horizonLine"></div>
                     <div className="logout">
                       <a href="/api/auth/logout">Log out</a>
@@ -465,7 +473,7 @@ function Header({defaultDashboard,tileCordinates, setTileCordinates,activeBoard,
           </Grid>
         </Toolbar>
       </AppBar>
-      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={user} />
+      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={dbUser} />
 
       {/* Delete DashBoard Model */}
       <Dialog open={openDashDeleteModel} className="model">

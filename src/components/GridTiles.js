@@ -15,7 +15,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Dialog, Button, DialogContent, DialogActions} from '@mui/material';
 import TextEditor from './TextEditor';
 import axios from 'axios';
-import { userContext } from '@/context/userContext';
+import { globalContext } from '@/context/globalContext';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import 'suneditor/dist/css/suneditor.min.css'; 
 import { fonts,colors } from '@/constants/textEditorConstant';
@@ -44,8 +44,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
-  const [selectedText,setSelectedText]=useState()
-  const { dbUser } = useContext(userContext)
+
+  const { dbUser } = useContext(globalContext)
   const hiddenFileInput = useRef(null)
 
   useEffect(()=>{
@@ -167,7 +167,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
         setSelectedTile(null)
       })
     }else{
-      axios.patch('api/tile/updateTile',formData).then((res) => {
+      axios.patch('/api/tile/updateTile',formData).then((res) => {
         let item = { ...items[selectedTile], ...res.data }; 
         items[selectedTile] = item;
         setTileCordinates(items)
