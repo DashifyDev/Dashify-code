@@ -18,6 +18,12 @@ const addGuestData = async(req,res) => {
                 try {
 
                     let tiles = dashboardObj.tiles
+
+                    tiles = tiles.map((tile) => {
+                        const { _id, ...tileData } = tile;
+                        return tileData;
+                    });
+            
                     let insert = await Tile.insertMany(tiles,{ rawResult: true })
                     let tileIds = Object.values(insert.insertedIds)
                     const dashboard = new Dashboard({

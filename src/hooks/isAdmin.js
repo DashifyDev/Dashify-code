@@ -6,7 +6,6 @@ export default function useAdmin() {
 
     useEffect(()=>{
         if (user) {
-            console.log(user);
             if (user["https://www.boardzy.app/roles"].includes("admin")) {
               setAdminState((prev)=>{return true})
             }
