@@ -44,6 +44,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
+  const [selectedText, setSelectedText] = useState(null)
 
   const { dbUser } = useContext(globalContext)
   const hiddenFileInput = useRef(null)

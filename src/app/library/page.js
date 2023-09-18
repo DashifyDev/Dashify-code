@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "./library.css";
 import axios from "axios";
+import { redirect } from "next/dist/server/api-utils";
 
 function Library() {
   const [library, setLibrary] = useState([]);
@@ -30,6 +31,10 @@ function Library() {
       }
     }
   };
+
+  const redirectToUser = (link) => {
+    window.open(link, '_blank');
+  }
 
   return (
     <div className="library-body">
@@ -65,7 +70,7 @@ function Library() {
               return (
                 <div key={index}>
                   <hr />
-                  <div className="filter-result">
+                  <div className="filter-result" onClick={()=>{redirectToUser(data.boardLink)}}>
                     <img
                       src={data.boardImage}
                       alt="board-image"
