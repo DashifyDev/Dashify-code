@@ -36,8 +36,8 @@
 
 .cross{
     position: absolute;
-    top: 0px;
-    right: 5px;
+    top: -4px;
+    right: 0px;
 }
 .dashboard_drag {
     display: flex;
@@ -144,4 +144,13 @@ a:focus {
         max-width : 500px
     }
 
+}
+.copiedUrl-content {
+    overflow: hidden;
+    background: whitesmoke;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0.8rem;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
 }

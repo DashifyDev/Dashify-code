@@ -93,6 +93,7 @@ function page({params}) {
         tileCordinates={tiles}
         setTileCordinates={setTiles}
         updateTilesInLocalstorage={updateTilesInLocalstorage}
+        activeBoard={activeBoard}
       />
     </div>
   )

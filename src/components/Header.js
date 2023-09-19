@@ -32,8 +32,7 @@ function Header() {
   const [showDeshboardModel, setShowDashboardModel] = useState(false)
   const [dashBoardName, setDashBoardName] = useState('')
   const [anchorEl, setAnchorEl] = useState(null);
-  // const [boards , setBoards] = useState([])
- // const [activeBoard, setActiveBoard] = useState('')
+  const [options, setOptions] = useState(null)
   const  {isLoading,user} = useUser()
   const  {dbUser, tiles, setTiles, activeBoard, setActiveBoard, boards, setBoards}  = useContext(globalContext)
   const divRef = useRef(null);
@@ -41,8 +40,11 @@ function Header() {
   const router = useRouter()
   const isAdmin = useAdmin()
   const {id} = useParams()
+  const [shareLinkModal,setShareLinkModal]=useState(false)
+  const [copiedUrl, setCopiedUrl] = useState("");
+  const [isCopied,setIsCopied]=useState(false)
   
-
+  
   useEffect(() => {
     const divElement = divRef.current.ref.current;
     if (divElement) {
@@ -53,7 +55,7 @@ function Header() {
       }
     }
   }, [boards]);
-
+  
   const handleScroll = (direction) => {
     const divElement = divRef.current.ref.current;
 
@@ -78,7 +80,7 @@ function Header() {
           }
         }
       })
-     }
+    }
     else{
       if(!isLoading && !user){
         getDefaultDashboard()
@@ -86,16 +88,16 @@ function Header() {
     }
     
   }, [user,dbUser,isLoading]);
-
-
+  
+  
   const getDefaultDashboard = async() => {
     let localData  = JSON.parse(localStorage.getItem('Dasify'))
-
+    
     if(localData){
       setBoards((prev)=> [...localData])
       if(!id){
-        if(res.data.length > 0){
-          router.push(`/dashboard/${res.data[0]._id}`)
+        if(localData.length > 0){
+          router.push(`/dashboard/${localData[0]._id}`)
         }
       }
       return
@@ -127,7 +129,7 @@ function Header() {
   let foundEmptySpace = false;
   let newRowY = 25;
   let newX = 25;
-
+  
   for (let x = 25; x <= windowWidth - tileWidth; x += tileWidth + tileMargin) {
     const occupiedTile = tiles.find(tile => tile.x === x && tile.y === newRowY);
 
@@ -137,7 +139,7 @@ function Header() {
       break;
     }
   }
-
+  
   let newY;
   if (foundEmptySpace) {
     newY = newRowY;
@@ -146,7 +148,7 @@ function Header() {
     if (lastTile) {
       newX = 25;
       newY = 170
-
+      
       if (newY + tileHeight > windowHeight) {
         newX = 25;
         newY = 25;
@@ -165,38 +167,39 @@ function Header() {
     }
   }
   
-    const newtile = {
-      dashboardId: activeBoard,
-      width: '135px',
-      height: '135px',
-      x: newX,
-      y: newY,
-      titleX:2,
-      titleY:2,
-      action : 'textEditor',
-      displayTitle:true
-    }
-    if(dbUser){
-      axios.post('/api/tile/tile', newtile ).then((res)=>{
-        setTiles([...tiles , res.data])
-      })
-    }
-    else{
-      let index = boards.findIndex(obj=> obj._id === activeBoard)
-      let items = [...boards ] 
-      let tiles = items[index].tiles
-      tiles = [...tiles, newtile]
-      items[index].tiles = tiles
-      localStorage.setItem("Dasify",JSON.stringify(items))
-      setTiles(tiles)
-    }
+  const newtile = {
+    dashboardId: activeBoard,
+    width: '135px',
+    height: '135px',
+    x: newX,
+    y: newY,
+    titleX:2,
+    titleY:2,
+    action : 'textEditor',
+    displayTitle:true
   }
+  if(dbUser){
+    axios.post('/api/tile/tile', newtile ).then((res)=>{
+      setTiles([...tiles , res.data])
+    })
+  }
+  else{
+    let index = boards.findIndex(obj=> obj._id === activeBoard)
+    let items = [...boards ] 
+    let tiles = items[index].tiles
+    tiles = [...tiles, newtile]
+    items[index].tiles = tiles
+    localStorage.setItem("Dasify",JSON.stringify(items))
+    setTiles(tiles)
+  }
+}
 
-  const addBoard = () => {
-    setShowDashboardModel(false)
-    let payload
-    if(dbUser){
-      if (isAdmin) {
+const addBoard = () => {
+  const boardsLength = boards.length
+  setShowDashboardModel(false)
+  let payload
+  if(dbUser){
+    if (isAdmin) {
         payload = {
           name: dashBoardName,
           userId: dbUser._id,
@@ -210,9 +213,12 @@ function Header() {
       }
         axios.post("/api/dashboard/addDashboard", payload).then((res) => {
           setBoards([...boards, res.data]);
+          if(boardsLength === 0){
+            router.push(`/dashboard/${res.data._id}`)
+          }
         });
     }
-    else {
+      else {
       payload={
         _id : uuidv4(),
         name: dashBoardName,
@@ -222,18 +228,14 @@ function Header() {
       items = [...items , payload]
       localStorage.setItem("Dasify",JSON.stringify(items))
       setBoards(items)
+      if(boardsLength === 0){
+        router.push(`/dashboard/${payload._id}`)
+      }
     }
   }
 
-  const selectBoard = (e,dashboardId , board , index) => {
-    if (e && (e.type === "touchstart" || e.detail == 2)) {
-      setSelectedDashboard(dashboardId);
-      setDashBoardName(board.name)
-      setShowDashboardModel(true)
-    } else {
-      //setActiveBoard(dashboardId)
+  const selectBoard = (dashboardId) => {
       router.push(`/dashboard/${dashboardId}`)
-    }
   }
 
   const updatedDashBoard = () => {
@@ -263,7 +265,7 @@ function Header() {
       localStorage.setItem("Dasify", JSON.stringify(items))
     }
   }
-
+  
   const changeDashboardName =(e) =>{
     setDashBoardName(e.target.value)
   }
@@ -287,10 +289,9 @@ function Header() {
       }
     }
   }
-
+  
   const deleteDashboard = ( id , index) =>{
     let isLastIndex = index == boards.length-1 ? true : false
-    console.log(isLastIndex)
     if (dbUser) {
       axios.delete(`/api/dashboard/${id}`).then((res) => {
         if (res) {
@@ -312,17 +313,26 @@ function Header() {
   }
 
   const setDash = (isLastIndex, index ) => {
-    isLastIndex
-       ? selectBoard(null, boards[index - 1]._id, boards[index - 1], index - 1)
-       : selectBoard(null, boards[index]._id, boards[index], index)
+    if(isLastIndex && index === 0){
+      router.push('/dashboard')
+    }
+    else{
+      isLastIndex
+      ? selectBoard(boards[index - 1]._id,)
+      : selectBoard(boards[index]._id)
+    }
   }
 
   const handlePicClick = (event) => {
-      setAnchorEl(event.currentTarget);
-      navigator.clipboard.writeText(window.location.href)
+    setAnchorEl(event.currentTarget);
+    navigator.clipboard.writeText(window.location.href)
   }
-
-
+  
+  async function handleCopy(){
+    await navigator.clipboard.writeText(location.href);
+      setIsCopied(true)
+   }
+  
   return (
     <Box>
       <AppBar
@@ -359,14 +369,14 @@ function Header() {
                       <List key={board._id}>
                         <ListItem
                           button
-                          onMouseEnter={() => setShowIcon(board._id)}
+                          onMouseEnter={() => {setShowIcon(board._id); setOptions(null)}}
                           onMouseLeave={() => setShowIcon(null)}
                           onClick={(e) => {
-                            selectBoard(e, board._id, board, index);
+                            selectBoard(board._id);
                           }}
                           onTouchStart={(e) => {
                             if (isDblTouchTap(e)) {
-                              selectBoard(e, board._id, board, index);
+                              selectBoard(board._id);
                             }
                           }}
                         >
@@ -380,17 +390,33 @@ function Header() {
                             }}
                           />
                           {showIcon === board._id &&
-                          board._id !== activeBoard &&
                            (
                               <span
                                 className="cross"
-                                onClick={() => {
-                                  setOpenDashDeleteModel(true),
-                                    setSelectedDashboard(board._id);
-                                  setSelectedDashIndex(index);
+                                onClick={(e) => {
+                                  options ? setOptions(null) : setOptions(e.currentTarget);
                                 }}
                               >
-                                x
+                                <MoreHorizSharpIcon/>
+                              <Menu
+                                anchorEl={options}
+                                open={Boolean(options)}
+                                onClose={() => setOptions(null)}
+                              >
+                                <MenuItem onClick={()=> {
+                                   setOptions(null); setOpenDashDeleteModel(true),
+                                   setSelectedDashboard(board._id);setSelectedDashIndex(index);
+                                }}>Delete</MenuItem>
+                                {dbUser && <MenuItem onClick={() => {
+                                   setOptions(null)
+                                   setShareLinkModal(true)
+                                   setCopiedUrl(window.location.href)
+                                }}>Share</MenuItem> }
+                                <MenuItem onClick={()=>{
+                                   setOptions(null); setSelectedDashboard(board._id);
+                                   setDashBoardName(board.name); setShowDashboardModel(true)
+                                }}>Rename</MenuItem>
+                              </Menu>
                               </span>
                             )}
                         </ListItem>
@@ -563,6 +589,21 @@ function Header() {
               Save
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Share Link Modal */}
+      <Dialog open={shareLinkModal}>
+        <DialogContent>
+          <div className='copiedUrl-content'>
+          <p>{copiedUrl}</p>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          {isCopied?<Button disabled>Copied</Button>:
+          <Button onClick={() => handleCopy()}>Copy</Button>
+          }
+          <Button onClick={()=>{setShareLinkModal(false);setIsCopied(false)}}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </Box>
