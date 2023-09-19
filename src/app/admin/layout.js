@@ -4,17 +4,19 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import React from 'react'
 
-function layout({children}) {
+function layout({ children }) {
   const isAdmin = useAdmin();
   const route = useRouter();
 
   useEffect(() => {
-    if (isAdmin) {
-      route.push("/admin/board-library")
-    } else {
-      route.push("/dashboard")
+    if (isAdmin !== null) {
+      if (isAdmin) {
+        route.push("/admin/board-library")
+      } else {
+        route.push("/dashboard")
+      }
     }
-  }, [isAdmin])
+  }, [route, isAdmin])
   return (
     <div>
       {children}
