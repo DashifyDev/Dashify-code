@@ -390,6 +390,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
         x: x,
         y: y
       }
+      if(tile.x === x && tile.y === y){
+        return
+      }
       let item = { ...items[index], ...toUpdate };
       items[index] = item;
       setTileCordinates(items)
@@ -694,7 +697,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                 }
               }}
             > 
-              <div className='text_overlay' style={TitlePositionStyle(tile)} dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index,tile) }}></div>
+              <div className='text_overlay' 
+                style={TitlePositionStyle(tile)}
+                dangerouslySetInnerHTML={{ __html:  changedTitlehandle(index,tile) }}>
+              </div>
               {isBackgroundImage(tile.tileBackground) && <img draggable="false" src={tile.tileBackground} alt="Preview" />}
               <div className="showOptions absolute top-0 right-2 cursor-pointer" onClick={(e) => openModel(e, index, null)}>
                 <MoreHorizSharpIcon />

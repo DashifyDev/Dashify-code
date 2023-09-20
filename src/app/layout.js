@@ -5,8 +5,8 @@ import { UserProvider } from "@auth0/nextjs-auth0/client";
 import AppContextProvider from "@/context/appContext";
 
 export const metadata = {
-  title: "Dashifiy",
-  description: "Dashify Home",
+  title: "Boardzy",
+  description: "Create beautiful dashboards for your life",
 };
 export default function RootLayout({ children }) {
   return (
