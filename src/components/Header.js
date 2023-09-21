@@ -6,7 +6,7 @@ import {  AppBar,  Toolbar,  Grid, Typography, Box, List , ListItem,ListItemText
 import MenuIcon from '@mui/icons-material/Menu';
 import CssBaseline from '@mui/material/CssBaseline';
 import { IconButton, Avatar, Button, Menu, MenuItem } from '@mui/material';
-import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SideDrawer from './SideDrawer';
 import { globalContext } from '@/context/globalContext';
 import { ReactSortable } from "react-sortablejs";
@@ -397,7 +397,7 @@ const addBoard = () => {
                                   options ? setOptions(null) : setOptions(e.currentTarget);
                                 }}
                               >
-                                <MoreHorizSharpIcon/>
+                                <KeyboardArrowDownIcon fontSize='small'/>
                               <Menu
                                 anchorEl={options}
                                 open={Boolean(options)}
