@@ -3,15 +3,15 @@ import './privacypolicy.css'
 
 function privacypolicy() {
     return (
-        <div class="page">
-            <div class="header">
-                <div class="container">
-                    <p class="title">Privacy Policy for Boardzy</p>
+        <div className="page">
+            <div className="header">
+                <div className="container">
+                    <p className="title">Privacy Policy for Boardzy</p>
                 </div>
             </div>
-            <div class="translations-content-container">
-                <div class="container">
-                    <div class="tab-content translations-content-item en visible" id="en">
+            <div className="translations-content-container">
+                <div className="container">
+                    <div className="tab-content translations-content-item en visible" id="en">
                         {/* <h1>Privacy Policy</h1> */}
                         {/* <p>Last updated: September 21, 2023</p> */}
                         <p>This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.</p>
@@ -153,7 +153,7 @@ function privacypolicy() {
                         <p>You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
                         <h2>Contact Us</h2>
                         <p>If you have any questions about this Privacy Policy, You can contact us:</p>
-                        <ul className='contact_us'>
+                        <ul classNameName='contact_us'>
                             <li>By email: contact@boardzy.app</li>
                         </ul>
                         <small>Last updated: September 21, 2023</small>
@@ -161,8 +161,8 @@ function privacypolicy() {
                 </div>
             </div>
 
-            <div class="footer">
-                <div class="container">
+            <div className="footer">
+                <div className="container">
                     <p>Generated using <a href="https://www.privacypolicies.com/privacy-policy-generator/" target="_blank">Privacy Policies Generator</a></p>
                 </div>
             </div>
