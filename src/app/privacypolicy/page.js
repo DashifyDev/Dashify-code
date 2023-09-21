@@ -153,7 +153,7 @@ function privacypolicy() {
                         <p>You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.</p>
                         <h2>Contact Us</h2>
                         <p>If you have any questions about this Privacy Policy, You can contact us:</p>
-                        <ul classNameName='contact_us'>
+                        <ul className='contact_us'>
                             <li>By email: contact@boardzy.app</li>
                         </ul>
                         <small>Last updated: September 21, 2023</small>
