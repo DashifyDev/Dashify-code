@@ -40,7 +40,26 @@ const addTemplate = async (req, res) => {
         break;
 
       case "GET":
-        let getData = await Template.find();
+        let filter = req.query.filter
+        let getData
+        if(filter === 'mostPopular'){
+          getData = await Template.find()
+          .sort({ rating: -1 })
+          .exec();;
+        }
+        else if(filter === 'newest'){
+          getData = await Template.find()
+          .sort({ createdAt: -1 }) 
+          .exec();
+        }
+        else if(filter === 'aToz'){
+          getData = await Template.find()
+          .sort({ boardName: 1}) 
+          .exec();
+        }
+        else{
+          getData = await Template.find();
+        }
         if (getData) {
           res.status(200).json(getData);
         } else {

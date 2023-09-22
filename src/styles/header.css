@@ -154,3 +154,20 @@ a:focus {
     overflow-wrap: anywhere;
     text-overflow: ellipsis;
 }
+
+.libray-heading{
+    font-size: xx-large;
+    color: #63899e;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media screen and (max-width:600px) {
+    .libray-heading{
+        font-size: large;
+    }
+    .css-1u64d6w-MuiModal-root-MuiDrawer-root .MuiDrawer-paper{
+        padding-top: 85px;
+    }
+}

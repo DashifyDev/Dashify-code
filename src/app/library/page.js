@@ -2,18 +2,33 @@
 import React, { useEffect, useState } from "react";
 import "./library.css";
 import axios from "axios";
-import { redirect } from "next/dist/server/api-utils";
 
 function Library() {
   const [library, setLibrary] = useState([]);
   const [originalLibrary, setOriginalLibrary] = useState([]);
   const [noSearchResult, setNoSearchResult] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("mostPopular");
+
+  const filterOption = [
+    { id: "mostPopular", filter: "Most Popular" },
+    { id: "newest", filter: "Newest" },
+    { id: "aToz", filter: "A-to-Z" },
+  ];
+
   useEffect(() => {
-    axios.get("/api/template/addTemplate").then((res) => {
-      setOriginalLibrary(res.data);
-      setLibrary(res.data);
-    });
+    axios
+      .get(`/api/template/addTemplate?filter=${selectedFilter}`)
+      .then((res) => {
+        setOriginalLibrary(res.data);
+        setLibrary(res.data);
+      });
   }, []);
+
+  const selectFilter = async (id) => {
+    setSelectedFilter(id);
+    const result = await axios.get(`/api/template/addTemplate?filter=${id}`);
+    setLibrary(result.data);
+  };
 
   var handleSearch = (event) => {
     let searchValue = event.target.value.toLowerCase();
@@ -33,62 +48,88 @@ function Library() {
   };
 
   const redirectToUser = (link) => {
-    window.open(link, '_blank');
-  }
+    window.open(link, "_blank");
+  };
 
   return (
-    <div className="library-body">
-      <div className="library-Style-Filter">
-        <p>
-          <span className="paraStyle">FILTER:</span> Most Popular, Newest,
-          Oldest, A-to-Z
-        </p>
-        <p>
-          <span className="paraStyle">
-            SEARCH:
-            <input
-              className="input-style"
-              placeholder="Search Boards"
-              onChange={(e) => {
-                handleSearch(e);
-              }}
-            />
-          </span>
-        </p>
+    <div className="library">
+      <div className="library-board-heading">
+        <p>[Click on a board below to add to your Boardzy!]</p>
       </div>
-      <div className="lib_container">
-        {noSearchResult ? (
-          <div>
-            <hr />
+      <div className="library-body">
+        <div className="library-Style-Filter">
+          <p>
+            <span className="paraStyle">FILTER:</span>
+            {filterOption.map((filter, index) => (
+              <span
+                onClick={() => {
+                  selectFilter(filter.id);
+                }}
+                key={filter.id}
+                style={{
+                  fontWeight: selectedFilter === filter.id ? 700 : 200,
+                  textDecoration:
+                    selectedFilter === filter.id ? "underline" : "none",
+                  marginLeft: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                {filter.filter}
+              </span>
+            ))}
+          </p>
+          <p>
+            <span className="paraStyle">
+              SEARCH:
+              <input
+                className="input-style"
+                placeholder="Search Boards"
+                onChange={(e) => {
+                  handleSearch(e);
+                }}
+              />
+            </span>
+          </p>
+        </div>
+        <div className="lib_container">
+          {noSearchResult ? (
             <div>
-              <h3>No Result Found</h3>
+              <hr />
+              <div>
+                <h3>No Result Found</h3>
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            {library.map((data, index) => {
-              return (
-                <div key={index}>
-                  <hr />
-                  <div className="filter-result" onClick={()=>{redirectToUser(data.boardLink)}}>
-                    <img
-                      src={data.boardImage}
-                      alt="board-image"
-                      className="filter-image"
-                    />
-                    <div>
-                      <p className="paraStyle1">{data.boardName}</p>
-                      <small>
-                        <span className="paraStyle">Keywords: </span>
-                        {data.keywords.join(",")}
-                      </small>
+          ) : (
+            <>
+              {library.map((data, index) => {
+                return (
+                  <div key={index}>
+                    <hr />
+                    <div
+                      className="filter-result"
+                      onClick={() => {
+                        redirectToUser(data.boardLink);
+                      }}
+                    >
+                      <img
+                        src={data.boardImage}
+                        alt="board-image"
+                        className="filter-image"
+                      />
+                      <div>
+                        <p className="paraStyle1">{data.boardName}</p>
+                        <small>
+                          <span className="paraStyle">Keywords: </span>
+                          {data.keywords.join(",")}
+                        </small>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
