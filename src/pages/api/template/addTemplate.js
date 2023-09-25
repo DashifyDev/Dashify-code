@@ -49,7 +49,7 @@ const addTemplate = async (req, res) => {
         }
         else if(filter === 'newest'){
           getData = await Template.find()
-          .sort({ createdAt: -1 }) 
+          .sort({ date: -1 }) 
           .exec();
         }
         else if(filter === 'aToz'){
