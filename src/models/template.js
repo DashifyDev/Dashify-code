@@ -20,7 +20,7 @@ const templateSchema = new Schema({
         default: Date.now
     },
     date:{
-        type: Date
+        type: String
     },
     rating:{
         type: String
