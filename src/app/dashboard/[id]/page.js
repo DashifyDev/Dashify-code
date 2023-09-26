@@ -46,9 +46,9 @@ function page({params}) {
       setActiveBoard(id)
       setTiles(res.data.tiles)
       setBoards((prev) => {
-        let data = [...prev , res.data]
+        let data = [res.data, ...prev]
        localStorage.setItem('Dasify', JSON.stringify(data));
-       return [...prev , res.data]
+       return [res.data, ...prev]
       })
     })
   }
@@ -71,8 +71,7 @@ function page({params}) {
     setActiveBoard(dashboard._id)
     setTiles(dashboard.tiles)
     setBoards((prev) =>{  
-      console.log("prev", prev)
-      return [...prev ,dashboard]
+      return [dashboard , ...prev ]
     })
   }
 
