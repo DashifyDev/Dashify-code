@@ -22,7 +22,7 @@
 
 .board_nav {
     display: flex;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
     flex-direction: row;
     align-items: center;
     position: relative;
@@ -163,11 +163,41 @@ a:focus {
     flex-wrap: wrap;
 }
 
-@media screen and (max-width:600px) {
+@media screen and (max-width:767px) {
+    body{
+        padding-right:0px !important ;
+    }
     .libray-heading{
         font-size: large;
     }
     .css-1u64d6w-MuiModal-root-MuiDrawer-root .MuiDrawer-paper{
         padding-top: 85px;
+    }
+    .header_container .right_header{
+        order: 1;
+        width: 100%;
+       justify-content: space-between;
+    }
+    .header_container .left_content{
+        order: 2;
+        justify-content: space-between;
+        width: 100%;
+    }
+    .header_container .right_header .menu-button{
+        margin-left: auto;
+    }
+    .header_container .left_content .vertical{
+        display: none;
+    }
+    .header_container .left_content .add_tiles{
+        order: 2;
+    }
+    .header_container .left_content .board_nav{
+        order: 1;
+        justify-content: center;
+        width: 100%;
+    }
+    .header_container .left_content .dashboard_btn{
+        order: 3;
     }
 }

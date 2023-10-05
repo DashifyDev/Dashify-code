@@ -39,9 +39,20 @@ function Library() {
       const result = originalLibrary.filter((item) =>
         item.boardName.toLowerCase().includes(searchValue)
       );
+      const keywordsSearch = originalLibrary
+        .map((item) => ({
+          ...item,
+          keywords: item.keywords.filter((item) =>
+            item.toLowerCase().includes(searchValue)
+          ),
+        }))
+        .filter((elements) => elements.keywords.length > 0);
       if (result.length) {
         setLibrary(result);
-      } else {
+      }else if(keywordsSearch.length){
+        setLibrary(keywordsSearch)
+      }
+       else {
         setNoSearchResult(true);
       }
     }

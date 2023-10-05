@@ -267,7 +267,6 @@ img.text-editor-image {
     min-width: 124px;
     max-height: 300px;
 }
-
-/* .all_options ul li .sun-editor .se-btn-select.se-btn-tool-font {
-    width: 122px;
-} */
+.css-hlj6pa-MuiDialogActions-root{
+    justify-content: space-between;
+}
