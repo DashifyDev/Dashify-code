@@ -347,7 +347,7 @@ const addBoard = () => {
       >
         <CssBaseline />
         <Toolbar>
-          <Grid container display="flex" justifyContent="space-between">
+          <Grid container display="flex" justifyContent="space-between" className='header_container'>
             <Grid item className="left_content">
               <div className="add_tiles" onClick={addTiles}>
                 <AddSharpIcon />
@@ -402,6 +402,14 @@ const addBoard = () => {
                                 anchorEl={options}
                                 open={Boolean(options)}
                                 onClose={() => setOptions(null)}
+                                anchorOrigin={{
+                                  vertical: 'top',
+                                  horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                  vertical: 'top',
+                                  horizontal: 'right',
+                                }}
                               >
                                 <MenuItem onClick={()=> {
                                    setOptions(null); setOpenDashDeleteModel(true),
@@ -440,8 +448,8 @@ const addBoard = () => {
                     <div className="vertical"></div>
                   </div>
                 )}
-
-                <Button
+              </div>
+              <Button
                   className="dashboard_btn"
                   sx={{ p: "11px" }}
                   onClick={() => {
@@ -453,7 +461,6 @@ const addBoard = () => {
                 >
                   + New
                 </Button>
-              </div>
             </Grid>
             <Grid item className="right_header">
               <Image className="logo" src={logo} alt="logo" />
@@ -462,6 +469,7 @@ const addBoard = () => {
                 edge="end"
                 color="inherit"
                 aria-label="menu"
+                className='menu-button'
                 onClick={toggleDrawer}
               >
                 <MenuIcon sx={{ color: "#45818e" }} />

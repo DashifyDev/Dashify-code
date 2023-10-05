@@ -3,12 +3,21 @@ import React, { useEffect, useContext, useState } from 'react'
 import { globalContext } from '@/context/globalContext';
 import GridTiles from '@/components/GridTiles';
 import axios from 'axios';
+import { useParams } from 'next/navigation';
 
 function page({params}) {
   
   const { id } = params
   const { dbUser, tiles, setTiles ,boards,setBoards,
           activeBoard, setActiveBoard, } = useContext(globalContext)
+
+    useEffect(()=>{
+      const pageTitle=boards.filter(boardId=>activeBoard===boardId._id)
+      if(pageTitle.length>0){
+        const pageName=pageTitle[0].name
+        document.title= pageName
+      }
+    },[id,activeBoard])
 
   useEffect(() => {
     if (boards.length >= 1) {

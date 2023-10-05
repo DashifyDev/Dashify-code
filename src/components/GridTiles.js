@@ -882,8 +882,14 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setEditorOpen(false)}>close</Button>
-            <Button onClick={()=>handleSelectedText()}>Make Heading</Button>
+          <div>
+          <Button className='make-title-button' disabled={!selectedText} onClick={()=>handleSelectedText()}>Make Title</Button>
+            </div>
+            <div>
+            <Button onClick={() => setEditorOpen(false)}>Close</Button>
+            <Button onClick={() => setEditorOpen(false)} >Save</Button>
+            </div>
+            
           </DialogActions>
       </Dialog>
 

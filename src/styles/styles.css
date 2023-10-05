@@ -267,7 +267,6 @@ img.text-editor-image {
     min-width: 124px;
     max-height: 300px;
 }
-
-/* .all_options ul li .sun-editor .se-btn-select.se-btn-tool-font {
-    width: 122px;
-} */
+.css-14b29qc{
+    justify-content: space-between !important;
+}
