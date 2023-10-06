@@ -31,7 +31,6 @@ class ColorPicker extends React.Component {
   handleChange = (color) => {
     this.setState({ color: color.rgb })
     this.setState({selectedHex : color.hex})
-    console.log('color',color)
     this.props.handleColorChange(color)
 
   };

@@ -104,13 +104,13 @@ function Header() {
     }
 
     axios.get('/api/dashboard/defaultDashboard').then(res=>{
-      localStorage.setItem("Dasify",JSON.stringify(res.data))
       setBoards((prev)=> [...res.data])
       if(!id){
         if(res.data.length > 0){
           router.push(`/dashboard/${res.data[0]._id}`)
         }
       }
+      localStorage.setItem("Dasify",JSON.stringify(res.data))
     })
   }
 
