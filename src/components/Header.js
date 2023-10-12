@@ -278,7 +278,7 @@ const addBoard = () => {
       })
       if (list.length > 1) {
         axios.patch('/api/dashboard/addDashboard', listArray).then((res) => {
-          console.log("isUp", res.data)
+          // console.log("isUp", res.data)
         })
       }
     }
@@ -332,6 +332,19 @@ const addBoard = () => {
     await navigator.clipboard.writeText(location.href);
       setIsCopied(true)
    }
+
+   const duplicateBoard = (currentBoard) => {
+     const newBoard = { ...currentBoard, _id: uuidv4() };
+     console.log("Payload", newBoard);
+     if (dbUser) {
+       axios.post("/api/dashboard/duplicateDashboard", newBoard).then((res) => {
+         setBoards([...boards, res.data]);
+       });
+     } else {
+       setBoards([...boards, newBoard]);
+       localStorage.setItem("Dasify", JSON.stringify([...boards, newBoard]));
+     }
+   };
   
   return (
     <Box>
@@ -424,6 +437,9 @@ const addBoard = () => {
                                    setOptions(null); setSelectedDashboard(board._id);
                                    setDashBoardName(board.name); setShowDashboardModel(true)
                                 }}>Rename</MenuItem>
+                                <MenuItem onClick={()=>{setOptions(null);duplicateBoard(board)}}>
+                                Duplicate
+                                </MenuItem>
                               </Menu>
                               </span>
                             )}
@@ -474,10 +490,10 @@ const addBoard = () => {
               >
                 <MenuIcon sx={{ color: "#45818e" }} />
               </IconButton>
-              {dbUser ? (
+              {user ? (
                 <div>
                   <Button onClick={(e) => handlePicClick(e)}>
-                    <Avatar src={dbUser.picture}></Avatar>
+                    <Avatar src={user.picture}></Avatar>
                   </Button>
                   <Menu
                     anchorEl={anchorEl}
@@ -486,7 +502,7 @@ const addBoard = () => {
                       setAnchorEl(null);
                     }}
                   >
-                    <div className="email">{dbUser.email}</div>
+                    <div className="email">{user.email}</div>
                     <div className="horizonLine"></div>
                     <div className="logout">
                       <a href="/api/auth/logout">Log out</a>
