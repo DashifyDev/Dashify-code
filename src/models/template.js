@@ -27,6 +27,9 @@ const templateSchema = new Schema({
     },
     boardLink:{
         type:String,
+    },
+    boardDescription:{
+        type:String,
     }
 });
 
