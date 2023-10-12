@@ -45,9 +45,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
   const [selectedText, setSelectedText] = useState(null)
-
   const { dbUser } = useContext(globalContext)
   const hiddenFileInput = useRef(null)
+  let firstNewLine=true;
 
   useEffect(()=>{
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
@@ -94,11 +94,21 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   }
 
   const enterText = (value) => {
-    setSelectedTileDetail({...selectedTileDetail, tileText : value})
-    const values = formValue
-    values.tileText = value
-    setFormValue(values)
-  }
+    let items = tileCordinates;
+    if (firstNewLine) {
+      const newLineIndex = value.indexOf("<div><br></div>");
+      if (newLineIndex !== -1) {
+        const enteredText = value.substring(0, newLineIndex);
+        const enteredUserText = enteredText.replace(/<[^>]*>/g, "");
+        items[selectedTile].editorHeading = enteredUserText;
+        firstNewLine = false;
+      }
+    }
+    setSelectedTileDetail({ ...selectedTileDetail, tileText: value });
+    const values = formValue;
+    values.tileText = value;
+    setFormValue(values);
+  };
   const enterLink = (e) => {
     setSelectedTileDetail({...selectedTileDetail, tileLink : e.target.value})
     const values = formValue
@@ -131,6 +141,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     let formData = new FormData;
     let payload = formValue
     if(payload.tileBackground instanceof File){
+      payload.displayTitle=false
       formData.append('tileImage', payload.tileBackground)
       delete payload.tileBackground
     }
@@ -791,12 +802,12 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     <label>Display Text</label>
                   </div>
                   <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} >
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} >
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
@@ -847,11 +858,9 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
             let selection=window.getSelection()
             setSelectedText(selection.toString())
           }}>
-          
               <SunEditor 
                 value={formValue.tileText}
                 defaultValue={selectedTileDetail.tileText}
-                
                 onChange={enterText} 
                 setOptions={{
                   buttonList: [

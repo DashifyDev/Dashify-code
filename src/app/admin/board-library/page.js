@@ -130,6 +130,7 @@ function board_library() {
                 <TableCell align="center">Link</TableCell>
                 <TableCell align="center">Rating</TableCell>
                 <TableCell align="center">Date</TableCell>
+                <TableCell align="center">Description</TableCell>
                 <TableCell colSpan={2} align="center">
                   Action
                 </TableCell>
@@ -150,6 +151,7 @@ function board_library() {
                   <TableCell align="center">
                     {new Date(board.date).toLocaleDateString("en-GB")}
                   </TableCell>
+                  <TableCell align="center">{board.boardDescription}</TableCell>
                   <TableCell align="center">
                     <IconButton
                       sx={{ color: "#434343" }}
@@ -249,6 +251,15 @@ function board_library() {
                 });
               }}
             />
+          </div>
+          <div className="modal-div-style">
+              <label>Description</label>
+              <textarea 
+              className="modal-input-style"
+              value={addBoardData.boardDescription}
+              onChange={(event)=>{
+                setAddBoardData({...addBoardData,boardDescription:event.target.value})
+              }}/>
           </div>
           <div className="modal-label-style">
             <label>Image</label>

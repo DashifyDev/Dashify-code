@@ -68,6 +68,10 @@
 .input-style:focus{
     outline: none;
 }
+.board-details{
+    width: 600px;
+    text-wrap: balance;
+}
 
 @media screen and (max-width: 600px) {
 
