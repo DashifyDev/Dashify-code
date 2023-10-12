@@ -127,8 +127,9 @@ function Library() {
                         alt="board-image"
                         className="filter-image"
                       />
-                      <div>
+                      <div className="board-details">
                         <p className="paraStyle1">{data.boardName}</p>
+                        <p>{data.boardDescription}</p>
                         <small>
                           <span className="paraStyle">Keywords: </span>
                           {data.keywords.join(",")}
