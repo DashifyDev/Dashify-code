@@ -138,6 +138,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
 
   const handleSave = (index) => {
+    setColorImage("color");
     let formData = new FormData;
     let payload = formValue
     if(payload.tileBackground instanceof File){
@@ -798,23 +799,26 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       type="checkbox"
                       checked={selectedTileDetail.displayTitle}
                       onChange={displayTitle}
+                      disabled={colorImage==="image"}
                     />
                     <label>Display Text</label>
                   </div>
                   <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} >
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} disabled={colorImage==="image"}>
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} >
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} disabled={colorImage==="image"}>
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
                     </select>
                   </div>
                 </div>
-                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image'/>
+                {colorImage!=="image"?
+                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image' disabled={colorImage==="image"}/>:""
+              }
 
               </div>
             </li>
@@ -891,12 +895,15 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               />
           </DialogContent>
           <DialogActions>
-          <div>
-          <Button className='make-title-button' disabled={!selectedText} onClick={()=>handleSelectedText()}>Make Title</Button>
+          <div className='set-title-style'>
+          <Button sx={{background: '#63899e',
+                  color: '#fff',}} disabled={!selectedText} onClick={()=>handleSelectedText()}>Set Title</Button>
+          <span> Select text and click here to set title in Text Editor</span>
             </div>
             <div>
-            <Button onClick={() => setEditorOpen(false)}>Close</Button>
-            <Button onClick={() => setEditorOpen(false)} >Save</Button>
+            <Button onClick={() => setEditorOpen(false)} sx={{color:'#63899e'}}>Close</Button>
+            <Button onClick={() => setEditorOpen(false)} sx={{background: '#63899e',
+                  color: '#fff',}} >Save</Button>
             </div>
             
           </DialogActions>
