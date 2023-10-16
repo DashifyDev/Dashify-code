@@ -163,6 +163,46 @@
         text-align: left;
     
 }
+.newsletter-title {
+    font-size: x-large;
+    font-weight: 500;
+}
+.newsletter-subHeading {
+    font-size: small;
+    margin: 10px 0px;
+}
+.newsletter-button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: none;
+    color: white;
+    text-decoration: underline;
+    font-size: medium;
+}
+.newsletter-closeIcon{
+    text-align: right;
+    cursor: pointer;
+}
+.newsletter-input-field {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0px;
+    border-radius: 5px;
+    border: none;
+}
+.newsletter-input-field:focus{
+    outline:none;
+}
+.css-ypiqx9-MuiDialogContent-root{
+    width: 450px;
+    background: #E8E8E8;
+}
+.subscribe-button:hover{
+    background: white;
+    color:#63899e;
+}
 @media screen and (max-width: 600px)  {
     .wlcm_boardzy {
         height: 390px;
