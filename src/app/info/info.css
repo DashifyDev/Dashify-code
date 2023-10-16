@@ -156,12 +156,10 @@
     /* flex-grow: 1; */
 }
 .dashboard_LifeContant{
-    
         padding: 50px 0px;
         display: flex;
         flex-direction: column;
         text-align: left;
-    
 }
 .newsletter-title {
     font-size: x-large;
@@ -203,6 +201,15 @@
     background: white;
     color:#63899e;
 }
+.css-1ty026z{
+    width: 450px;
+    background: #E8E8E8;
+}
+.css-15vqq1r:hover{
+    background: white;
+    color:#63899e;
+}
+
 @media screen and (max-width: 600px)  {
     .wlcm_boardzy {
         height: 390px;
