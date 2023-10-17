@@ -334,13 +334,13 @@ const addBoard = () => {
    }
 
    const duplicateBoard = (currentBoard) => {
-     const newBoard = { ...currentBoard, _id: uuidv4() };
-     console.log("Payload", newBoard);
      if (dbUser) {
+       const newBoard = { ...currentBoard };
        axios.post("/api/dashboard/duplicateDashboard", newBoard).then((res) => {
          setBoards([...boards, res.data]);
        });
      } else {
+      const newBoard={...currentBoard,_id:uuidv4()}
        setBoards([...boards, newBoard]);
        localStorage.setItem("Dasify", JSON.stringify([...boards, newBoard]));
      }
@@ -437,7 +437,7 @@ const addBoard = () => {
                                    setOptions(null); setSelectedDashboard(board._id);
                                    setDashBoardName(board.name); setShowDashboardModel(true)
                                 }}>Rename</MenuItem>
-                                <MenuItem onClick={()=>{setOptions(null);duplicateBoard(board)}}>
+                                <MenuItem onClick={()=>{duplicateBoard(board)}}>
                                 Duplicate
                                 </MenuItem>
                               </Menu>
