@@ -58,6 +58,9 @@ const tileSchema = new Schema({
     },
     editorHeading:{
         type: String
+    },
+    backgroundAction:{
+        type:String
     }
 
 });

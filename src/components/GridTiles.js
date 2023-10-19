@@ -70,7 +70,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   };
   
   const handleColorImage = (e) => {
-    setColorImage(e.target.value)
+    setSelectedTileDetail({...selectedTileDetail,backgroundAction:e.target.value})
+    const values=formValue
+    values.backgroundAction=e.target.value;
+    setFormValue(values)
   }
 
   const changeAction = (e) => {
@@ -138,10 +141,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
 
   const handleSave = (index) => {
-    setColorImage("color");
     let formData = new FormData;
     let payload = formValue
     if(payload.tileBackground instanceof File){
+      payload.backgroundAction="image",
       payload.displayTitle=false
       formData.append('tileImage', payload.tileBackground)
       delete payload.tileBackground
@@ -411,7 +414,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       if (dbUser){
         axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
           if (res.data) {
-            console.log("update Drag Coordinate")
+            // console.log("update Drag Coordinate")
           }
         })
       }else{
@@ -435,7 +438,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     if(dbUser){
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if(res.data){
-          console.log("update resize")
+          // console.log("update resize")
         }
       })
     }
@@ -730,13 +733,13 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
         <div className='all_options'>
           <ul>
             <li>
-              <h3 className='menu_header'>Tile Background</h3>
+              <h3 className='menu_header'>Box Background</h3>
               <div className='radio_menu'>
                 <div className="radiosets">
                   <FormControl>
                     <RadioGroup
                       aria-labelledby="demo-radio-buttons-group-label"
-                      defaultValue={colorImage}
+                      defaultValue={selectedTileDetail.backgroundAction}
                       name="radio-buttonsColor"
                       onChange={handleColorImage}
                     >
@@ -745,10 +748,10 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                     </RadioGroup>
                   </FormControl>
                 </div>
-                  {colorImage === 'color' &&
+                  {selectedTileDetail.backgroundAction === 'color' &&
                       <ColorPicker handleColorChange={handleColorChange} colorBackground={colorBackground}/>
                   }
-                  {colorImage === 'image' &&
+                  {selectedTileDetail.backgroundAction === 'image' &&
                   <div className='image_value'>
                     <Image
                     src={imageUpload}
@@ -766,7 +769,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               </div>
             </li>
             <li>
-              <h3 className='menu_header'>Tile Action</h3>
+              <h3 className='menu_header'>Box Action</h3>
               <div className='radio_control'>
                 <div className="radiosets">
                   <FormControl>
@@ -791,7 +794,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               </div>
             </li>
             <li>
-              <h3 className='menu_header'>Tile Text</h3>
+              <h3 className='menu_header'>Box Text</h3>
               <div className='title_editor'>
                 <div className='display_title'>
                   <div className='display_title_check'>
@@ -799,25 +802,25 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       type="checkbox"
                       checked={selectedTileDetail.displayTitle}
                       onChange={displayTitle}
-                      disabled={colorImage==="image"}
+                      disabled={selectedTileDetail.backgroundAction==="image"}
                     />
                     <label>Display Text</label>
                   </div>
                   <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} disabled={colorImage==="image"}>
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} disabled={selectedTileDetail.backgroundAction==="image"}>
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} disabled={colorImage==="image"}>
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} disabled={selectedTileDetail.backgroundAction==="image"}>
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
                     </select>
                   </div>
                 </div>
-                {colorImage!=="image"?
-                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image' disabled={colorImage==="image"}/>:""
+                {selectedTileDetail.backgroundAction!=="image"?
+                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image'/>:""
               }
 
               </div>
@@ -896,8 +899,17 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
           </DialogContent>
           <DialogActions>
           <div className='set-title-style'>
-          <Button sx={{background: '#63899e',
-                  color: '#fff',}} disabled={!selectedText} onClick={()=>handleSelectedText()}>Set Title</Button>
+          <Button sx={{
+                    background: '#63899e',
+                    color: '#fff',
+                    "&.Mui-disabled": {
+                      color: "#a9a9a9"
+                    }
+            }}
+             disabled={!selectedText}
+             onClick={()=>handleSelectedText()}>
+                    Set Title
+          </Button>
           <span> Select text and click here to set title in Text Editor</span>
             </div>
             <div>

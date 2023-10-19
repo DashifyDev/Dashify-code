@@ -176,7 +176,8 @@ function Header() {
     titleX:2,
     titleY:2,
     action : 'textEditor',
-    displayTitle:true
+    displayTitle:true,
+    backgroundAction:"color"
   }
   if(dbUser){
     axios.post('/api/tile/tile', newtile ).then((res)=>{
