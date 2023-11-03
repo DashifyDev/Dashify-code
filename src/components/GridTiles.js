@@ -927,6 +927,8 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
         content={textEditorContent}
         onSave={updateEditorContent}
         label={editorLabel}
+        tileDetails={tileCordinates}
+        selectedTileIndex={selectedTile}
       />
 
     </div >
