@@ -8,15 +8,23 @@ const SunEditor = dynamic(() => import("suneditor-react"), {
 });
 import CloseSharpIcon from '@mui/icons-material/CloseSharp';
 import { Dialog, DialogTitle, DialogContent ,DialogActions , Button} from '@mui/material';
+import leftArrow from "../assets/leftArrow1.svg"
+import rightArrow from "../assets/rightArrow.svg"
+import Image from 'next/image';
 
 
-const  TextEditor = ({ open, onClose , content, onSave,label }) => {
+const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selectedTileIndex }) => {
   const [ editorContent, setEditorContent] = useState();
-   
+  const [newIndexValue,setNewIndexValue]=useState()
+  const [newEditorContent,setNewEditorContent]=useState();
+  const [rightArrowButtonState,setRightArrowButtonState]=useState(true);
+  const [leftArrowButtonState,setLeftArrowButtonState]=useState(true)
+  
   useEffect(()=>{
     setEditorContent(content)
+    setNewIndexValue(selectedTileIndex)
+    setNewEditorContent(content)
   },[content])
-
 
   const labelChange = () => {
     const parser = new DOMParser();
@@ -37,16 +45,52 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
     onSave(editorContent)
   }
 
+  const handleNextTileContent=()=>{
+    setNewIndexValue(()=> {
+      let updatedIndex=newIndexValue+1;
+      if(updatedIndex<tileDetails.length){
+        setRightArrowButtonState(true)
+        setLeftArrowButtonState(true)
+        setNewEditorContent(()=> {return tileDetails[updatedIndex].tileContent})
+      }else{
+        setRightArrowButtonState(false)
+        updatedIndex=updatedIndex-1;
+      }
+      return updatedIndex;
+    })
+  }
+
+  const handlePreviousTileContent=()=>{
+    setNewIndexValue(()=>{
+      let updatedIndex=newIndexValue-1;
+      if(updatedIndex>=0){
+        setLeftArrowButtonState(true)
+        setRightArrowButtonState(true)
+        setNewEditorContent(()=>tileDetails[updatedIndex].tileContent)
+      }else{
+        setLeftArrowButtonState(false)
+        updatedIndex=updatedIndex+1;
+      }
+      return updatedIndex;
+    })
+  }
+
   return (
       <Dialog open={open} >
-          <DialogTitle>{label ? label : 'Title'}</DialogTitle>
+          <DialogTitle>
+              {label ? label : 'Title'}
+          </DialogTitle>
           <span className="absolute top-4 right-7 cursor-pointer"
                 onClick={handleClose}>
               <CloseSharpIcon />
           </span>
-          <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}>
+          <DialogContent sx={{ width: '600px', height: '540px', overflow:'hidden',display:"flex",alignItems:"center",gap:"0.8rem"}}>
+          {leftArrowButtonState&&<div>
+            <Image src={leftArrow} style={{width:"32px",height:"32px",cursor:"pointer"}} onClick={handlePreviousTileContent} alt="left-arrow"/>
+            </div>}
               <SunEditor 
-                defaultValue={content} 
+                defaultValue={content}
+                setContents={newEditorContent}
                 onChange={handleEditorChange} 
                 setOptions={{
                   buttonList: [
@@ -75,6 +119,9 @@ const  TextEditor = ({ open, onClose , content, onSave,label }) => {
                   font: fonts
                 }}
               />
+              {rightArrowButtonState&&<div>
+              <Image src={rightArrow} style={{width:"32px",height:"32px",cursor:"pointer"}} onClick={handleNextTileContent} alt="right-arrow" />
+            </div>}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleSave}>Save</Button>
