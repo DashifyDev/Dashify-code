@@ -280,3 +280,10 @@ img.text-editor-image {
     font-size: 12px;
     text-wrap: balance;
 }
+/* Side Drawer */
+.app-drawer-style{
+    width: 100%;
+    font-size: x-large;
+    font-weight: 600;
+    margin: 0px;
+}

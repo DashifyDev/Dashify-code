@@ -44,7 +44,7 @@ function LibraryHeader() {
         <Toolbar>
           <Grid container display="flex" justifyContent="space-between">
             <Grid item className="libray-heading">
-                Boards Library
+                Click on a board below to add to your Boardzy!
             </Grid>
             <Grid item className="right_header">
               <a href='/dashboard'>

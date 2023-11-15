@@ -65,11 +65,11 @@ function Library() {
   return (
     <div className="library">
       <div className="library-board-heading">
-        <p>[Click on a board below to add to your Boardzy!]</p>
+        <h1>Boards Library</h1>
       </div>
       <div className="library-body">
         <div className="library-Style-Filter">
-          <p>
+          <h2>
             <span className="paraStyle">FILTER:</span>
             {filterOption.map((filter, index) => (
               <span
@@ -88,8 +88,8 @@ function Library() {
                 {filter.filter}
               </span>
             ))}
-          </p>
-          <p>
+          </h2>
+          <h2>
             <span className="paraStyle">
               SEARCH:
               <input
@@ -100,7 +100,7 @@ function Library() {
                 }}
               />
             </span>
-          </p>
+          </h2>
         </div>
         <div className="lib_container">
           {noSearchResult ? (
@@ -128,7 +128,7 @@ function Library() {
                         className="filter-image"
                       />
                       <div className="board-details">
-                        <p className="paraStyle1">{data.boardName}</p>
+                        <h2 className="paraStyle1">{data.boardName}</h2>
                         <p>{data.boardDescription}</p>
                         <small>
                           <span className="paraStyle">Keywords: </span>

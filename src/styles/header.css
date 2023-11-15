@@ -155,12 +155,13 @@ a:focus {
     text-overflow: ellipsis;
 }
 
-.libray-heading{
-    font-size: xx-large;
+.libray-heading {
+    font-size: x-large;
     color: #63899e;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    font-style: italic;
 }
 
 @media screen and (max-width:767px) {
