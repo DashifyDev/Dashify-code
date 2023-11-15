@@ -3,7 +3,7 @@
 import { Drawer, ListItem, ListItemText,List } from '@mui/material'
 import React from 'react'
 import { useRouter } from 'next/navigation'
-
+import "../styles/styles.css"
 function SideDrawer({open , close ,user}) {
 
   const router = useRouter()
@@ -18,27 +18,27 @@ function SideDrawer({open , close ,user}) {
         width: '250px',
         flexShrink: 0,
         [`& .MuiDrawer-paper`]:
-        { width: '250px', 
+        { width: '380px', 
         boxSizing: 'border-box',
-        paddingTop:"55px",
+        paddingTop:"80px",
         background:'#63899e',
-        color:'#fff', },
+        color:'#fff',},
       }}>
         <List>
           <ListItem button onClick={() => reDirectToInfo('1qw')}>
-            <ListItemText primary="Welcome to Boardzy!" />
+            <p className='app-drawer-style'>Welcome To Boardzy</p>
           </ListItem>
           <ListItem button onClick={() => reDirectToInfo('2qw')}>
-            <ListItemText primary="What is Boardzy?" />
+            <p className='app-drawer-style'>What is Boardzy?</p>
           </ListItem>
           <ListItem button onClick={() => reDirectToInfo('3qw')}>
-            <ListItemText primary="How to use Boardzy" />
+            <p className='app-drawer-style'>How to use it</p>
           </ListItem>
           <ListItem button onClick={() => reDirectToInfo('4qw')}>
-            <ListItemText primary="Browse Boards" />
+            <p className='app-drawer-style'>Boards Library</p>
           </ListItem>
           <ListItem button onClick={() => reDirectToInfo('5qw')}>
-            <ListItemText primary="Also: Dashboard Your Life"/>
+            <p className='app-drawer-style'>Dashboard your Life</p>
           </ListItem>
         </List>
       </Drawer>

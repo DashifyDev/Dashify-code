@@ -5,11 +5,12 @@ import { useSearchParams, useRouter} from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import logo from '../../assets/whiteLogo.png'
-import { Dialog,DialogActions,DialogContent,Button } from '@mui/material';
-import CloseSharpIcon from '@mui/icons-material/CloseSharp';
+import Link from 'next/link';
+import tikTokIcon from"../../assets/tiktok.svg"
+import facebookIcon from"../../assets/facebook.svg"
+import instagramIcon from"../../assets/instagram.svg"
 
 function Info() {
-  const[openLetterModal,setOpenLetterModal]=useState();
   const searchParmas = useSearchParams()
   const router = useRouter()
 
@@ -38,11 +39,11 @@ function Info() {
           <h2>Welcome to Boardzy!</h2>
           <ul className="wlcm-boardzyContant-listStyle">
             <li>A place to organize.</li>
-            <li>To show who you are.</li>
-            <li>To track what you do.</li>
+            <li>To track all the things</li>
+            <li>To visualize your dreams</li>
             <li>To focus.</li>
           </ul>
-          <h5>A place to create your own boardzy</h5>
+          <h5>A place to create your boardzy</h5>
         </div>
       </section>
       <section className="about_boardzy" id="2qw">
@@ -50,9 +51,7 @@ function Info() {
           <h2 className="section-heading">What is Boardzy?</h2>
           <p>Boardzy is an app for creating “dashboards”.</p>
           <p>
-            Dashboards centralize ideas & info. With Boardzy, create beautiful
-            dashboards for your life, work, project, hobby, interests, ideas,
-            lists, brainstorms, notes, etc.
+          Create beautiful dashboards for your life, work, project, ideas, hobbies, etc.. Dashboard anything with Boardzy.
           </p>
         </div>
         <div className="board_image"></div>
@@ -61,40 +60,22 @@ function Info() {
         <div className="use_image"></div>
         <div className="use_boardzyContant">
           <h2 className="section-heading">How to use Boardzy</h2>
-          <p>Check out the Library to make some of our examples your own.</p>
+          <p>Grab a dashboard from the Dashboards Library.</p>
           <p>Or create a new board from scratch:</p>
           <ol type="number">
-            <li>Create +New Dashboard</li>
-            <li>Add Tiles.</li>
-            <li>Dress Tiles with Image or Colors</li>
-            <li>Clicking Tiles opens Text Editor or Link. </li>
+            <li>+New Dashboard</li>
+            <li>+Boxes</li>
+            <li>...Edit Box Images,Color & Text</li>
           </ol>
+          <p>Check out <Link style={{fontWeight:"bold"}} href={"#"}>VIDEO</Link> or <b>The ‘Dashboard Your Life’</b></p>
+          <p><b>Framework</b> for more help!</p>
         </div>
       </section>
       <section className="checkout_templates" id="4qw">
         <div className="checkout_templatesContant">
-          <h2 className="section-heading">Browse Boards</h2>
-          <p>Click here to check out our collection of pre-made boards.</p>
-          <ul className="checkout_templatesLink">
-            <li>
-              <a href="#">
-                <ChevronRightOutlinedIcon />
-                Welcome Boardzy
-              </a>
-            </li>
-            <li>
-              <a href="#">
-                <ChevronRightOutlinedIcon />
-                Vision NYC
-              </a>
-            </li>
-            <li>
-              <a href="#">
-                <ChevronRightOutlinedIcon />
-                Kidz Boards
-              </a>
-            </li>
-          </ul>
+          <h2 className="section-heading">Boards Library</h2>
+          <p><Link href={"https://www.boardzy.app/library"}><b>Click here</b></Link> for <b>Boardzy’s Boards Library.</b></p>
+          <p>Personal dashboards, work dashboards, school, fitness, travel, project…we’ve got dashboards for days.</p>
         </div>
         <div className="checkout-template-image"></div>
       </section>
@@ -102,71 +83,48 @@ function Info() {
       <section className="dashboard_Life" id="5qw">
         <div className="dashboard-image"></div>
         <div className="dashboard_LifeContant">
-          <h2 className="section-heading">Also: ‘Dashboard Your Life’</h2>
-          <p>Looking for a framework to help organize life?</p>
+          <h2 className="section-heading">Dashboard Your Life!</h2>
+          <p>Check out this simple, but powerful framework for organizing your life with dashboards.</p>
           <p>
-            Check out the <b>‘DYL’ Framework.</b>
+            <Link href={"https://dashboardyourlife.com/"}><b>The ‘DYL’ Framework.</b></Link>
           </p>
         </div>
       </section>
       <section className="contact_us" id="6qw">
         <div className="contact_usContant">
-          <h2>Contact Us</h2>
-          <p>
-            Email Us: <b>contact@boardzy.app</b>
-            <br />
+          <h2>Hang With Us...</h2>
+          <div className='footer-icon-class'>
+            <Image src={tikTokIcon} alt='TikTok'></Image>
+            <Image src={instagramIcon} alt='Instagram'></Image>
+            <Image src={facebookIcon} alt='Facebook'></Image>
+          </div>
+        </div>
+          <div className='subscription-class'>
+          <h2>
+        Subscribe for updates
+      </h2>
+        <div className='subscription-class-content'>
+          <input placeholder='Name'/>
+          <input placeholder='Email'/>
+          <button className='subscription-class-button'>SUBSCRIBE</button>
+        </div>
+          </div>
+               <div>
+               <h2 style={{margin:"90px 0px"}}>
+            Email:  <b>contact@boardzy.app</b>
+          </h2>
+          <h3>
             Submit New Feature Ideas:
-            <a
+            <br/>
+          <a
               href="https://boardzy.canny.io/boardzy-feature-requests"
               target="_blank"
             >
               Boardzy Feature Requests
             </a>
-          </p>
-          <p>
-            <button
-              onClick={() => {
-                setOpenLetterModal(true);
-              }}
-              className="newsletter-button"
-            >
-              Subscibe to our News Letter
-            </button>
-          </p>
-        </div>
+          </h3>
+              </div>
       </section>
-      <Dialog open={openLetterModal}>
-        <DialogContent>
-          <div
-            className="newsletter-closeIcon"
-            onClick={() => {
-              setOpenLetterModal(false);
-            }}
-          >
-            <CloseSharpIcon />
-          </div>
-          <div>
-            <div className="newsletter-title">Subscribe For Updates:</div>
-            <div className="newsletter-subHeading">Boardzy</div>
-            <div>
-              <input placeholder="Name" className="newsletter-input-field" />
-            </div>
-            <div>
-              <input placeholder="Email" className="newsletter-input-field" />
-            </div>
-            <Button
-              className='subscribe-button'
-              sx={{ background: "#63899e", color: "#fff", width: "100%",marginTop:"10px" }}
-              onClick={() => {
-                handleSubscribe,
-                setOpenLetterModal(false);
-              }}
-            >
-              Subscribe
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

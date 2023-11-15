@@ -7,9 +7,8 @@
     font-weight: bolder;
     margin-left: 1.6rem;
     font-size: larger;
-    font-style: italic;
 }
-.library-board-heading p{
+.library-board-heading h1{
     margin-bottom: 0px;
 }
 .library-body {
@@ -24,11 +23,14 @@
 .library-Style-Filter {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    margin-bottom: 1rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 .library-Style-Filter>p{
     margin: 0px;
+}
+.library-Style-Filter h2{
+    margin:0px
 }
 
 .filter-result{
