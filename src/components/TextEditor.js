@@ -14,7 +14,8 @@ import Image from 'next/image';
 
 
 const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selectedTileIndex }) => {
-  const [ editorContent, setEditorContent] = useState();
+  const [editorContent, setEditorContent] = useState();
+  const [textBoxHeading,setTextBoxHeading]=useState();
   const [newIndexValue,setNewIndexValue]=useState()
   const [newEditorContent,setNewEditorContent]=useState();
   const [rightArrowButtonState,setRightArrowButtonState]=useState(true);
@@ -39,6 +40,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
 
   const handleClose = () => {
     onClose(editorContent);
+    setTextBoxHeading("");
   };
 
   const handleSave = () => {
@@ -51,6 +53,12 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
       if(updatedIndex<tileDetails.length){
         setRightArrowButtonState(true)
         setLeftArrowButtonState(true)
+        if(tileDetails[updatedIndex].backgroundAction==="image"||tileDetails[updatedIndex].action==="noAction"){
+          setTextBoxHeading(" ")
+        }else{          
+          setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
+        }
+        console.log("===",tileDetails)
         setNewEditorContent(()=> {return tileDetails[updatedIndex].tileContent})
       }else{
         setRightArrowButtonState(false)
@@ -66,6 +74,11 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
       if(updatedIndex>=0){
         setLeftArrowButtonState(true)
         setRightArrowButtonState(true)
+        if(tileDetails[updatedIndex].backgroundAction==="image"||tileDetails[updatedIndex].action==="noAction"){
+          setTextBoxHeading(" ")
+        }else{          
+          setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
+        }
         setNewEditorContent(()=>tileDetails[updatedIndex].tileContent)
       }else{
         setLeftArrowButtonState(false)
@@ -78,7 +91,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
   return (
       <Dialog open={open} >
           <DialogTitle>
-              {label ? label : 'Title'}
+              {textBoxHeading?textBoxHeading:label}
           </DialogTitle>
           <span className="absolute top-4 right-7 cursor-pointer"
                 onClick={handleClose}>
