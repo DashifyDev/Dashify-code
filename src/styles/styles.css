@@ -270,16 +270,6 @@ img.text-editor-image {
 .css-14b29qc{
     justify-content: space-between !important;
 }
-.set-title-style{
-        display: flex;
-        align-items: center;
-        gap: 10px
-}
-.set-title-style span{
-    width: 200px;
-    font-size: 12px;
-    text-wrap: balance;
-}
 /* Side Drawer */
 .app-drawer-style{
     width: 100%;

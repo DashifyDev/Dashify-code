@@ -44,7 +44,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
-  const [selectedText, setSelectedText] = useState(null)
   const { dbUser } = useContext(globalContext)
   const hiddenFileInput = useRef(null)
   let firstNewLine=true;
@@ -52,22 +51,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   useEffect(()=>{
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   },[tileCordinates])
-
-  const handleSelectedText = () => {
-    let items = tileCordinates;
-    let tileId = items[selectedTile]._id;
-    if (dbUser) {
-      axios
-        .patch(`/api/tile/${tileId}`, { editorHeading: selectedText })
-        .then((res) => {
-          let item={...items[selectedTile],...res.data}
-          items[selectedTile]=item
-        })
-    } else {
-      items[selectedTile].editorHeading = selectedText;
-      updateTilesInLocalstorage(items);
-    }
-  };
   
   const handleColorImage = (e) => {
     setSelectedTileDetail({...selectedTileDetail,backgroundAction:e.target.value})
@@ -489,7 +472,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setSelectedPod(null)
   }
 
-  const updateEditorContent = (content) => {
+  const updateEditorContent = (content,editorTitle) => {
     if (selectedPod) {
       let podIndex = selectedPod.podIndex
       let tileIndex = selectedPod.tileIndex
@@ -513,7 +496,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
     setTextEditorContent(null)
     setOpenTextEdior(false)
     if(dbUser){
-      axios.patch(`/api/tile/${tileId}`, {tileContent : content}).then((res) => {
+      axios.patch(`/api/tile/${tileId}`, {tileContent : content, editorHeading: editorTitle}).then((res) => {
         let item = { ...items[selectedTile], ...res.data };
         items[selectedTile] = item;
         setTileCordinates(items)
@@ -521,7 +504,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
       })
     }
     else{
-      let item = { ...items[selectedTile], tileContent : content }
+      let item = { ...items[selectedTile], tileContent : content, editorHeading: editorTitle }
       items[selectedTile] = item;
       setTileCordinates(items)
       updateTilesInLocalstorage(items)
@@ -802,27 +785,23 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                       type="checkbox"
                       checked={selectedTileDetail.displayTitle}
                       onChange={displayTitle}
-                      disabled={selectedTileDetail.backgroundAction==="image"}
                     />
                     <label>Display Text</label>
                   </div>
                   <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} disabled={selectedTileDetail.backgroundAction==="image"}>
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX} >
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} disabled={selectedTileDetail.backgroundAction==="image"}>
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY} >
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
                     </select>
                   </div>
                 </div>
-                {selectedTileDetail.backgroundAction!=="image"?
-                <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image'/>:""
-              }
-
+              <Image src={text} alt="TEXT"onClick={()=> setEditorOpen(true) } className='text-editor-image'/>
               </div>
             </li>
           </ul>
@@ -861,10 +840,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
 
       <Dialog open={editorOpen}>
           <DialogContent sx={{ width: '600px', height: '500px', overflow:'hidden'}}
-          onMouseUp={()=>{
-            let selection=window.getSelection()
-            setSelectedText(selection.toString())
-          }}>
+          >
               <SunEditor 
                 value={formValue.tileText}
                 defaultValue={selectedTileDetail.tileText}
@@ -898,20 +874,6 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
               />
           </DialogContent>
           <DialogActions>
-          <div className='set-title-style'>
-          <Button sx={{
-                    background: '#63899e',
-                    color: '#fff',
-                    "&.Mui-disabled": {
-                      color: "#a9a9a9"
-                    }
-            }}
-             disabled={!selectedText}
-             onClick={()=>handleSelectedText()}>
-                    Set Title
-          </Button>
-          <span> Select text and click here to set title in Text Editor</span>
-            </div>
             <div>
             <Button onClick={() => setEditorOpen(false)} sx={{color:'#63899e'}}>Close</Button>
             <Button onClick={() => setEditorOpen(false)} sx={{background: '#63899e',
