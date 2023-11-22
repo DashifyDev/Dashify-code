@@ -65,7 +65,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
       if(updatedIndex<tileDetails.length){
         setRightArrowButtonState(true)
         setLeftArrowButtonState(true)
-        if(tileDetails[updatedIndex].backgroundAction==="image"||tileDetails[updatedIndex].action==="noAction"){
+        if(tileDetails[updatedIndex].backgroundAction==="image"||!tileDetails[updatedIndex].hasOwnProperty("editorHeading")){
           setTextBoxHeading("Title")
         }else{          
           setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
@@ -85,7 +85,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
       if(updatedIndex>=0){
         setLeftArrowButtonState(true)
         setRightArrowButtonState(true)
-        if(tileDetails[updatedIndex].backgroundAction==="image"||tileDetails[updatedIndex].action==="noAction"){
+        if(tileDetails[updatedIndex].backgroundAction==="image"||!tileDetails[updatedIndex].hasOwnProperty("editorHeading")){
           setTextBoxHeading("Title")
         }else{
           setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
@@ -106,6 +106,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
           {editBoxHeading ? (
             <input
               type="text"
+              value={textBoxHeading}
               onBlur={() => setEditBoxHeading(false)}
               onChange={(e) => {
                 handleHeadingChange(e.target.value);
@@ -114,7 +115,7 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
             />
           ) : (
             <span>
-                {tileDetails[selectedTileIndex]&&tileDetails[selectedTileIndex].editorHeading
+                {textBoxHeading
                 ? textBoxHeading
                 : "Title"}
             </span>
