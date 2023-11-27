@@ -51,6 +51,15 @@ export default function RootLayout({ children }) {
                   }(window, document, 'ttq');
                   `}
           </Script>
+
+          {/* Google Analytics Tag */}
+          <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8KMTMSNBKP" id='google-analytics'></Script>
+          <Script id='google-analytics'>
+            {`window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-8KMTMSNBKP');`}
+          </Script>
           <body id="__next">
             <noscript>
               <iframe
