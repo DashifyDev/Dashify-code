@@ -4,6 +4,7 @@ import { ThemeProvider, CssBaseline } from "./theme/themeExports";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import AppContextProvider from "@/context/appContext";
 import Script from "next/script";
+import IsMobilePrompt from "@/components/IsMobilePrompt";
 
 export const metadata = {
   title: "Boardzy",
@@ -51,7 +52,17 @@ export default function RootLayout({ children }) {
                   }(window, document, 'ttq');
                   `}
           </Script>
+
+          {/* Google Analytics Tag */}
+          <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8KMTMSNBKP" id='google-analytics'></Script>
+          <Script id='google-analytics'>
+            {`window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-8KMTMSNBKP');`}
+          </Script>
           <body id="__next">
+            <IsMobilePrompt/>
             <noscript>
               <iframe
                 src="https://www.googletagmanager.com/ns.html?id=GTM-5QKCCXNS"

@@ -25,7 +25,9 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
   const [editBoxHeading,setEditBoxHeading]=useState(false);
 
   useEffect(()=>{
-    setTextBoxHeading(tileDetails[selectedTileIndex]&&tileDetails[selectedTileIndex].editorHeading)
+    setTextBoxHeading(tileDetails[selectedTileIndex]&&tileDetails[selectedTileIndex].editorHeading);
+    setLeftArrowButtonState(true);
+    setRightArrowButtonState(true);
   },[selectedTileIndex])
 
   useEffect(()=>{
