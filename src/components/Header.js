@@ -34,7 +34,7 @@ function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [options, setOptions] = useState(null)
   const  {isLoading,user} = useUser()
-  const  {dbUser, tiles, setTiles, activeBoard, setActiveBoard, boards, setBoards}  = useContext(globalContext)
+  const  {dbUser, tiles, setTiles, activeBoard, setActiveBoard, boards, setBoards,headerwidth}  = useContext(globalContext)
   const divRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const router = useRouter()
@@ -43,7 +43,6 @@ function Header() {
   const [shareLinkModal,setShareLinkModal]=useState(false)
   const [copiedUrl, setCopiedUrl] = useState("");
   const [isCopied,setIsCopied]=useState(false)
-  
   
   useEffect(() => {
     const divElement = divRef.current.ref.current;
@@ -357,6 +356,7 @@ const addBoard = () => {
             return theme.zIndex.drawer + 1;
           },
           backgroundColor: "#FFFFFF",
+          width: headerwidth
         }}
       >
         <CssBaseline />

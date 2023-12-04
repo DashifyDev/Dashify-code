@@ -9,9 +9,22 @@
 .section-heading{
     color: #63899e;
 }
+.mobile-web-information {
+    text-align: center;
+    margin: 50px 450px 0px 450px;
+    border: 1px solid black;
+    padding: 40px 0px;
+    color: red;
+    font-style: italic;
+    font-weight: 500;
+}
+.mobile-web-information p{
+    margin:0px;
+}
 .wlcm-boardzyContant-listStyle{
     list-style: none;
     font-size: x-large;
+    text-align: center;
 }
 .wlcm_boardzy {
     /* background-image: url('../../assets/infoBoardzy.jpg'); */
@@ -27,7 +40,7 @@
 
 .boardzy_logo {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .boardzy_logo img {
@@ -37,9 +50,10 @@
     cursor: pointer;
 }
 
-.wlcm_boardzy h2{
+.wlcm_boardzy h1{
     color: #fff;
     margin-top: 0;
+    text-align: center;
 }
 
 .about_boardzy{
@@ -85,12 +99,13 @@
     text-align: left;
     /* background: aliceblue; */
     /* padding: 0px 50px; */
+    text-wrap: balance;
 }
 .use_boardzyContant h2{
     margin-bottom: 0px;
 }
 .use_boardzyContant p{
-    margin-bottom: 0px;
+    margin-bottom: 20px;
 }
 .use_boardzyContant ol{
     font-size: small;
@@ -114,6 +129,7 @@
     flex-direction: column;
     padding: 50px;
     text-align: right;
+    text-wrap: balance;
 }
 
 .checkout_templatesLink{
@@ -175,14 +191,13 @@
     margin-bottom:60px;
 }
 .subscription-class-content {
-        margin: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        /* width: 100%; */
-        justify-content: center;
-        background-color: white;
-        padding: 140px 400px
+    margin: 0px 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    background-color: white;
+    padding: 40px 80px;
 }
 .subscription-class-content input{
     padding: 10px 0px 10px 15px;
@@ -261,6 +276,19 @@
         padding-left: 10px;
     }
 
+    .wlcm_boardzy h1 {
+        color: #fff;
+        margin-top: 50px;
+        text-align: center;
+    }
+
+    .mobile-web-information {
+        margin: 45px 35px;
+        padding: 14px;
+        font-size: medium;
+        text-wrap: pretty;
+    }
+
     .boardzy_logo img {
         color: transparent;
         width: 150px;
@@ -334,7 +362,6 @@
     }
     .dashboard_LifeContant{
         padding: 20px;
-
     }
     .section-heading{
         font-size: x-large;
@@ -347,6 +374,7 @@
     }
     .subscription-class-content{
         padding: 40px 50px;
+        margin:0px
     }
     .subscription-class-button{
         width: 50%;

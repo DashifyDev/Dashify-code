@@ -36,22 +36,25 @@ function Info() {
           <Image src={logo} alt="image" onClick={() => router.push("/")} />
         </div>
         <div className="wlcm_boardzyContant">
-          <h2>Welcome to Boardzy!</h2>
+          <h1>Welcome to Boardzy!</h1>
           <ul className="wlcm-boardzyContant-listStyle">
             <li>A place to organize.</li>
-            <li>To track all the things</li>
             <li>To visualize your dreams</li>
-            <li>To focus.</li>
+            <li>To bring ideas to life</li>
           </ul>
-          <h5>A place to create your boardzy</h5>
+          <h5 style={{textAlign:"center"}}>A place to create your boardzy</h5>
         </div>
+      </section>
+      <section className='mobile-web-information'>
+      <p>The Boardzy web app is not yet optimized for mobile.</p>
+      <p>Please visit on a desktop device.</p>
       </section>
       <section className="about_boardzy" id="2qw">
         <div className="about_boardzyContant">
           <h2 className="section-heading">What is Boardzy?</h2>
-          <p>Boardzy is an app for creating “dashboards”.</p>
+          <p>Boardzy is an app for creating dashboards. Dashboards that help organize your life, work, projects, etc.</p>
           <p>
-          Create beautiful dashboards for your life, work, project, ideas, hobbies, etc.. Dashboard anything with Boardzy.
+          Dashboard anything with Boardzy!
           </p>
         </div>
         <div className="board_image"></div>
@@ -60,22 +63,22 @@ function Info() {
         <div className="use_image"></div>
         <div className="use_boardzyContant">
           <h2 className="section-heading">How to use Boardzy</h2>
-          <p>Grab a dashboard from the Dashboards Library.</p>
-          <p>Or create a new board from scratch:</p>
-          <ol type="number">
+          <p>Create dashboards on Boardzy by using a template or starting from scratch.</p>
+          <p>Either way, check out the video to learn more.</p>
+          {/* <ol type="number">
             <li>+New Dashboard</li>
             <li>+Boxes</li>
             <li>...Edit Box Images,Color & Text</li>
-          </ol>
-          <p>Check out <Link style={{fontWeight:"bold"}} href={"#"}>VIDEO</Link> or <b>The ‘Dashboard Your Life’</b></p>
-          <p><b>Framework</b> for more help!</p>
+          </ol> */}
+          {/* <p>Check out <Link style={{fontWeight:"bold"}} href={"#"}>VIDEO</Link> or <b>The ‘Dashboard Your Life’</b></p> */}
+          {/* <p><b>Framework</b> for more help!</p> */}
         </div>
       </section>
       <section className="checkout_templates" id="4qw">
         <div className="checkout_templatesContant">
-          <h2 className="section-heading">Boards Library</h2>
-          <p><Link href={"https://www.boardzy.app/library"}><b>Click here</b></Link> for <b>Boardzy’s Boards Library.</b></p>
-          <p>Personal dashboards, work dashboards, school, fitness, travel, project…we’ve got dashboards for days.</p>
+          <h2 className="section-heading">Dashboard Library</h2>
+          <p>Get a head start creating your own dashboard by visiting Boardzy’s</p>
+          <p><Link href={"https://www.boardzy.app/library"}><b>Dashboard Library</b></Link></p>
         </div>
         <div className="checkout-template-image"></div>
       </section>
@@ -84,9 +87,10 @@ function Info() {
         <div className="dashboard-image"></div>
         <div className="dashboard_LifeContant">
           <h2 className="section-heading">Dashboard Your Life!</h2>
-          <p>Check out this simple, but powerful framework for organizing your life with dashboards.</p>
-          <p>
-            <Link href={"https://dashboardyourlife.com/"}><b>The ‘DYL’ Framework.</b></Link>
+          <p>A simple, but powerful framework to help organize your life with dashboards.</p>
+          <p>Check out: 
+            <Link href={"https://dashboardyourlife.com/"}><b>The ‘Dashboard Your Life’ Framework
+              </b></Link>
           </p>
         </div>
       </section>

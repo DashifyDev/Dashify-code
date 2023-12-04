@@ -9,7 +9,7 @@ function page({params}) {
   
   const { id } = params
   const { dbUser, tiles, setTiles ,boards,setBoards,
-          activeBoard, setActiveBoard, } = useContext(globalContext)
+          activeBoard, setActiveBoard,setHeaderWidth } = useContext(globalContext)
 
     useEffect(()=>{
       const pageTitle=boards.filter(boardId=>activeBoard===boardId._id)
@@ -18,6 +18,15 @@ function page({params}) {
         document.title= pageName
       }
     },[id,activeBoard])
+
+    useEffect(()=>{
+      if(tiles.length>0){
+        let maxWidth=getTileMaxWidth()
+        const windowWidth = window.innerWidth;
+        const newMaxWidth=Math.max(windowWidth,maxWidth)
+        setHeaderWidth(newMaxWidth)
+      }
+    },[tiles])
 
   useEffect(() => {
     if (boards.length >= 1) {
@@ -60,6 +69,17 @@ function page({params}) {
        return [res.data, ...prev]
       })
     })
+  }
+
+  const getTileMaxWidth=()=>{
+    const maxWidth=
+      tiles.map(item => {
+        const widthValue = parseInt(item.width, 10) || 0;
+        const xValue = item.x || 0;
+        const sum = widthValue + xValue;
+        return sum;
+      })
+    return(Math.max(...maxWidth))
   }
 
   const getTileDataWhileUser = (sameUser) => {

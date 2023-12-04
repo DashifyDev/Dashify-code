@@ -18,7 +18,7 @@ export default function IsMobilePrompt(){
 return(
     <Dialog open={showPopup} >
         <DialogTitle>Warning</DialogTitle>
-        <DialogContent>Boardzy is not a mobile application. Please use it from desktop</DialogContent>
+        <DialogContent>The Boardzy web app  is not currently optimized for mobile. Please visit on a desktop device.</DialogContent>
         <DialogActions>
             <Button onClick={()=>setShowPopUp(false)}>Close</Button>
         </DialogActions>
