@@ -44,7 +44,7 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
   const [resizeCount, setResizeCount] = useState(0)
   const [colorBackground, setColorBackground] = useState()
   const [editorOpen, setEditorOpen] = useState(false)
-  const { dbUser } = useContext(globalContext)
+  const { dbUser,setHeaderWidth,headerwidth } = useContext(globalContext)
   const hiddenFileInput = useRef(null)
   let firstNewLine=true;
 
@@ -692,6 +692,12 @@ export default function GridTiles({tileCordinates, setTileCordinates,activeBoard
                 }
                 else{
                   setShowOption(`tile_${index}`)
+                }
+              }}
+              onDrag={(event,data)=>{
+                const tileRight = data.x + parseInt(tile.width,10);
+                if (tileRight > headerwidth) {
+                  setHeaderWidth(tileRight)
                 }
               }}
             > 

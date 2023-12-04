@@ -10,6 +10,7 @@ const AppContextProvider = ({ children }) => {
     const [tiles, setTiles] = useState([])
     const [dbUser, setDbuser] = useState()
     const [activeBoard, setActiveBoard] = useState('')
+    const [headerwidth,setHeaderWidth]=useState()
     const [boards, setBoards] = useState([])
 
     React.useEffect(() => {
@@ -40,7 +41,9 @@ const AppContextProvider = ({ children }) => {
                 activeBoard, 
                 setActiveBoard,
                 setBoards,
-                boards
+                boards,
+                setHeaderWidth,
+                headerwidth
             }}
         >
             {children}

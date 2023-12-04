@@ -45,6 +45,7 @@
     text-wrap: nowrap;
     overflow-x: hidden;
     max-width: 900px;
+    gap: 15px;
 }
 .scroll-bar {
     display: flex;
@@ -163,42 +164,11 @@ a:focus {
     flex-wrap: wrap;
     font-style: italic;
 }
-
-@media screen and (max-width:767px) {
-    body{
-        padding-right:0px !important ;
+@media screen and (max-width:767px){
+    .left_content{
+        flex-wrap: nowrap;
     }
-    .libray-heading{
-        font-size: large;
-    }
-    .css-1u64d6w-MuiModal-root-MuiDrawer-root .MuiDrawer-paper{
-        padding-top: 85px;
-    }
-    .header_container .right_header{
-        order: 1;
-        width: 100%;
-       justify-content: space-between;
-    }
-    .header_container .left_content{
-        order: 2;
-        justify-content: space-between;
-        width: 100%;
-    }
-    .header_container .right_header .menu-button{
-        margin-left: auto;
-    }
-    .header_container .left_content .vertical{
-        display: none;
-    }
-    .header_container .left_content .add_tiles{
-        order: 2;
-    }
-    .header_container .left_content .board_nav{
-        order: 1;
-        justify-content: center;
-        width: 100%;
-    }
-    .header_container .left_content .dashboard_btn{
-        order: 3;
+    .dashboard_btn{
+        width: max-content;
     }
 }

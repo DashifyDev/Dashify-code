@@ -65,7 +65,7 @@ function Library() {
   return (
     <div className="library">
       <div className="library-board-heading">
-        <h1>Boards Library</h1>
+        <h1>Dashboard Library</h1>
       </div>
       <div className="library-body">
         <div className="library-Style-Filter">
