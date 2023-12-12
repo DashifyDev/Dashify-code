@@ -1,33 +1,31 @@
-'use client'
-import {useState, React, useContext , useEffect} from 'react'
-import {  AppBar,  Toolbar,  Grid, Box } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import CssBaseline from '@mui/material/CssBaseline';
-import { IconButton, Avatar, Button, Menu, MenuItem } from '@mui/material';
-import SideDrawer from '@/components/SideDrawer';
-import { globalContext } from '@/context/globalContext';
-import '../../styles//header.css'
+"use client";
+import { useState, React, useContext, useEffect } from "react";
+import { AppBar, Toolbar, Grid, Box } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import CssBaseline from "@mui/material/CssBaseline";
+import { IconButton, Avatar, Button, Menu, MenuItem } from "@mui/material";
+import SideDrawer from "@/components/SideDrawer";
+import { globalContext } from "@/context/globalContext";
+import "../../styles//header.css";
 import logo from "../../assets/logo.png";
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 function LibraryHeader() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const  {dbUser}  = useContext(globalContext)
-  const router=useRouter();
-  
+  const { dbUser } = useContext(globalContext);
+  const router = useRouter();
 
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
-  }
-
+  };
 
   const handlePicClick = (event) => {
     setAnchorEl(event.currentTarget);
-    navigator.clipboard.writeText(window.location.href)
-  }
-  
+    navigator.clipboard.writeText(window.location.href);
+  };
+
   return (
     <Box>
       <AppBar
@@ -44,11 +42,11 @@ function LibraryHeader() {
         <Toolbar>
           <Grid container display="flex" justifyContent="space-between">
             <Grid item className="libray-heading">
-                Click on a board below to add to your Boardzy!
+              Click on a board below to add to your Boardzy!
             </Grid>
             <Grid item className="right_header">
-              <a href='/dashboard'>
-              <Image className="logo" src={logo} alt="logo"/>
+              <a href="/dashboard">
+                <Image className="logo" src={logo} alt="logo" />
               </a>
               <IconButton
                 size="large"
@@ -57,7 +55,7 @@ function LibraryHeader() {
                 aria-label="menu"
                 onClick={toggleDrawer}
               >
-                <MenuIcon sx={{ color: "#45818e" }} />
+                <MenuIcon sx={{ color: "#45818e", marginLeft: "10px" }} />
               </IconButton>
               {dbUser ? (
                 <div>
@@ -97,5 +95,4 @@ function LibraryHeader() {
   );
 }
 
-export default LibraryHeader
-
+export default LibraryHeader;

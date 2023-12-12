@@ -49,10 +49,9 @@ function Library() {
         .filter((elements) => elements.keywords.length > 0);
       if (result.length) {
         setLibrary(result);
-      }else if(keywordsSearch.length){
-        setLibrary(keywordsSearch)
-      }
-       else {
+      } else if (keywordsSearch.length) {
+        setLibrary(keywordsSearch);
+      } else {
         setNoSearchResult(true);
       }
     }
@@ -65,7 +64,7 @@ function Library() {
   return (
     <div className="library">
       <div className="library-board-heading">
-        <h1>Dashboard Library</h1>
+        <h1>Boards Library</h1>
       </div>
       <div className="library-body">
         <div className="library-Style-Filter">
