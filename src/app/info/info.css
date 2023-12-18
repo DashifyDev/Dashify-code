@@ -92,37 +92,9 @@
     gap: 7rem;
 }
 
-/* .use_image {
-    background-image: url("../../assets/How\ to\ use\ Boardzy.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 360px;
+iframe {
     width: 40%;
-} */
-
-.use_image {
-    position: relative;
-    background-image: url("../../assets/How to use Boardzy.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     height: 360px;
-    width: 40%;
-}
-
-.video-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100px;
-    height: 100px;
-    background-image: url('../../assets/videoplaybutton.png');
-    background-size: cover;
-    cursor: pointer;
-    mix-blend-mode: lighten;
-    background-position: center;
 }
 
 .use_boardzyContant {
@@ -358,12 +330,9 @@
         margin-top: 21px;
     }
 
-    .use_image {
-        /* background-image: url(/_next/static/media/decorativeWall.5f04cc11.jpg); */
-        height: 220px;
+    iframe {
         width: 100%;
-        background-size: cover;
-        background-position: center;
+        height: 220px;
     }
 
     .board_image {

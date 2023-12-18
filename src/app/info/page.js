@@ -64,12 +64,14 @@ function Info() {
         <div className="board_image"></div>
       </section>
       <section className="use_boardzy" id="3qw">
-        {/* <div className="use_image"> */}
-        {/* <div class="video-button"></div> */}
-        {/* </div> */}
-        <div className="use_image">
-          <div className="video-button"></div>
-        </div>
+        <iframe
+          src="https://www.youtube.com/embed/nfij5KmRi2s?si=hthvHiFmYqc6vPDW"
+          title="YouTube video player"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        />
+
         <div className="use_boardzyContant">
           <h2 className="section-heading">How to use Boardzy</h2>
           <p>
