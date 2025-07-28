@@ -23,6 +23,63 @@ import { useRouter } from 'next/navigation';
 import useAdmin from '@/hooks/isAdmin';
 import { useParams } from 'next/navigation';
 
+const defaultBoardTemplate = {
+  name: "WELCOME TO BOARDZY!",
+  tiles: [
+    {
+      tileText:
+        "<h2>Welcome to Boardzy!</h2><p>Where boards are life!</p><p>Check out our Boards Library to get started >>></p>",
+      displayTitle: true,
+      action: "link",
+      tileLink: "/info?sectionId=1qw",
+      width: "450px",
+      height: "200px",
+      x: 50,
+      y: 50,
+      backgroundAction: "color",
+      tileBackground: "#6d94a7",
+    },
+    {
+      tileText:
+        "<h3>Boards Library</h3><p>Browse through our pre-made boards to help you get started!</p>",
+      displayTitle: true,
+      action: "link",
+      tileLink: "/library",
+      width: "450px",
+      height: "200px",
+      x: 550,
+      y: 50,
+      backgroundAction: "color",
+      tileBackground: "#46a7c5",
+    },
+    {
+      tileText: "<h3>What is Boardzy & How to Use It</h3>",
+      displayTitle: true,
+      action: "link",
+      tileLink: "/info?sectionId=2qw",
+      width: "300px",
+      height: "200px",
+      x: 50,
+      y: 300,
+      backgroundAction: "color",
+      tileBackground: "#73a5bf",
+    },
+    {
+      tileText:
+        "<h4>Get organized with:</h4><h2>'Dashboard Your Life'</h2><p>Use the DYL framework to organize your life with Boardzy.</p>",
+      displayTitle: true,
+      action: "link",
+      tileLink: "/info?sectionId=5qw",
+      width: "600px",
+      height: "150px",
+      x: 400,
+      y: 300,
+      backgroundAction: "color",
+      tileBackground: "#035e84",
+    },
+  ],
+};
+
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [showIcon , setShowIcon] = useState(null)
@@ -68,51 +125,156 @@ function Header() {
   };
 
   useEffect(() => {
-    if(dbUser && user){
-      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res) => {
-        if (res.data.length >= 1) {
-          setBoards((prev) =>{
-            return [ ...res.data]
-          });
-          if(!id){
-            router.push(`/dashboard/${res.data[0]._id}`)
+    if (dbUser && user) {
+      if (boards.length > 0 && boards.some((b) => b.userId === dbUser._id))
+        return;
+
+      axios
+        .get(`/api/dashboard/addDashboard/?id=${dbUser._id}`)
+        .then((res) => {
+          if (res.data && res.data.length > 0) {
+            setBoards(res.data);
+            localStorage.removeItem("Dasify");
+            if (!id) {
+              router.push(`/dashboard/${res.data[0]._id}`);
+            }
+          } else {
+            const localData = JSON.parse(localStorage.getItem("Dasify"));
+            if (localData && localData.length > 0) {
+              migrateLocalBoardsToDB(localData);
+            } else {
+              createDefaultBoardForUser();
+            }
           }
-        }
-      })
+        })
+        .catch((error) => {
+          console.error("Error fetching dashboards:", error);
+        });
+    } else if (!isLoading && !user) {
+      getDefaultDashboard();
     }
-    else{
-      if(!isLoading && !user){
-        getDefaultDashboard()
-      }
-    }
-    
-  }, [user,dbUser,isLoading]);
+  }, [user, dbUser, isLoading]);
   
   
-  const getDefaultDashboard = async() => {
-    let localData  = JSON.parse(localStorage.getItem('Dasify'))
-    
-    if(localData){
-      setBoards((prev)=> [...localData])
-      if(!id){
-        if(localData.length > 0){
-          router.push(`/dashboard/${localData[0]._id}`)
+  const createDefaultBoardForUser = async () => {
+    const boardPayload = {
+      name: defaultBoardTemplate.name,
+      userId: dbUser._id,
+      tiles: [],
+    };
+
+    try {
+      const boardResponse = await axios.post(
+        "/api/dashboard/addDashboard",
+        boardPayload
+      );
+      const newBoard = boardResponse.data;
+      const boardId = newBoard._id;
+
+      const tileCreationPromises = defaultBoardTemplate.tiles.map(
+        (tileTemplate) => {
+          const tilePayload = {
+            ...tileTemplate,
+            dashboardId: boardId,
+          };
+          return axios.post("/api/tile/tile", tilePayload);
         }
+      );
+
+      const createdTilesResponses = await Promise.all(tileCreationPromises);
+      const createdTiles = createdTilesResponses.map((res) => res.data);
+
+      const tileIds = createdTiles.map((tile) => tile._id);
+      await axios.patch(`/api/dashboard/${boardId}`, { tiles: tileIds });
+
+      newBoard.tiles = createdTiles;
+      setBoards([newBoard]);
+      if (!id) {
+        router.push(`/dashboard/${newBoard._id}`);
       }
-      return
+    } catch (error) {
+      console.error("Failed to create default board:", error);
+    }
+  };
+
+  const getDefaultDashboard = () => {
+    let localData = JSON.parse(localStorage.getItem("Dasify"));
+
+    if (localData && localData.length > 0) {
+      setBoards(localData);
+      if (!id) {
+        router.push(`/dashboard/${localData[0]._id}`);
+      }
+      return;
     }
 
-    axios.get('/api/dashboard/defaultDashboard').then(res=>{
-      setBoards((prev)=> [...res.data])
-      if(!id){
-        if(res.data.length > 0){
-          router.push(`/dashboard/${res.data[0]._id}`)
-        }
-      }
-      localStorage.setItem("Dasify",JSON.stringify(res.data))
-    })
-  }
+    const boardId = uuidv4();
+    const welcomeBoard = {
+      _id: boardId,
+      name: defaultBoardTemplate.name,
+      tiles: defaultBoardTemplate.tiles.map((tileTemplate) => ({
+        ...tileTemplate,
+        _id: uuidv4(),
+        dashboardId: boardId,
+      })),
+      position: 1,
+    };
 
+    const boardsToStore = [welcomeBoard];
+
+    setBoards(boardsToStore);
+    localStorage.setItem("Dasify", JSON.stringify(boardsToStore));
+
+    if (!id) {
+      router.push(`/dashboard/${boardsToStore[0]._id}`);
+    }
+  };
+
+  const migrateLocalBoardsToDB = async (localBoards) => {
+    try {
+      const boardCreationPromises = localBoards.map(async (localBoard) => {
+        const boardPayload = {
+          name: localBoard.name,
+          userId: dbUser._id,
+          tiles: [],
+        };
+        const boardResponse = await axios.post(
+          "/api/dashboard/addDashboard",
+          boardPayload
+        );
+        const newBoard = boardResponse.data;
+        const boardId = newBoard._id;
+
+        const tileCreationPromises = localBoard.tiles.map((localTile) => {
+          const tilePayload = {
+            ...localTile,
+            dashboardId: boardId,
+          };
+          delete tilePayload._id;
+          return axios.post("/api/tile/tile", tilePayload);
+        });
+
+        const createdTilesResponses = await Promise.all(tileCreationPromises);
+        const createdTiles = createdTilesResponses.map((res) => res.data);
+        const tileIds = createdTiles.map((tile) => tile._id);
+
+        await axios.patch(`/api/dashboard/${boardId}`, { tiles: tileIds });
+
+        newBoard.tiles = createdTiles;
+        return newBoard;
+      });
+
+      const migratedBoards = await Promise.all(boardCreationPromises);
+
+      setBoards(migratedBoards);
+      localStorage.removeItem("Dasify");
+      if (!id && migratedBoards.length > 0) {
+        router.push(`/dashboard/${migratedBoards[0]._id}`);
+      }
+    } catch (error) {
+      console.error("Failed to migrate local boards:", error);
+    }
+  };
 
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
