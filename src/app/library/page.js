@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from "react";
 import "./library.css";
 import axios from "axios";
+import { useRouter } from 'next/navigation';
 
 function Library() {
   const [library, setLibrary] = useState([]);
   const [originalLibrary, setOriginalLibrary] = useState([]);
   const [noSearchResult, setNoSearchResult] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("mostPopular");
+  const router = useRouter();
 
   const filterOption = [
     { id: "mostPopular", filter: "Most Popular" },
@@ -58,7 +60,8 @@ function Library() {
   };
 
   const redirectToUser = (link) => {
-    window.open(link, "_blank");
+      const boardId = link.split('/').pop();
+      router.push(`/dashboard/${boardId}`);
   };
 
   return (
