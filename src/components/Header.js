@@ -474,7 +474,7 @@ const addBoard = () => {
                     setSelectedDashboard(null);
                     setDashBoardName("");
                   }}
-                  disabled={isAdmin && boards.length>=4}
+                  // disabled={isAdmin && boards.length>=4}
                 >
                   + New
                 </Button>
