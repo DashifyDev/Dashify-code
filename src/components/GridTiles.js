@@ -976,7 +976,7 @@ export default function GridTiles({
                 <span onClick={() => deleteTile(selectedTile)}>Delete</span>
               </div>
             </div>
-            <div>
+            <div sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 className="button_cancel"
                 sx={{ color: "#63899e", marginRight: "3px" }}
@@ -1048,7 +1048,7 @@ export default function GridTiles({
           />
         </DialogContent>
         <DialogActions>
-          <div>
+          <div sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               onClick={() => setEditorOpen(false)}
               sx={{ color: "#63899e" }}
