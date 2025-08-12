@@ -536,7 +536,7 @@ export default function GridTiles({
       setOpenTextEdior(false);
       setTextEditorContent(null);
       const form = new FormData();
-      const payload = { tileText: content, editorHeading: editorTitle };
+      const payload = { tileContent: content, editorHeading: editorTitle };
       form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then((res) => {
         if (res.data) {
@@ -562,7 +562,7 @@ export default function GridTiles({
     setOpenTextEdior(false);
     if (dbUser) {
       const form = new FormData();
-      const payload = { tileText: content, editorHeading: editorTitle };
+      const payload = { tileContent: content, editorHeading: editorTitle };
       form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then((res) => {
         if (
@@ -771,7 +771,7 @@ export default function GridTiles({
               handleResizeStop(e, direction, ref, delta, position, index)
             }
             onDoubleClick={(e) =>
-              onDoubleTap(e, tile.action, tile.tileText, tile, index, null)
+              onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
             }
             minWidth={minHeightWidth[index]?.width || 50}
             minHeight={minHeightWidth[index]?.height || 50}
@@ -783,7 +783,14 @@ export default function GridTiles({
             dragGrid={[5, 5]}
             onTouchStart={(e) => {
               if (isDblTouchTap(e)) {
-                onDoubleTap(e, tile.action, tile.tileText, tile, index, null);
+                onDoubleTap(
+                  e,
+                  tile.action,
+                  tile.tileContent,
+                  tile,
+                  index,
+                  null
+                );
               } else {
                 setShowOption(`tile_${index}`);
               }
@@ -976,7 +983,13 @@ export default function GridTiles({
                 <span onClick={() => deleteTile(selectedTile)}>Delete</span>
               </div>
             </div>
-            <div sx={{ display: 'flex', justifyContent: 'flex-end', paddingRight: "25px"}}>
+            <div
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                paddingRight: "25px",
+              }}
+            >
               <Button
                 className="button_cancel"
                 sx={{ color: "#63899e", marginRight: "3px" }}
@@ -1048,7 +1061,13 @@ export default function GridTiles({
           />
         </DialogContent>
         <DialogActions>
-          <div sx={{ display: 'flex', justifyContent: 'flex-end', paddingRight: "25px" }}>
+          <div
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              paddingRight: "25px",
+            }}
+          >
             <Button
               onClick={() => setEditorOpen(false)}
               sx={{ color: "#63899e" }}
