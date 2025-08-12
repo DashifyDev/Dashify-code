@@ -1,47 +1,62 @@
-import React, { useEffect, useState,useContext} from 'react';
-import dynamic from 'next/dynamic';
-import 'suneditor/dist/css/suneditor.min.css';
-import '../styles/styles.css'
-import { fonts,colors } from '@/constants/textEditorConstant';
+import React, { useEffect, useState, useContext } from "react";
+import dynamic from "next/dynamic";
+import "suneditor/dist/css/suneditor.min.css";
+import "../styles/styles.css";
+import { fonts, colors } from "@/constants/textEditorConstant";
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
-import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-import { Dialog, DialogTitle, DialogContent ,DialogActions , Button} from '@mui/material';
-import leftArrow from "../assets/leftArrow1.svg"
-import rightArrow from "../assets/rightArrow.svg"
-import Image from 'next/image';
-import EditIcon from '@mui/icons-material/Edit';
+import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
+import leftArrow from "../assets/leftArrow1.svg";
+import rightArrow from "../assets/rightArrow.svg";
+import Image from "next/image";
+import EditIcon from "@mui/icons-material/Edit";
 
-
-
-const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selectedTileIndex }) => {
+const TextEditor = ({
+  open,
+  onClose,
+  content,
+  onSave,
+  label,
+  tileDetails,
+  selectedTileIndex,
+}) => {
   const [editorContent, setEditorContent] = useState();
-  const [textBoxHeading,setTextBoxHeading]=useState();
-  const [newIndexValue,setNewIndexValue]=useState()
-  const [newEditorContent,setNewEditorContent]=useState();
-  const [rightArrowButtonState,setRightArrowButtonState]=useState(true);
-  const [leftArrowButtonState,setLeftArrowButtonState]=useState(true)
-  const [editBoxHeading,setEditBoxHeading]=useState(false);
+  const [textBoxHeading, setTextBoxHeading] = useState();
+  const [newIndexValue, setNewIndexValue] = useState();
+  const [newEditorContent, setNewEditorContent] = useState();
+  const [rightArrowButtonState, setRightArrowButtonState] = useState(true);
+  const [leftArrowButtonState, setLeftArrowButtonState] = useState(true);
+  const [editBoxHeading, setEditBoxHeading] = useState(false);
 
-  useEffect(()=>{
-    setTextBoxHeading(tileDetails[selectedTileIndex]&&tileDetails[selectedTileIndex].editorHeading);
+  useEffect(() => {
+    setTextBoxHeading(
+      tileDetails[selectedTileIndex] &&
+        tileDetails[selectedTileIndex].editorHeading
+    );
     setLeftArrowButtonState(true);
     setRightArrowButtonState(true);
-  },[selectedTileIndex])
+  }, [selectedTileIndex]);
 
-  useEffect(()=>{
-    setEditorContent(content)
-    setNewIndexValue(selectedTileIndex)
-    setNewEditorContent(content)
-  },[content])
+  useEffect(() => {
+    setEditorContent(content || "");
+    setNewIndexValue(selectedTileIndex);
+    setNewEditorContent(content || "");
+  }, [content, selectedTileIndex]);
 
   const labelChange = () => {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(label, 'text/html');
-    let content = doc.getElementsByTagName('div')[0].innerText;
-    return content
-  }
+    const doc = parser.parseFromString(label, "text/html");
+    let content = doc.getElementsByTagName("div")[0].innerText;
+    return content;
+  };
 
   const handleEditorChange = (value) => {
     setEditorContent(value);
@@ -50,59 +65,67 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
   const handleClose = () => {
     onClose(editorContent);
     setTextBoxHeading("");
-    setEditBoxHeading(false)
+    setEditBoxHeading(false);
   };
 
   const handleSave = () => {
-    onSave(editorContent,textBoxHeading)
-  }
+    onSave(editorContent, textBoxHeading);
+  };
 
-  const handleHeadingChange=(value)=>{
+  const handleHeadingChange = (value) => {
     setTextBoxHeading(value);
-  }
+  };
 
-  const handleNextTileContent=()=>{
-    setNewIndexValue(()=> {
-      let updatedIndex=newIndexValue+1;
-      if(updatedIndex<tileDetails.length){
-        setRightArrowButtonState(true)
-        setLeftArrowButtonState(true)
-        if(tileDetails[updatedIndex].backgroundAction==="image"||!tileDetails[updatedIndex].hasOwnProperty("editorHeading")){
-          setTextBoxHeading("Title")
-        }else{          
-          setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
+  const handleNextTileContent = () => {
+    setNewIndexValue(() => {
+      let updatedIndex = newIndexValue + 1;
+      if (updatedIndex < tileDetails.length) {
+        setRightArrowButtonState(true);
+        setLeftArrowButtonState(true);
+        if (
+          tileDetails[updatedIndex].backgroundAction === "image" ||
+          !tileDetails[updatedIndex].hasOwnProperty("editorHeading")
+        ) {
+          setTextBoxHeading("Title");
+        } else {
+          setTextBoxHeading(tileDetails[updatedIndex].editorHeading);
         }
-        setNewEditorContent(()=> {return tileDetails[updatedIndex].tileContent})
-      }else{
-        setRightArrowButtonState(false)
-        updatedIndex=updatedIndex-1;
+        setNewEditorContent(() => {
+          return tileDetails[updatedIndex].tileContent;
+        });
+      } else {
+        setRightArrowButtonState(false);
+        updatedIndex = updatedIndex - 1;
       }
       return updatedIndex;
-    })
-  }
+    });
+  };
 
-  const handlePreviousTileContent=()=>{
-    setNewIndexValue(()=>{
-      let updatedIndex=newIndexValue-1;
-      if(updatedIndex>=0){
-        setLeftArrowButtonState(true)
-        setRightArrowButtonState(true)
-        if(tileDetails[updatedIndex].backgroundAction==="image"||!tileDetails[updatedIndex].hasOwnProperty("editorHeading")){
-          setTextBoxHeading("Title")
-        }else{
-          setTextBoxHeading(tileDetails[updatedIndex].editorHeading)
+  const handlePreviousTileContent = () => {
+    setNewIndexValue(() => {
+      let updatedIndex = newIndexValue - 1;
+      if (updatedIndex >= 0) {
+        setLeftArrowButtonState(true);
+        setRightArrowButtonState(true);
+        if (
+          tileDetails[updatedIndex].backgroundAction === "image" ||
+          !tileDetails[updatedIndex].hasOwnProperty("editorHeading")
+        ) {
+          setTextBoxHeading("Title");
+        } else {
+          setTextBoxHeading(tileDetails[updatedIndex].editorHeading);
         }
-        setNewEditorContent(()=>tileDetails[updatedIndex].tileContent)
-      }else{
-        setLeftArrowButtonState(false)
-        updatedIndex=updatedIndex+1;
+        setNewEditorContent(() => tileDetails[updatedIndex].tileContent);
+      } else {
+        setLeftArrowButtonState(false);
+        updatedIndex = updatedIndex + 1;
       }
       return updatedIndex;
-    })
-  }
+    });
+  };
 
   return (
-    <Dialog open={open} >
+    <Dialog open={open}>
       <DialogTitle>
         <div>
           {editBoxHeading ? (
@@ -113,22 +136,18 @@ const  TextEditor = ({ open, onClose , content, onSave,label,tileDetails,selecte
               onChange={(e) => {
                 handleHeadingChange(e.target.value);
               }}
-              style={{padding:"5px"}}
+              style={{ padding: "5px" }}
             />
           ) : (
-            <span>
-                {textBoxHeading
-                ? textBoxHeading
-                : "Title"}
-            </span>
+            <span>{textBoxHeading ? textBoxHeading : "Title"}</span>
           )}
           <span>
-        <EditIcon
-          sx={{ fontSize: "medium", cursor: "pointer",marginLeft:"6px" }}
-          onClick={() => {
-            setEditBoxHeading(true);
-          }}
-        />
+            <EditIcon
+              sx={{ fontSize: "medium", cursor: "pointer", marginLeft: "6px" }}
+              onClick={() => {
+                setEditBoxHeading(true);
+              }}
+            />
           </span>
         </div>
       </DialogTitle>

@@ -325,7 +325,7 @@ export default function GridTiles({
     return titleVal;
   };
 
-  const onDoubleTap = (e, action, tileContent, tile, index, isPod) => {
+  const onDoubleTap = (e, action, editorHtml, tile, index, isPod) => {
     if ((e.type === "touchstart" || e.detail == 2) && action == "link") {
       if (tile.tileLink) {
         window.open(tile.tileLink, "_blank");
@@ -334,10 +334,9 @@ export default function GridTiles({
       (e.type === "touchstart" || e.detail == 2) &&
       action == "textEditor"
     ) {
-      let label = tile.tileText;
       setEditorLabel(tile.editorHeading);
       setOpenTextEdior(true);
-      setTextEditorContent(tileContent);
+      setTextEditorContent(editorHtml || "");
       if (isPod) {
         setSelectedPod(isPod);
       } else {
@@ -536,12 +535,15 @@ export default function GridTiles({
       setSelectedPod(null);
       setOpenTextEdior(false);
       setTextEditorContent(null);
-      axios
-        .patch(`/api/tile/${tileId}`, { tileContent: content })
-        .then((res) => {
-          items[podIndex].tiles[tileIndex].tileContent = content;
+      const form = new FormData();
+      const payload = { tileText: content, editorHeading: editorTitle };
+      form.append("formValue", JSON.stringify(payload));
+      axios.patch(`/api/tile/${tileId}`, form).then((res) => {
+        if (res.data) {
+          items[podIndex].tiles[tileIndex] = res.data;
           setPods(items);
-        });
+        }
+      });
       return;
     }
 
@@ -559,25 +561,23 @@ export default function GridTiles({
     setTextEditorContent(null);
     setOpenTextEdior(false);
     if (dbUser) {
-      axios
-        .patch(`/api/tile/${tileId}`, {
-          tileContent: content,
-          editorHeading: editorTitle,
-        })
-        .then((res) => {
-          if (
-            selectedTile === null ||
-            selectedTile === undefined ||
-            selectedTile < 0 ||
-            selectedTile >= items.length
-          ) {
-            return;
-          }
-          let item = { ...items[selectedTile], ...res.data };
-          items[selectedTile] = item;
-          setTileCordinates(items);
-          setSelectedTile(null);
-        });
+      const form = new FormData();
+      const payload = { tileText: content, editorHeading: editorTitle };
+      form.append("formValue", JSON.stringify(payload));
+      axios.patch(`/api/tile/${tileId}`, form).then((res) => {
+        if (
+          selectedTile === null ||
+          selectedTile === undefined ||
+          selectedTile < 0 ||
+          selectedTile >= items.length
+        ) {
+          return;
+        }
+        let item = { ...items[selectedTile], ...res.data };
+        items[selectedTile] = item;
+        setTileCordinates(items);
+        setSelectedTile(null);
+      });
     } else {
       let item = {
         ...items[selectedTile],
@@ -752,49 +752,7 @@ export default function GridTiles({
   };
 
   const saveEditorText = () => {
-    if (!formValue.tileText) return;
-
-    if (
-      selectedTile === null ||
-      selectedTile === undefined ||
-      selectedTile < 0 ||
-      selectedTile >= tileCordinates.length
-    ) {
-      return;
-    }
-
-    let items = [...tileCordinates];
-    if (dbUser) {
-
-      let tileId = items[selectedTile]._id;
-      axios
-        .patch(`/api/tile/${tileId}`, { tileText: formValue.tileText })
-        .then((res) => {
-          if (
-            selectedTile === null ||
-            selectedTile === undefined ||
-            selectedTile < 0 ||
-            selectedTile >= items.length
-          ) {
-
-            return;
-          }
-          let item = { ...items[selectedTile], ...res.data };
-          items[selectedTile] = item;
-          setTileCordinates(items);
-          setSelectedTile(null);
-          setEditorOpen(false);
-          setFormValue({});
-        });
-    } else {
-      let item = { ...items[selectedTile], tileText: formValue.tileText };
-      items[selectedTile] = item;
-      setTileCordinates(items);
-      updateTilesInLocalstorage(items);
-      setSelectedTile(null);
-      setEditorOpen(false);
-      setFormValue({});
-    }
+    setEditorOpen(false);
   };
 
   return (
@@ -813,7 +771,7 @@ export default function GridTiles({
               handleResizeStop(e, direction, ref, delta, position, index)
             }
             onDoubleClick={(e) =>
-              onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
+              onDoubleTap(e, tile.action, tile.tileText, tile, index, null)
             }
             minWidth={minHeightWidth[index]?.width || 50}
             minHeight={minHeightWidth[index]?.height || 50}
@@ -825,14 +783,7 @@ export default function GridTiles({
             dragGrid={[5, 5]}
             onTouchStart={(e) => {
               if (isDblTouchTap(e)) {
-                onDoubleTap(
-                  e,
-                  tile.action,
-                  tile.tileContent,
-                  tile,
-                  index,
-                  null
-                );
+                onDoubleTap(e, tile.action, tile.tileText, tile, index, null);
               } else {
                 setShowOption(`tile_${index}`);
               }
@@ -1045,9 +996,7 @@ export default function GridTiles({
                 sx={{
                   background: "#63899e",
                   color: "#fff",
-                  "&:hover": {
-                    backgroundColor: "#63899e",
-                  },
+                  "&:hover": { backgroundColor: "#63899e", opacity: 0.8 },
                 }}
                 onClick={(index) => handleSave(`tiles_${selectedTile}`)}
               >
@@ -1108,7 +1057,11 @@ export default function GridTiles({
             </Button>
             <Button
               onClick={saveEditorText}
-              sx={{ background: "#63899e", color: "#fff" }}
+              sx={{
+                background: "#63899e",
+                color: "#fff",
+                "&:hover": { backgroundColor: "#63899e", opacity: 0.8 },
+              }}
             >
               Save
             </Button>
