@@ -13,7 +13,9 @@ import DifferenceOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
 import ColorPicker from "./ColorPicker";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { Dialog, Button, DialogContent, DialogActions } from "@mui/material";
-import TextEditor from "./TextEditor";
+import TipTapMainEditor from "./TipTapEditor/TipTapMainEditor";
+
+import TipTapTextEditorDialog from "./TipTapEditor/TipTapTextEditorDialog";
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
@@ -22,6 +24,7 @@ import { fonts, colors } from "@/constants/textEditorConstant";
 import imageUpload from "../assets/imageUpload.jpg";
 import text from "../assets/text.png";
 import Image from "next/image";
+import TextEditor from "./TextEditor";
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
@@ -1020,45 +1023,25 @@ export default function GridTiles({
         </div>
       </Dialog>
 
-      <Dialog open={editorOpen}>
+      <Dialog maxWidth={"md"} open={editorOpen}>
         <DialogContent
-          sx={{ width: "600px", height: "500px", overflow: "hidden" }}
+          sx={{
+            // width: "600px",
+            height: "540px",
+            // overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.8rem",
+          }}
         >
-          <SunEditor
-            value={formValue.tileText}
-            defaultValue={selectedTileDetail.tileText}
-            onChange={enterText}
-            setOptions={{
-              buttonList: [
-                ["undo", "redo"],
-                [
-                  "bold",
-                  "underline",
-                  "italic",
-                  "strike",
-                  "subscript",
-                  "superscript",
-                ],
-                ["formatBlock"],
-                ["removeFormat"],
-                ["fontColor", "hiliteColor"],
-                ["lineHeight"],
-                ["font", "fontSize"],
-                ["align", "list"],
-                ["outdent", "indent"],
-
-                ["table", "horizontalRule", "link"],
-                ["paragraphStyle", "blockquote"],
-              ],
-              defaultTag: "div",
-              colorList: colors,
-              minHeight: "370px",
-              maxHeight: "370px",
-              showPathLabel: false,
-              font: fonts,
-            }}
-            width="100%"
-          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <TipTapMainEditor
+              initialContent={
+                formValue.tileText || selectedTileDetail.tileText || ""
+              }
+              onContentChange={(html) => enterText(html)}
+            />
+          </div>
         </DialogContent>
         <DialogActions>
           <div
@@ -1088,7 +1071,8 @@ export default function GridTiles({
         </DialogActions>
       </Dialog>
 
-      <TextEditor
+      {/* <TextEditor */}
+      <TipTapTextEditorDialog
         open={openTextEditor}
         onClose={handleCloseTextEditor}
         content={textEditorContent}
