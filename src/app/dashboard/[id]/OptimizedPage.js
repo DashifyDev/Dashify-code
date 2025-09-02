@@ -11,6 +11,8 @@ import dynamic from "next/dynamic";
 import { globalContext } from "@/context/globalContext";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardKeys } from "@/hooks/useDashboard";
 
 const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   loading: () => <DashboardSkeleton />,
@@ -38,6 +40,7 @@ const DashboardSkeleton = () => (
 
 function OptimizedDashboard({ params }) {
   const { id } = params;
+  const queryClient = useQueryClient();
   const {
     dbUser,
     tiles,
@@ -105,14 +108,19 @@ function OptimizedDashboard({ params }) {
   return (
     <div className="dashboard-container">
       <GridTiles
-        tiles={tiles}
-        setTiles={setTiles}
-        boards={boards}
-        setBoards={setBoards}
+        tileCordinates={tiles}
+        setTileCordinates={setTiles}
         activeBoard={activeBoard}
-        setActiveBoard={setActiveBoard}
-        setHeaderWidth={setHeaderWidth}
-        dbUser={dbUser}
+        updateTilesInLocalstorage={(updatedTiles) => {
+          // Update React Query cache
+          queryClient.setQueryData(dashboardKeys.detail(id), (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: updatedTiles,
+            };
+          });
+        }}
       />
     </div>
   );

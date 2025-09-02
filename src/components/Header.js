@@ -35,6 +35,8 @@ import rightArrow from "../assets/rightArrow.svg";
 import { useRouter } from "next/navigation";
 import useAdmin from "@/hooks/isAdmin";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardKeys } from "@/hooks/useDashboard";
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -62,6 +64,7 @@ function Header() {
   const router = useRouter();
   const isAdmin = useAdmin();
   const { id } = useParams();
+  const queryClient = useQueryClient();
 
   const currentActiveBoard = id || activeBoard;
 
@@ -144,63 +147,19 @@ function Header() {
   };
 
   const addTiles = () => {
-    const tileWidth = 135;
-    const tileHeight = 135;
-    const tileMargin = 10;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
+    const TILE_WIDTH = 135;
+    const TILE_HEIGHT = 135;
+    const FIXED_X = 25;
+    const FIXED_Y = 25;
 
-    let foundEmptySpace = false;
-    let newRowY = 25;
-    let newX = 25;
-
-    for (
-      let x = 25;
-      x <= windowWidth - tileWidth;
-      x += tileWidth + tileMargin
-    ) {
-      const occupiedTile = tiles.find(
-        (tile) => tile.x === x && tile.y === newRowY
-      );
-
-      if (!occupiedTile) {
-        foundEmptySpace = true;
-        newX = x;
-        break;
-      }
-    }
-
-    let newY;
-    if (foundEmptySpace) {
-      newY = newRowY;
-    } else {
-      const lastTile = tiles[tiles.length - 1];
-      if (lastTile) {
-        newX = 25;
-        newY = 170;
-
-        if (newY + tileHeight > windowHeight) {
-          newX = 25;
-          newY = 25;
-        }
-      } else {
-        newX = 25;
-        newY = 25;
-      }
-    }
-    if (newX + tileWidth > windowWidth) {
-      newX = 25;
-      newY += tileHeight + tileMargin;
-      if (newY + tileHeight > windowHeight) {
-        newX = 25;
-        newY = 25;
-      }
-    }
+    // Завжди розміщуємо новий блок в одному фіксованому місці
+    const newX = FIXED_X;
+    const newY = FIXED_Y;
 
     const newtile = {
       dashboardId: currentActiveBoard,
-      width: "135px",
-      height: "135px",
+      width: `${TILE_WIDTH}px`,
+      height: `${TILE_HEIGHT}px`,
       x: newX,
       y: newY,
       titleX: 2,
@@ -209,18 +168,87 @@ function Header() {
       displayTitle: true,
       backgroundAction: "color",
     };
+
     if (dbUser) {
-      axios.post("/api/tile/tile", newtile).then((res) => {
-        setTiles([...tiles, res.data]);
-      });
+      // Оптимістичне оновлення
+      const tempTile = { ...newtile, _id: `temp_${Date.now()}` };
+      setTiles([...tiles, tempTile]);
+
+      // Оновлюємо React Query кеш оптимістично
+      queryClient.setQueryData(
+        dashboardKeys.detail(currentActiveBoard),
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            tiles: [...(oldData.tiles || []), tempTile],
+          };
+        }
+      );
+
+      axios
+        .post("/api/tile/tile", newtile)
+        .then((res) => {
+          // Замінюємо тимчасовий блок на справжній
+          setTiles((prevTiles) =>
+            prevTiles.map((tile) =>
+              tile._id === tempTile._id ? res.data : tile
+            )
+          );
+
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(currentActiveBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.map((tile) =>
+                  tile._id === tempTile._id ? res.data : tile
+                ),
+              };
+            }
+          );
+        })
+        .catch((error) => {
+          console.error("Error adding tile:", error);
+          // Видаляємо тимчасовий блок при помилці
+          setTiles((prevTiles) =>
+            prevTiles.filter((tile) => tile._id !== tempTile._id)
+          );
+
+          queryClient.setQueryData(
+            dashboardKeys.detail(currentActiveBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.filter(
+                  (tile) => tile._id !== tempTile._id
+                ),
+              };
+            }
+          );
+        });
     } else {
-      let index = boards.findIndex((obj) => obj._id === currentActiveBoard);
-      let items = [...boards];
-      let tiles = items[index].tiles;
-      tiles = [...tiles, newtile];
-      items[index].tiles = tiles;
+      let boardIndex = boards.findIndex(
+        (obj) => obj._id === currentActiveBoard
+      );
+      if (boardIndex === -1) {
+        console.error(
+          "Активна дошка не знайдена для збереження в localStorage"
+        );
+        return;
+      }
+      let items = JSON.parse(JSON.stringify(boards));
+      if (!items[boardIndex].tiles) {
+        items[boardIndex].tiles = [];
+      }
+      items[boardIndex].tiles.push(newtile);
+
       localStorage.setItem("Dasify", JSON.stringify(items));
-      setTiles(tiles);
+      setBoards(items);
+      setTiles(items[boardIndex].tiles);
     }
   };
 

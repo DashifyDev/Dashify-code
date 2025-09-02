@@ -44,6 +44,8 @@ const TipTapTextEditorDialog = dynamic(
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardKeys } from "@/hooks/useDashboard";
 import "suneditor/dist/css/suneditor.min.css";
 import { fonts, colors } from "@/constants/textEditorConstant";
 import imageUpload from "../assets/imageUpload.jpg";
@@ -78,6 +80,7 @@ const GridTiles = memo(function GridTiles({
   const [colorBackground, setColorBackground] = useState();
   const [editorOpen, setEditorOpen] = useState(false);
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
+  const queryClient = useQueryClient();
   const hiddenFileInput = useRef(null);
   let firstNewLine = true;
 
@@ -220,6 +223,21 @@ const GridTiles = memo(function GridTiles({
         let item = { ...items[selectedTile], ...res.data };
         items[selectedTile] = item;
         setTileCordinates(items);
+
+        // Update React Query cache
+        queryClient.setQueryData(
+          dashboardKeys.detail(activeBoard),
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: oldData.tiles.map((tile) =>
+                tile._id === tileId ? res.data : tile
+              ),
+            };
+          }
+        );
+
         setSelectedTile(null);
       });
     } else {
@@ -286,6 +304,18 @@ const GridTiles = memo(function GridTiles({
         if (res) {
           tileCordinates.splice(index, 1);
           setTileCordinates([...tileCordinates]);
+
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.filter((tile) => tile._id !== tileId),
+              };
+            }
+          );
         }
       });
     } else {
@@ -482,6 +512,19 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.map((tile) =>
+                  tile._id === tileId ? { ...tile, ...res.data } : tile
+                ),
+              };
+            }
+          );
         }
       });
     } else {
@@ -503,6 +546,19 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.map((tile) =>
+                  tile._id === tileId ? { ...tile, ...res.data } : tile
+                ),
+              };
+            }
+          );
         }
       });
     } else {
@@ -605,6 +661,21 @@ const GridTiles = memo(function GridTiles({
         let item = { ...items[selectedTile], ...res.data };
         items[selectedTile] = item;
         setTileCordinates(items);
+
+        // Update React Query cache
+        queryClient.setQueryData(
+          dashboardKeys.detail(activeBoard),
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: oldData.tiles.map((tile) =>
+                tile._id === tileId ? res.data : tile
+              ),
+            };
+          }
+        );
+
         setSelectedTile(null);
       });
     } else {
@@ -681,28 +752,77 @@ const GridTiles = memo(function GridTiles({
   const tileClone = (index) => {
     let content = tileCordinates[index];
 
-    const newTileWidth = parseInt(content.width);
-    const newTileMargin = 5;
-    const windowWidth = window.innerWidth;
-    const maxTileX = windowWidth - newTileWidth - newTileMargin - 10;
-    let newTileX = content.x + newTileWidth + newTileMargin;
-
-    if (newTileX > maxTileX) {
-      newTileX = content.x - newTileWidth - newTileMargin;
-    }
+    // Завжди розміщуємо клонований блок в фіксованому місці
+    const FIXED_X = 25;
+    const FIXED_Y = 25;
 
     const newTile = {
       ...content,
-      x: newTileX,
-      y: content.y,
+      x: FIXED_X,
+      y: FIXED_Y,
     };
 
     setShowModel(false);
     if (dbUser) {
       newTile.dashboardId = activeBoard;
-      axios.post("/api/tile/tile", newTile).then((res) => {
-        setTileCordinates([...tileCordinates, res.data]);
+
+      // Оптимістичне оновлення для клонування
+      const tempTile = { ...newTile, _id: `temp_clone_${Date.now()}` };
+      setTileCordinates([...tileCordinates, tempTile]);
+
+      // Оновлюємо React Query кеш оптимістично
+      queryClient.setQueryData(dashboardKeys.detail(activeBoard), (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          tiles: [...(oldData.tiles || []), tempTile],
+        };
       });
+
+      axios
+        .post("/api/tile/tile", newTile)
+        .then((res) => {
+          // Замінюємо тимчасовий блок на справжній
+          setTileCordinates((prevTiles) =>
+            prevTiles.map((tile) =>
+              tile._id === tempTile._id ? res.data : tile
+            )
+          );
+
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.map((tile) =>
+                  tile._id === tempTile._id ? res.data : tile
+                ),
+              };
+            }
+          );
+        })
+        .catch((error) => {
+          console.error("Error cloning tile:", error);
+          // Видаляємо тимчасовий блок при помилці
+          setTileCordinates((prevTiles) =>
+            prevTiles.filter((tile) => tile._id !== tempTile._id)
+          );
+
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.filter(
+                  (tile) => tile._id !== tempTile._id
+                ),
+              };
+            }
+          );
+        });
     } else {
       let items = [...tileCordinates, newTile];
       setTileCordinates(items);
