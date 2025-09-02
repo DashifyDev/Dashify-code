@@ -253,13 +253,17 @@ function board_library() {
             />
           </div>
           <div className="modal-div-style">
-              <label>Description</label>
-              <textarea 
+            <label>Description</label>
+            <textarea
               className="modal-input-style"
               value={addBoardData.boardDescription}
-              onChange={(event)=>{
-                setAddBoardData({...addBoardData,boardDescription:event.target.value})
-              }}/>
+              onChange={(event) => {
+                setAddBoardData({
+                  ...addBoardData,
+                  boardDescription: event.target.value,
+                });
+              }}
+            />
           </div>
           <div className="modal-label-style">
             <label>Image</label>

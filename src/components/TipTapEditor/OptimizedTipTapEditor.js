@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { createRoot } from "react-dom/client";
 
@@ -10,7 +10,6 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
-import Image from "@tiptap/extension-image";
 import { TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { CustomTable } from "./utils/CustomTable";
 import {
@@ -22,6 +21,7 @@ import {
   CustomHorizontalRule,
 } from "./utils/tiptapExtensions";
 import { StyledParagraph } from "./utils/StyledParagraph";
+import { OptimizedImageExtension } from "./utils/OptimizedImageExtension";
 
 import Toolbar from "./Toolbar";
 import LinkBubble from "./LinkBubble";
@@ -30,11 +30,11 @@ import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import "./styles/TipTapMainEditor.css";
 
-const TipTapMainEditor = ({ initialContent, onContentChange }) => {
+const OptimizedTipTapEditor = memo(({ initialContent, onContentChange }) => {
   const [activeStyles, setActiveStyles] = useState({});
 
-  const editor = useEditor({
-    extensions: [
+  const extensions = React.useMemo(
+    () => [
       StarterKit.configure({
         horizontalRule: false,
         link: false,
@@ -49,7 +49,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       Superscript,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       SafeLink.configure({ openOnClick: false, autolink: true }),
-      Image.configure({ inline: true }),
+      OptimizedImageExtension,
       CustomTable,
       TableRow,
       TableHeader,
@@ -59,9 +59,11 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       LineHeight,
       CustomHorizontalRule,
     ],
-    content: initialContent || "",
+    []
+  );
 
-    onUpdate: ({ editor }) => {
+  const handleUpdate = useCallback(
+    ({ editor }) => {
       if (onContentChange) {
         onContentChange(editor.getHTML());
       }
@@ -85,28 +87,36 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
         fontSize: editor.getAttributes("textStyle").fontSize,
       });
     },
+    [onContentChange]
+  );
 
-    onSelectionUpdate: ({ editor }) => {
-      setActiveStyles({
-        isBold: editor.isActive("bold"),
-        isItalic: editor.isActive("italic"),
-        isUnderline: editor.isActive("underline"),
-        isStrike: editor.isActive("strike"),
-        isSubscript: editor.isActive("subscript"),
-        isSuperscript: editor.isActive("superscript"),
-        textAlign:
-          ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align })
-          ) || "left",
-        isBulletList: editor.isActive("bulletList"),
-        isOrderedList: editor.isActive("orderedList"),
-        isLink: editor.isActive("link"),
-        color: editor.getAttributes("textStyle").color,
-        highlight: editor.getAttributes("highlight")?.color,
-        fontFamily: editor.getAttributes("textStyle").fontFamily,
-        fontSize: editor.getAttributes("textStyle").fontSize,
-      });
-    },
+  const handleSelectionUpdate = useCallback(({ editor }) => {
+    setActiveStyles({
+      isBold: editor.isActive("bold"),
+      isItalic: editor.isActive("italic"),
+      isUnderline: editor.isActive("underline"),
+      isStrike: editor.isActive("strike"),
+      isSubscript: editor.isActive("subscript"),
+      isSuperscript: editor.isActive("superscript"),
+      textAlign:
+        ["left", "center", "right", "justify"].find((align) =>
+          editor.isActive({ textAlign: align })
+        ) || "left",
+      isBulletList: editor.isActive("bulletList"),
+      isOrderedList: editor.isActive("orderedList"),
+      isLink: editor.isActive("link"),
+      color: editor.getAttributes("textStyle").color,
+      highlight: editor.getAttributes("highlight")?.color,
+      fontFamily: editor.getAttributes("textStyle").fontFamily,
+      fontSize: editor.getAttributes("textStyle").fontSize,
+    });
+  }, []);
+
+  const editor = useEditor({
+    extensions,
+    content: initialContent || "",
+    onUpdate: handleUpdate,
+    onSelectionUpdate: handleSelectionUpdate,
     immediatelyRender: false,
   });
 
@@ -126,6 +136,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
 
   useEffect(() => {
     if (!editor) return;
+
     const menu = document.createElement("div");
     menu.className = "link-bubble-menu";
     const root = createRoot(menu);
@@ -358,6 +369,8 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       />
     </div>
   );
-};
+});
 
-export default TipTapMainEditor;
+OptimizedTipTapEditor.displayName = "OptimizedTipTapEditor";
+
+export default OptimizedTipTapEditor;

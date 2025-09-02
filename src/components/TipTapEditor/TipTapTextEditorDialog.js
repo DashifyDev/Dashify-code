@@ -68,10 +68,7 @@ const TipTapTextEditorDialog = ({
   };
 
   return (
-    <Dialog 
-    open={open} 
-    maxWidth={"md"}
-    >
+    <Dialog open={open} maxWidth={"md"}>
       <DialogTitle>
         <div>
           <input
@@ -106,7 +103,7 @@ const TipTapTextEditorDialog = ({
             />
           </div>
         )}
-        <div style={{ flex: 1, minWidth: 0, }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <TipTapMainEditor
             initialContent={editorContent}
             onContentChange={(html) => setEditorContent(html)}

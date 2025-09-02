@@ -54,34 +54,29 @@ const TextStyleDropdown = ({ editor }) => {
 
   const styles = [
     {
-      key: 'spaced',
-      label: 'Spaced',
+      key: "spaced",
+      label: "Spaced",
       command: () => editor.chain().focus().toggleSpacedStyle().run(),
-      isActive: editor.isActive('paragraph', { isSpaced: true }),
+      isActive: editor.isActive("paragraph", { isSpaced: true }),
     },
     {
-      key: 'bordered',
-      label: 'Bordered',
+      key: "bordered",
+      label: "Bordered",
       command: () => editor.chain().focus().toggleBorderedStyle().run(),
-      isActive: editor.isActive('paragraph', { isBordered: true }),
+      isActive: editor.isActive("paragraph", { isBordered: true }),
     },
     {
-      key: 'neon',
-      label: 'NEON',
+      key: "neon",
+      label: "NEON",
       command: () => editor.chain().focus().toggleNeonStyle().run(),
-      isActive: editor.isActive('paragraph', { isNeon: true }),
+      isActive: editor.isActive("paragraph", { isNeon: true }),
     },
   ];
 
-  // Ця функція буде викликатись при кліку на опцію.
-  // Вона викликає відповідну команду.
   const handleStyleSelect = (command) => {
     command();
-    // Ми НЕ закриваємо меню, щоб користувач міг вибрати кілька стилів
-    // setIsOpen(false); 
   };
 
-  // Закриваємо меню, якщо клікнули поза ним
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -96,8 +91,8 @@ const TextStyleDropdown = ({ editor }) => {
 
   return (
     <div ref={dropdownRef} className="text-style-dropdown">
-      <button 
-        className="dropdown-toggle-btn" 
+      <button
+        className="dropdown-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
         title="Paragraph Styles"
       >
@@ -109,12 +104,13 @@ const TextStyleDropdown = ({ editor }) => {
           {styles.map(({ key, label, command, isActive }) => (
             <li key={key}>
               <button
-                className={`dropdown-item text-style-${key} ${isActive ? 'is-active' : ''}`}
-                // ВИКЛИКАЄМО ПРАВИЛЬНУ КОМАНДУ!
+                className={`dropdown-item text-style-${key} ${
+                  isActive ? "is-active" : ""
+                }`}
                 onClick={() => handleStyleSelect(command)}
               >
                 <span className="dropdown-item-preview">{label}</span>
-                {/* Додаємо галочку, якщо стиль активний */}
+
                 {isActive && <FaCheck className="dropdown-item-check" />}
               </button>
             </li>

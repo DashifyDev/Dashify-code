@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from "react";
+import { FaChevronDown } from "react-icons/fa";
 
 const fontOptions = [
-  "Arial", "Comic Sans MS", "Courier New", "Impact", "Georgia", "Tahoma",
-  "Trebuchet MS", "Verdana", "Monospace", "Salesforce Sans", "Garamond",
-  "Sans-Serif", "Serif", "Times New Roman", "Helvetica",
+  "Arial",
+  "Comic Sans MS",
+  "Courier New",
+  "Impact",
+  "Georgia",
+  "Tahoma",
+  "Trebuchet MS",
+  "Verdana",
+  "Monospace",
+  "Salesforce Sans",
+  "Garamond",
+  "Sans-Serif",
+  "Serif",
+  "Times New Roman",
+  "Helvetica",
 ];
 
 const FontFamilySelector = ({ editor, activeFontFamily }) => {
@@ -24,7 +36,10 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -38,21 +53,23 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
 
   return (
     <div className="font-selector-container" ref={containerRef}>
-      <button className="font-selector-button" onClick={() => setIsOpen(!isOpen)} title="Font Family">
+      <button
+        className="font-selector-button"
+        onClick={() => setIsOpen(!isOpen)}
+        title="Font Family"
+      >
         <span style={{ fontFamily: activeFontFamily }}>{currentFontLabel}</span>
-        <FaChevronDown className={`chevron ${isOpen ? 'open' : ''}`} />
+        <FaChevronDown className={`chevron ${isOpen ? "open" : ""}`} />
       </button>
       {isOpen && (
         <ul className="font-selector-list">
-          <li onClick={() => handleSelectFont(null)}>
-            Default Font
-          </li>
+          <li onClick={() => handleSelectFont(null)}>Default Font</li>
           {fontOptions.map((font) => (
             <li
               key={font}
               onClick={() => handleSelectFont(font)}
               style={{ fontFamily: font }}
-              className={activeFontFamily === font ? 'is-active' : ''}
+              className={activeFontFamily === font ? "is-active" : ""}
             >
               {font}
             </li>
@@ -68,7 +85,7 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          width: 150px; /* Ширина кнопки */
+          width: 150px;
           text-align: left;
           border-right: 1px solid #eee !important;
         }

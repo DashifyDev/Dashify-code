@@ -9,7 +9,7 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaTrash,
-  FaColumns
+  FaColumns,
 } from "react-icons/fa";
 import { TbRowRemove, TbColumnRemove } from "react-icons/tb";
 
@@ -41,8 +41,8 @@ export const TopTableMenu = ({ editor }) => {
   if (!editor) return null;
 
   const isFullWidth = editor.getAttributes("table").layout === "full-width";
-  
-  const isFixedLayout = editor.getAttributes("table").layoutMode === 'fixed';
+
+  const isFixedLayout = editor.getAttributes("table").layoutMode === "fixed";
 
   return (
     <div style={commonStyles.container} onMouseDown={(e) => e.preventDefault()}>
@@ -54,13 +54,17 @@ export const TopTableMenu = ({ editor }) => {
       >
         <FaArrowsAltH />
       </button>
-      
+
       <button
         style={{
           ...commonStyles.btn,
-          backgroundColor: isFixedLayout ? '#e0e0e0' : 'transparent',
+          backgroundColor: isFixedLayout ? "#e0e0e0" : "transparent",
         }}
-        title={isFixedLayout ? "Switch to Auto Column Width" : "Switch to Fixed Column Width"}
+        title={
+          isFixedLayout
+            ? "Switch to Auto Column Width"
+            : "Switch to Fixed Column Width"
+        }
         data-tippy-content={isFixedLayout ? "Auto Width" : "Fixed Width"}
         onClick={() => editor.chain().focus().toggleLayoutMode().run()}
       >
@@ -89,8 +93,11 @@ export const TopTableMenu = ({ editor }) => {
 
 export const BottomTableMenu = ({ editor }) => {
   return (
-    <div style={{...commonStyles.container, flexDirection: 'column', gap: 8}} onMouseDown={(e) => e.preventDefault()}>
-      <div style={{ display: 'flex', gap: 8 }}>
+    <div
+      style={{ ...commonStyles.container, flexDirection: "column", gap: 8 }}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      <div style={{ display: "flex", gap: 8 }}>
         <button
           style={commonStyles.btn}
           title="Add row above"
@@ -105,7 +112,7 @@ export const BottomTableMenu = ({ editor }) => {
         >
           <FaArrowDown />
         </button>
-         <button
+        <button
           style={commonStyles.btn}
           title="Delete current row"
           onClick={() => editor.chain().focus().deleteRow().run()}
@@ -120,7 +127,7 @@ export const BottomTableMenu = ({ editor }) => {
           <FaCompressAlt />
         </button>
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: "flex", gap: 8 }}>
         <button
           style={commonStyles.btn}
           title="Add column left"
@@ -142,7 +149,7 @@ export const BottomTableMenu = ({ editor }) => {
         >
           <TbColumnRemove />
         </button>
-         <button
+        <button
           style={commonStyles.btn}
           title="Split cell"
           onClick={() => editor.chain().focus().splitCell().run()}

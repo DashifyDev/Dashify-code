@@ -1,9 +1,18 @@
 "use client";
 "use strict";
 import dynamic from "next/dynamic";
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+  memo,
+  useCallback,
+  useMemo,
+} from "react";
 import "../styles/styles.css";
 import { Rnd } from "react-rnd";
+
 import MoreHorizSharpIcon from "@mui/icons-material/MoreHorizSharp";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -12,10 +21,26 @@ import FormControl from "@mui/material/FormControl";
 import DifferenceOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
 import ColorPicker from "./ColorPicker";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { Dialog, Button, DialogContent, DialogActions } from "@mui/material";
-import TipTapMainEditor from "./TipTapEditor/TipTapMainEditor";
+import Dialog from "@mui/material/Dialog";
+import Button from "@mui/material/Button";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 
-import TipTapTextEditorDialog from "./TipTapEditor/TipTapTextEditorDialog";
+const TipTapMainEditor = dynamic(
+  () => import("./TipTapEditor/TipTapMainEditor"),
+  {
+    loading: () => <div>Loading editor...</div>,
+    ssr: false,
+  }
+);
+
+const TipTapTextEditorDialog = dynamic(
+  () => import("./TipTapEditor/TipTapTextEditorDialog"),
+  {
+    loading: () => <div>Loading dialog...</div>,
+    ssr: false,
+  }
+);
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
@@ -24,12 +49,12 @@ import { fonts, colors } from "@/constants/textEditorConstant";
 import imageUpload from "../assets/imageUpload.jpg";
 import text from "../assets/text.png";
 import Image from "next/image";
-import TextEditor from "./TextEditor";
+
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 
-export default function GridTiles({
+const GridTiles = memo(function GridTiles({
   tileCordinates,
   setTileCordinates,
   activeBoard,
@@ -60,15 +85,18 @@ export default function GridTiles({
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   }, [tileCordinates]);
 
-  const handleColorImage = (e) => {
-    setSelectedTileDetail({
-      ...selectedTileDetail,
-      backgroundAction: e.target.value,
-    });
-    const values = formValue;
-    values.backgroundAction = e.target.value;
-    setFormValue(values);
-  };
+  const handleColorImage = useCallback(
+    (e) => {
+      setSelectedTileDetail({
+        ...selectedTileDetail,
+        backgroundAction: e.target.value,
+      });
+      const values = formValue;
+      values.backgroundAction = e.target.value;
+      setFormValue(values);
+    },
+    [selectedTileDetail, formValue]
+  );
 
   const changeAction = (e) => {
     setSelectedTileDetail({ ...selectedTileDetail, action: e.target.value });
@@ -207,7 +235,7 @@ export default function GridTiles({
             return;
           }
           let updatedData = JSON.parse(formData.get("formValue"));
-          updatedData.tileBackground = e.target.result; // base64 string
+          updatedData.tileBackground = e.target.result;
           let item = { ...items[selectedTile], ...updatedData };
           items[selectedTile] = item;
           setTileCordinates(items);
@@ -286,7 +314,7 @@ export default function GridTiles({
     setFormValue(values);
   };
 
-  const style = (index, tile) => {
+  const style = useCallback((index, tile) => {
     let isImageBackground;
     if (tile.tileBackground) {
       isImageBackground = isBackgroundImage(tile.tileBackground);
@@ -307,7 +335,7 @@ export default function GridTiles({
     };
 
     return stylevalue;
-  };
+  }, []);
 
   const changedTitlehandle = (index, tile) => {
     let tileText = tileCordinates[index].tileText;
@@ -454,7 +482,6 @@ export default function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
-          // console.log("update Drag Coordinate")
         }
       });
     } else {
@@ -476,7 +503,6 @@ export default function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
-          // console.log("update resize")
         }
       });
     } else {
@@ -723,18 +749,15 @@ export default function GridTiles({
     return style;
   };
 
-  const isBackgroundImage = (url) => {
+  const isBackgroundImage = useCallback((url) => {
     if (url) {
-      // if (url.startsWith("data:image/")) {
-      //   return true;
-      // }
       const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
       let isImage = imageExtensions.some((ext) =>
         url.toLowerCase().endsWith(ext)
       );
       return isImage;
     }
-  };
+  }, []);
 
   const currentBackground = (tile) => {
     if (tile.tileBackground) {
@@ -1026,7 +1049,6 @@ export default function GridTiles({
       <Dialog maxWidth={"md"} open={editorOpen}>
         <DialogContent
           sx={{
-            // width: "600px",
             height: "540px",
             // overflow: "hidden",
             display: "flex",
@@ -1083,4 +1105,6 @@ export default function GridTiles({
       />
     </div>
   );
-}
+});
+
+export default GridTiles;
