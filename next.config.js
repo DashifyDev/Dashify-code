@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   optimizeCss: true, // Temporarily disabled due to CSS parsing error
+  // },
 
   images: {
     formats: ["image/webp", "image/avif"],
@@ -23,67 +23,94 @@ const nextConfig = {
       };
     }
 
-    if (!dev) {
-      config.optimization.splitChunks = {
-        chunks: "all",
-        maxInitialRequests: 30,
-        maxAsyncRequests: 30,
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: "vendors",
-            chunks: "all",
-            priority: 10,
-            maxSize: 244000, // 244KB
-          },
-          mui: {
-            test: /[\\/]node_modules[\\/]@mui[\\/]/,
-            name: "mui",
-            chunks: "all",
-            priority: 20,
-            maxSize: 200000, // 200KB
-          },
-          tiptap: {
-            test: /[\\/]node_modules[\\/]@tiptap[\\/]/,
-            name: "tiptap",
-            chunks: "all",
-            priority: 20,
-            maxSize: 300000, // 300KB
-          },
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: "react",
-            chunks: "all",
-            priority: 30,
-            maxSize: 150000, // 150KB
-          },
-          auth0: {
-            test: /[\\/]node_modules[\\/]@auth0[\\/]/,
-            name: "auth0",
-            chunks: "all",
-            priority: 25,
-            maxSize: 100000, // 100KB
-          },
-          common: {
-            name: "common",
-            minChunks: 2,
-            chunks: "all",
-            priority: 5,
-            reuseExistingChunk: true,
-            maxSize: 200000, // 200KB
-          },
-        },
-      };
+    // Temporarily disable complex webpack optimizations to fix favicon issue
+    // if (!dev) {
+    //   config.optimization.splitChunks = {
+    //     chunks: "all",
+    //     maxInitialRequests: 30,
+    //     maxAsyncRequests: 30,
+    //     cacheGroups: {
+    //       vendor: {
+    //         test: /[\\/]node_modules[\\/]/,
+    //         name: "vendors",
+    //         chunks: "all",
+    //         priority: 10,
+    //         maxSize: 244000, // 244KB
+    //       },
+    //       mui: {
+    //         test: /[\\/]node_modules[\\/]@mui[\\/]/,
+    //         name: "mui",
+    //         chunks: "all",
+    //         priority: 20,
+    //         maxSize: 200000, // 200KB
+    //       },
+    //       tiptap: {
+    //         test: /[\\/]node_modules[\\/]@tiptap[\\/]/,
+    //         name: "tiptap",
+    //         chunks: "all",
+    //         priority: 20,
+    //         maxSize: 300000, // 300KB
+    //       },
+    //       react: {
+    //         test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+    //         name: "react",
+    //         chunks: "all",
+    //         priority: 30,
+    //         maxSize: 150000, // 150KB
+    //       },
+    //       auth0: {
+    //         test: /[\\/]node_modules[\\/]@auth0[\\/]/,
+    //         name: "auth0",
+    //         chunks: "all",
+    //         priority: 25,
+    //         maxSize: 100000, // 100KB
+    //       },
+    //       common: {
+    //         name: "common",
+    //         minChunks: 2,
+    //         chunks: "all",
+    //         priority: 5,
+    //         reuseExistingChunk: true,
+    //         maxSize: 200000, // 200KB
+    //       },
+    //     },
+    //   };
 
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-    }
+    //   config.optimization.usedExports = true;
+    //   config.optimization.sideEffects = false;
+    // }
 
     return config;
   },
 
   async headers() {
     return [
+      {
+        source: "/favicon.ico",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+          {
+            key: "Content-Type",
+            value: "image/x-icon",
+          },
+        ],
+      },
+      {
+        source: "/favicon-:size.ico",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+          {
+            key: "Content-Type",
+            value: "image/x-icon",
+          },
+        ],
+      },
       {
         source: "/api/dashboard/:path*",
         headers: [

@@ -1,0 +1,16 @@
+{
+  "name": "Boardzy",
+  "short_name": "Boardzy",
+  "description": "Create beautiful dashboards for your life",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#63899e",
+  "icons": [
+    {
+      "src": "/api/favicon",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

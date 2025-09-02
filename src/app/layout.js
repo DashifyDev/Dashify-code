@@ -12,10 +12,42 @@ import QueryProvider from "@/components/QueryProvider";
 export const metadata = {
   title: "Boardzy",
   description: "Create beautiful dashboards for your life",
+  icons: {
+    icon: [
+      { url: "/api/favicon", sizes: "16x16", type: "image/x-icon" },
+      { url: "/api/favicon", sizes: "32x32", type: "image/x-icon" },
+      { url: "/api/favicon", sizes: "any" },
+    ],
+    shortcut: "/api/favicon",
+    apple: "/api/favicon",
+  },
+  manifest: "/manifest.json",
+  other: {
+    "msapplication-TileColor": "#63899e",
+    "theme-color": "#63899e",
+  },
 };
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="icon"
+          type="image/x-icon"
+          sizes="16x16"
+          href="/api/favicon"
+        />
+        <link
+          rel="icon"
+          type="image/x-icon"
+          sizes="32x32"
+          href="/api/favicon"
+        />
+        <link rel="icon" type="image/x-icon" href="/api/favicon" />
+        <link rel="shortcut icon" type="image/x-icon" href="/api/favicon" />
+        <meta name="msapplication-TileColor" content="#63899e" />
+        <meta name="theme-color" content="#63899e" />
+      </head>
       <UserProvider>
         <QueryProvider>
           <OptimizedContextProvider>
