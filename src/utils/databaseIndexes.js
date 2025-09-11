@@ -21,10 +21,10 @@ export const createDatabaseIndexes = async () => {
     await Dashboard.collection.createIndex({ sessionId: 1, createdAt: 1 });
 
     await Tile.collection.createIndex({ isInsidePod: 1 });
-    await Tile.collection.createIndex({ x: 1, y: 1 }); 
+    await Tile.collection.createIndex({ x: 1, y: 1 });
 
     await Pod.collection.createIndex({ isPod: 1 });
-    await Pod.collection.createIndex({ x: 1, y: 1 }); 
+    await Pod.collection.createIndex({ x: 1, y: 1 });
 
     await User.collection.createIndex({ email: 1 }, { unique: true });
 
@@ -50,7 +50,7 @@ export const getDashboardMinimal = async (id) => {
         createdAt: 1,
         position: 1,
       }
-    ).lean(); 
+    ).lean();
 
     if (!dashboard) {
       return null;
@@ -130,8 +130,9 @@ export const getUserDashboards = async (userId, sessionId) => {
   try {
     await connectMongo();
 
-    const query = userId ? { userId } : { sessionId };
-    const sort = userId ? { position: 1 } : { createdAt: 1 };
+    // For Auth0 users, use sessionId instead of userId to avoid ObjectId casting issues
+    const query = sessionId ? { sessionId } : { userId };
+    const sort = sessionId ? { position: 1 } : { createdAt: 1 };
 
     const dashboards = await Dashboard.find(query, {
       _id: 1,

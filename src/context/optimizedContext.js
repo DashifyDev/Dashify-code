@@ -30,10 +30,9 @@ export const OptimizedContextProvider = ({ children }) => {
     isLoading: dashboardsLoading,
     error: dashboardsError,
   } = useUserDashboards(
-    user?.sub, 
-    !user && typeof window !== "undefined"
-      ? localStorage.getItem("sessionId")
-      : null 
+    null, // Don't use userId for Auth0 users
+    user?.sub ||
+      (typeof window !== "undefined" ? localStorage.getItem("sessionId") : null)
   );
 
   const { data: adminDashboards = [], isLoading: adminLoading } =

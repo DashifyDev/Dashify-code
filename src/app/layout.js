@@ -8,6 +8,20 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Script from "next/script";
 import IsMobilePrompt from "@/components/IsMobilePrompt";
 import QueryProvider from "@/components/QueryProvider";
+import { Nunito_Sans } from "next/font/google";
+import { Roboto } from "next/font/google";
+
+const nunitoSans = Nunito_Sans({
+  subsets: ["latin"],
+  weight: ["300"],
+  display: "swap",
+});
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  display: "swap",
+});
 
 export const metadata = {
   title: "Boardzy",
@@ -99,7 +113,10 @@ export default function RootLayout({ children }) {
             gtag('js', new Date());
             gtag('config', 'G-8KMTMSNBKP');`}
               </Script>
-              <body id="__next">
+              <body
+                id="__next"
+                className={`${nunitoSans.className} ${roboto.className}`}
+              >
                 <ErrorBoundary>
                   <IsMobilePrompt />
                   <noscript>
