@@ -4,9 +4,11 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useDashboardData } from "@/context/optimizedContext";
 import dynamic from "next/dynamic";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
 const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   ssr: false,
-  loading: () => <div>Loading board...</div>,
+  loading: () => <LoadingSpinner text={"Loading board..."} fullScreen={true} />,
 });
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useQueryClient } from "@tanstack/react-query";

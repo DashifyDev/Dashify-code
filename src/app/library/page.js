@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "./library.css";
 import axios from "axios";
+import Image from "next/image";
 
 function Library() {
   const [library, setLibrary] = useState([]);
@@ -121,10 +122,13 @@ function Library() {
                         redirectToUser(data.boardLink);
                       }}
                     >
-                      <img
+                      <Image
                         src={data.boardImage}
-                        alt="board-image"
+                        alt={data.boardName || "board-image"}
+                        width={150}
+                        height={90}
                         className="filter-image"
+                        style={{ objectFit: "cover" }}
                       />
                       <div className="board-details">
                         <h2 className="paraStyle1">{data.boardName}</h2>
