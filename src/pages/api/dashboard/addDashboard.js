@@ -1,5 +1,7 @@
 import connectMongo from "@/utils/db";
 import Dashboard from "@/models/dashboard";
+import User from "@/models/user";
+import mongoose from "mongoose";
 import { getUserDashboards } from "@/utils/databaseIndexes";
 
 const addDashBoard = async (req, res) => {
@@ -8,7 +10,25 @@ const addDashBoard = async (req, res) => {
     console.log("database Connected Successfully", req.method);
     switch (req.method) {
       case "POST":
-        const data = req.body;
+        let data = req.body;
+
+        // If client sent an auth0 id or a non-ObjectId user identifier, resolve it to Mongo _id
+        if (data?.userId && !mongoose.Types.ObjectId.isValid(data.userId)) {
+          try {
+            const possibleUser = await User.findOne({ auth0Id: data.userId });
+            if (possibleUser) {
+              data.userId = possibleUser._id;
+            } else {
+              // leave as-is; Dashboard schema expects ObjectId, creation may fail and return an error
+            }
+          } catch (err) {
+            console.warn(
+              "addDashboard: failed to resolve userId from auth0Id",
+              err
+            );
+          }
+        }
+
         const dashboard = await Dashboard.create(data);
         res.status(200).json(dashboard);
 
@@ -17,6 +37,22 @@ const addDashBoard = async (req, res) => {
       case "GET":
         let id = req.query.id;
         let sid = req.query.sid;
+
+        // If id looks like an Auth0 id (contains '-') or isn't a valid ObjectId,
+        // try to resolve to the backend User _id so we return dashboards by userId.
+        if (id && !mongoose.Types.ObjectId.isValid(id)) {
+          try {
+            const resolved = await User.findOne({ auth0Id: id });
+            if (resolved) {
+              id = resolved._id.toString();
+            }
+          } catch (err) {
+            console.warn(
+              "addDashboard GET: failed to resolve auth0 id to userId",
+              err
+            );
+          }
+        }
 
         const boards = await getUserDashboards(id, sid);
 
@@ -35,7 +71,7 @@ const addDashBoard = async (req, res) => {
 
           res.status(200).json(boards);
         } else {
-          res.status(200).json([]); 
+          res.status(200).json([]);
         }
         break;
 

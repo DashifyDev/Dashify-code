@@ -3,7 +3,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useDashboardData } from "@/context/optimizedContext";
-import GridTiles from "@/components/GridTiles";
+import dynamic from "next/dynamic";
+const GridTiles = dynamic(() => import("@/components/GridTiles"), {
+  ssr: false,
+  loading: () => <div>Loading board...</div>,
+});
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { dashboardKeys } from "@/hooks/useDashboard";
@@ -19,6 +23,22 @@ function OptimizedDashboardPage() {
     error,
     isFetching,
   } = useDashboardData(id);
+
+  // Попереднє завантаження наступних дощок
+  useEffect(() => {
+    if (dashboardData && dashboardData.relatedBoards) {
+      dashboardData.relatedBoards.forEach((boardId) => {
+        queryClient.prefetchQuery({
+          queryKey: dashboardKeys.detail(boardId),
+          queryFn: async () => {
+            const response = await fetch(`/api/dashboard/${boardId}`);
+            return response.json();
+          },
+          staleTime: 5 * 60 * 1000,
+        });
+      });
+    }
+  }, [dashboardData, queryClient]);
 
   const [tiles, setTiles] = useState([]);
   const [pods, setPods] = useState([]);

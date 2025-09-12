@@ -44,7 +44,7 @@ const TipTapTextEditorDialog = dynamic(
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { dashboardKeys } from "@/hooks/useDashboard";
 import "suneditor/dist/css/suneditor.min.css";
 import { fonts, colors } from "@/constants/textEditorConstant";
@@ -81,6 +81,58 @@ const GridTiles = memo(function GridTiles({
   const [editorOpen, setEditorOpen] = useState(false);
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
   const queryClient = useQueryClient();
+  const cloneMutation = useMutation(
+    async (tileToCreate) => {
+      const response = await axios.post("/api/tile/tile", tileToCreate);
+      return response.data;
+    },
+    {
+      // optimistic update
+      onMutate: async (newTile) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        await queryClient.cancelQueries({ queryKey: detailKey });
+        const previous = queryClient.getQueryData(detailKey);
+
+        const tempTile = { ...newTile, _id: `temp_clone_${Date.now()}` };
+
+        // update cache only (do not touch local state here to avoid duplicates)
+        queryClient.setQueryData(detailKey, (old) => {
+          return {
+            ...(old || {}),
+            tiles: [...((old && old.tiles) || []), tempTile],
+          };
+        });
+
+        return { previous, tempTile };
+      },
+      onError: (err, newTile, context) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        if (context?.previous) {
+          queryClient.setQueryData(detailKey, context.previous);
+        }
+        if (context?.previous?.tiles) setTileCordinates(context.previous.tiles);
+      },
+      onSuccess: (data, newTile, context) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        // replace temp tile with server tile in cache
+        queryClient.setQueryData(detailKey, (old) => {
+          const tiles = (old && Array.isArray(old.tiles) ? old.tiles : []).map(
+            (t) => (t._id === context.tempTile._id ? data : t)
+          );
+          return { ...(old || {}), tiles };
+        });
+
+        setTileCordinates((prev) =>
+          prev.map((t) => (t._id === context.tempTile._id ? data : t))
+        );
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: dashboardKeys.detail(activeBoard),
+        });
+      },
+    }
+  );
   const hiddenFileInput = useRef(null);
   let firstNewLine = true;
 
@@ -231,8 +283,8 @@ const GridTiles = memo(function GridTiles({
             if (!oldData) return oldData;
             return {
               ...oldData,
-              tiles: oldData.tiles.map((tile) =>
-                tile._id === tileId ? res.data : tile
+              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                (tile) => (tile._id === tileId ? res.data : tile)
               ),
             };
           }
@@ -312,7 +364,10 @@ const GridTiles = memo(function GridTiles({
               if (!oldData) return oldData;
               return {
                 ...oldData,
-                tiles: oldData.tiles.filter((tile) => tile._id !== tileId),
+                tiles: (Array.isArray(oldData.tiles)
+                  ? oldData.tiles
+                  : []
+                ).filter((tile) => tile._id !== tileId),
               };
             }
           );
@@ -362,6 +417,7 @@ const GridTiles = memo(function GridTiles({
       color: "black",
       overflowWrap: "anywhere",
       borderRadius: "10px",
+      position: "relative",
     };
 
     return stylevalue;
@@ -519,8 +575,9 @@ const GridTiles = memo(function GridTiles({
               if (!oldData) return oldData;
               return {
                 ...oldData,
-                tiles: oldData.tiles.map((tile) =>
-                  tile._id === tileId ? { ...tile, ...res.data } : tile
+                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                  (tile) =>
+                    tile._id === tileId ? { ...tile, ...res.data } : tile
                 ),
               };
             }
@@ -553,8 +610,9 @@ const GridTiles = memo(function GridTiles({
               if (!oldData) return oldData;
               return {
                 ...oldData,
-                tiles: oldData.tiles.map((tile) =>
-                  tile._id === tileId ? { ...tile, ...res.data } : tile
+                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                  (tile) =>
+                    tile._id === tileId ? { ...tile, ...res.data } : tile
                 ),
               };
             }
@@ -765,64 +823,8 @@ const GridTiles = memo(function GridTiles({
     setShowModel(false);
     if (dbUser) {
       newTile.dashboardId = activeBoard;
-
-      // Оптимістичне оновлення для клонування
-      const tempTile = { ...newTile, _id: `temp_clone_${Date.now()}` };
-      setTileCordinates([...tileCordinates, tempTile]);
-
-      // Оновлюємо React Query кеш оптимістично
-      queryClient.setQueryData(dashboardKeys.detail(activeBoard), (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          tiles: [...(oldData.tiles || []), tempTile],
-        };
-      });
-
-      axios
-        .post("/api/tile/tile", newTile)
-        .then((res) => {
-          // Замінюємо тимчасовий блок на справжній
-          setTileCordinates((prevTiles) =>
-            prevTiles.map((tile) =>
-              tile._id === tempTile._id ? res.data : tile
-            )
-          );
-
-          // Update React Query cache
-          queryClient.setQueryData(
-            dashboardKeys.detail(activeBoard),
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                tiles: oldData.tiles.map((tile) =>
-                  tile._id === tempTile._id ? res.data : tile
-                ),
-              };
-            }
-          );
-        })
-        .catch((error) => {
-          console.error("Error cloning tile:", error);
-          // Видаляємо тимчасовий блок при помилці
-          setTileCordinates((prevTiles) =>
-            prevTiles.filter((tile) => tile._id !== tempTile._id)
-          );
-
-          queryClient.setQueryData(
-            dashboardKeys.detail(activeBoard),
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                tiles: oldData.tiles.filter(
-                  (tile) => tile._id !== tempTile._id
-                ),
-              };
-            }
-          );
-        });
+      // Use mutation for optimistic clone
+      cloneMutation.mutate(newTile);
     } else {
       let items = [...tileCordinates, newTile];
       setTileCordinates(items);
@@ -879,6 +881,27 @@ const GridTiles = memo(function GridTiles({
     }
   }, []);
 
+  // Memoize per-tile styles keyed by tile coordinates and background to
+  // avoid stale styles while allowing updates when position/size/background changes.
+  const tileDepsKey = useMemo(() => {
+    return tileCordinates
+      .map(
+        (t) =>
+          `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`
+      )
+      .join(",");
+  }, [tileCordinates]);
+
+  const tileStyles = useMemo(() => {
+    return tileCordinates.map((tile, index) => ({
+      index,
+      style: style(index, tile),
+      isImageBackground: tile.tileBackground
+        ? isBackgroundImage(tile.tileBackground)
+        : false,
+    }));
+  }, [tileDepsKey, style, isBackgroundImage]);
+
   const currentBackground = (tile) => {
     if (tile.tileBackground) {
       if (isBackgroundImage(tile.tileBackground)) {
@@ -904,77 +927,97 @@ const GridTiles = memo(function GridTiles({
   return (
     <div className="main_grid_container">
       <div className="tiles_container">
-        {tileCordinates.map((tile, index) => (
-          <Rnd
-            key={index}
-            onMouseLeave={() => setShowOption(null)}
-            className="tile"
-            style={style(index, tile)}
-            size={{ width: tile.width, height: tile.height }}
-            position={{ x: tile.x, y: tile.y }}
-            onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
-            onResizeStop={(e, direction, ref, delta, position) =>
-              handleResizeStop(e, direction, ref, delta, position, index)
-            }
-            onDoubleClick={(e) =>
-              onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
-            }
-            minWidth={minHeightWidth[index]?.width || 50}
-            minHeight={minHeightWidth[index]?.height || 50}
-            onResize={(e, direction, ref, delta, position) =>
-              onResize(index, e, direction, ref, delta, position)
-            }
-            id={tile._id}
-            onResizeStart={() => setResizeCount(0)}
-            dragGrid={[5, 5]}
-            onTouchStart={(e) => {
-              if (isDblTouchTap(e)) {
-                onDoubleTap(
-                  e,
-                  tile.action,
-                  tile.tileContent,
-                  tile,
-                  index,
-                  null
-                );
-              } else {
-                setShowOption(`tile_${index}`);
+        {tileCordinates.map((tile, index) => {
+          const computedStyle = style(index, tile);
+          const isImgBackground = isBackgroundImage(tile.tileBackground);
+          return (
+            <Rnd
+              key={tile._id || index}
+              onMouseLeave={() => setShowOption(null)}
+              className="tile"
+              style={computedStyle}
+              size={{ width: tile.width, height: tile.height }}
+              position={{ x: tile.x, y: tile.y }}
+              onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
+              onResizeStop={(e, direction, ref, delta, position) =>
+                handleResizeStop(e, direction, ref, delta, position, index)
               }
-            }}
-            onDrag={(event, data) => {
-              const tileRight = data.x + parseInt(tile.width, 10);
-              if (tileRight > headerwidth) {
-                setHeaderWidth(tileRight);
+              onDoubleClick={(e) =>
+                onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
               }
-            }}
-          >
-            <div
-              className="text_overlay"
-              style={TitlePositionStyle(tile)}
-              dangerouslySetInnerHTML={{
-                __html: changedTitlehandle(index, tile),
+              minWidth={minHeightWidth[index]?.width || 50}
+              minHeight={minHeightWidth[index]?.height || 50}
+              onResize={(e, direction, ref, delta, position) =>
+                onResize(index, e, direction, ref, delta, position)
+              }
+              id={tile._id}
+              onResizeStart={() => setResizeCount(0)}
+              dragGrid={[5, 5]}
+              onTouchStart={(e) => {
+                if (isDblTouchTap(e)) {
+                  onDoubleTap(
+                    e,
+                    tile.action,
+                    tile.tileContent,
+                    tile,
+                    index,
+                    null
+                  );
+                } else {
+                  setShowOption(`tile_${index}`);
+                }
               }}
-            ></div>
-            {isBackgroundImage(tile.tileBackground) && (
-              <img draggable="false" src={tile.tileBackground} alt="Preview" />
-            )}
-            <div
-              className="showOptions absolute top-0 right-2 cursor-pointer"
-              onClick={(e) => openModel(e, index, null)}
+              onDrag={(event, data) => {
+                const tileRight = data.x + parseInt(tile.width, 10);
+                if (tileRight > headerwidth) {
+                  setHeaderWidth(tileRight);
+                }
+              }}
             >
-              <MoreHorizSharpIcon />
-            </div>
-            {showOption == `tile_${index}` && (
               <div
-                className="absolute top-0 right-2 cursor-pointer "
-                onTouchStart={(e) => openModel(e, index, null)}
+                className="text_overlay"
+                style={TitlePositionStyle(tile)}
+                dangerouslySetInnerHTML={{
+                  __html: changedTitlehandle(index, tile),
+                }}
+              ></div>
+              {isImgBackground && (
+                <Image
+                  src={tile.tileBackground}
+                  alt="Preview"
+                  fill
+                  priority={index < 6}
+                  quality={75}
+                  // Use unoptimized for external CDN URLs to allow browser parallel loading
+                  unoptimized={
+                    tile.tileBackground &&
+                    tile.tileBackground.startsWith("http")
+                  }
+                  style={{
+                    objectFit: "cover",
+                    borderRadius: "10px",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+              <div
+                className="showOptions absolute top-0 right-2 cursor-pointer"
+                onClick={(e) => openModel(e, index, null)}
               >
                 <MoreHorizSharpIcon />
               </div>
-            )}{" "}
-            {/* For Mobile view port  */}
-          </Rnd>
-        ))}
+              {showOption == `tile_${index}` && (
+                <div
+                  className="absolute top-0 right-2 cursor-pointer "
+                  onTouchStart={(e) => openModel(e, index, null)}
+                >
+                  <MoreHorizSharpIcon />
+                </div>
+              )}{" "}
+              {/* For Mobile view port  */}
+            </Rnd>
+          );
+        })}
       </div>
 
       {/* Tiles Property Model */}

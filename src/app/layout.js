@@ -46,6 +46,23 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <link
+          rel="preconnect"
+          href="https://res.cloudinary.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://images.unsplash.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
+          href="https://via.placeholder.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link
           rel="icon"
           type="image/x-icon"
           sizes="16x16"
@@ -64,8 +81,8 @@ export default function RootLayout({ children }) {
       </head>
       <UserProvider>
         <QueryProvider>
-          <OptimizedContextProvider>
-            <AppContextProvider>
+          <AppContextProvider>
+            <OptimizedContextProvider>
               <CssBaseline />
               <Script id="google-tag-manager" strategy="afterInteractive">
                 {`
@@ -138,8 +155,8 @@ export default function RootLayout({ children }) {
                   {children}
                 </ErrorBoundary>
               </body>
-            </AppContextProvider>
-          </OptimizedContextProvider>
+            </OptimizedContextProvider>
+          </AppContextProvider>
         </QueryProvider>
       </UserProvider>
     </html>

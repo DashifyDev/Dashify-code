@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+  useState,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import {
@@ -8,6 +14,8 @@ import {
   useUserDashboards,
   useAdminDashboards,
 } from "@/hooks/useDashboard";
+import { globalContext } from "@/context/globalContext";
+import { optimizedAxios } from "@/hooks/useOptimizedQuery";
 
 const OptimizedContext = createContext();
 
@@ -25,14 +33,50 @@ export const OptimizedContextProvider = ({ children }) => {
   const { user, isLoading: userLoading } = useUser();
   const queryClient = useQueryClient();
 
+  // Resolve backend user id (Mongo _id) for authenticated users so we can
+  // request dashboards by userId instead of by sessionId (Auth0 sub).
+  const [resolvedUserId, setResolvedUserId] = useState(null);
+
+  // If AppContext has already resolved dbUser, use it immediately to avoid
+  // fetching with Auth0 sub/sessionId fallback which returns empty lists.
+  const appContext = useContext(globalContext);
+  const appDbUser = appContext?.dbUser;
+
+  useEffect(() => {
+    if (appDbUser && appDbUser._id) {
+      setResolvedUserId(appDbUser._id);
+      return;
+    }
+
+    let mounted = true;
+    const fetchBackendUser = async () => {
+      if (!user) return;
+      try {
+        const res = await optimizedAxios.post("/api/manage/getUser", user);
+        if (mounted && res?.data?._id) setResolvedUserId(res.data._id);
+      } catch (err) {
+        console.warn("OptimizedContext: failed to resolve backend user", err);
+      }
+    };
+    fetchBackendUser();
+    return () => {
+      mounted = false;
+    };
+  }, [user, appDbUser]);
+
   const {
     data: userDashboards = [],
     isLoading: dashboardsLoading,
     error: dashboardsError,
   } = useUserDashboards(
-    null, // Don't use userId for Auth0 users
-    user?.sub ||
-      (typeof window !== "undefined" ? localStorage.getItem("sessionId") : null)
+    // if we resolved backend user id, pass it as userId; otherwise fall back to sessionId for guests
+    resolvedUserId || null,
+    resolvedUserId
+      ? null
+      : user?.sub ||
+          (typeof window !== "undefined"
+            ? localStorage.getItem("sessionId")
+            : null)
   );
 
   const { data: adminDashboards = [], isLoading: adminLoading } =

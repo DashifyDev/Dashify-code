@@ -7,12 +7,12 @@ export const useOptimizedQuery = (queryKey, queryFn, options = {}) => {
       if (error?.response?.status >= 400 && error?.response?.status < 500) {
         return false;
       }
-      
+
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 5 * 60 * 1000, 
-    gcTime: 10 * 60 * 1000, 
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     ...options,
@@ -26,7 +26,7 @@ export const useOptimizedQuery = (queryKey, queryFn, options = {}) => {
 };
 
 export const optimizedAxios = axios.create({
-  timeout: 10000, 
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },

@@ -13,12 +13,28 @@ export const useDashboard = (id) => {
   return useOptimizedQuery(
     dashboardKeys.detail(id),
     async () => {
+      // If there's a locally created board stored in localStorage (guest mode),
+      // return it directly to avoid calling the API which expects ObjectId _id.
+      if (typeof window !== "undefined") {
+        try {
+          const localBoards = JSON.parse(
+            localStorage.getItem("Dasify") || "[]"
+          );
+          const localBoard = localBoards.find((b) => b._id === id);
+          if (localBoard) {
+            return localBoard;
+          }
+        } catch (err) {
+          // ignore parse errors and fall back to API
+          console.warn("useDashboard: failed to read local boards", err);
+        }
+      }
+
       const response = await optimizedAxios.get(`/api/dashboard/${id}`);
       return response.data;
     },
     {
       enabled: !!id,
-      
       select: (data) => ({
         ...data,
         tiles: data.tiles || [],
@@ -39,8 +55,8 @@ export const useUserDashboards = (userId, sessionId) => {
       return response.data;
     },
     enabled: !!(userId || sessionId),
-    staleTime: 2 * 60 * 1000, 
-    gcTime: 5 * 60 * 1000, 
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 
@@ -53,8 +69,8 @@ export const useAdminDashboards = () => {
       );
       return response.data;
     },
-    staleTime: 10 * 60 * 1000, 
-    gcTime: 15 * 60 * 1000, 
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 };
 
@@ -71,7 +87,6 @@ export const useCreateDashboard = () => {
     },
     onSuccess: (newDashboard) => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
-      
       queryClient.setQueryData(
         dashboardKeys.detail(newDashboard._id),
         newDashboard
@@ -93,7 +108,6 @@ export const useUpdateDashboard = () => {
         dashboardKeys.detail(updatedDashboard._id),
         updatedDashboard
       );
-      
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
     },
   });
@@ -109,7 +123,6 @@ export const useDeleteDashboard = () => {
     },
     onSuccess: (_, deletedId) => {
       queryClient.removeQueries({ queryKey: dashboardKeys.detail(deletedId) });
-      
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
     },
   });

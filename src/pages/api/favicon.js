@@ -6,18 +6,23 @@ export default function handler(req, res) {
     const faviconPath = path.join(process.cwd(), "public", "favicon.ico");
 
     if (!fs.existsSync(faviconPath)) {
-      return res.status(404).json({ error: "Favicon not found" });
+      console.error("Favicon not found at", faviconPath);
+      return res.status(404).end();
     }
 
-    const faviconBuffer = fs.readFileSync(faviconPath);
-
+    const stat = fs.statSync(faviconPath);
     res.setHeader("Content-Type", "image/x-icon");
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    res.setHeader("Content-Length", faviconBuffer.length);
+    res.setHeader("Content-Length", stat.size);
 
-    res.send(faviconBuffer);
+    const stream = fs.createReadStream(faviconPath);
+    stream.on("error", (err) => {
+      console.error("Error streaming favicon:", err);
+      if (!res.headersSent) res.status(500).end();
+    });
+    stream.pipe(res);
   } catch (error) {
     console.error("Error serving favicon:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).end();
   }
 }

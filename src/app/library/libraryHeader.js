@@ -9,6 +9,7 @@ import { globalContext } from "@/context/globalContext";
 import "../../styles//header.css";
 import logo from "../../assets/logo.png";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 function LibraryHeader() {
@@ -45,9 +46,14 @@ function LibraryHeader() {
               Click on a board below to add to your Boardzy!
             </Grid>
             <Grid item className="right_header">
-              <a href="/dashboard">
-                <Image className="logo" src={logo} alt="logo" />
-              </a>
+              <Link href="/dashboard" prefetch={false}>
+                <Image
+                  className="logo"
+                  src={logo}
+                  alt="Boardzy logo"
+                  priority
+                />
+              </Link>
               <IconButton
                 size="large"
                 edge="end"

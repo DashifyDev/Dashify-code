@@ -9,14 +9,14 @@ function Login() {
       <List>
         <ListItem>
           <ListItemText>
-            <a href="/api/auth/login" className="login_btn">
+            <Link href="/api/auth/login" prefetch={false} className="login_btn">
               Log in
-            </a>
+            </Link>
           </ListItemText>
           <ListItemText>
-            <a href="/api/auth/login" className="sign_btn">
+            <Link href="/api/auth/login" prefetch={false} className="sign_btn">
               Sign up
-            </a>
+            </Link>
           </ListItemText>
         </ListItem>
       </List>

@@ -3,6 +3,7 @@ import Dashboard from "@/models/dashboard";
 import Tile from "@/models/tile";
 import Pod from "@/models/pod";
 import User from "@/models/user";
+import mongoose from "mongoose";
 
 export const createDatabaseIndexes = async () => {
   try {
@@ -38,6 +39,11 @@ export const createDatabaseIndexes = async () => {
 export const getDashboardMinimal = async (id) => {
   try {
     await connectMongo();
+
+    // Validate ObjectId to avoid CastError when non-ObjectId (e.g. UUID) is passed
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return null;
+    }
 
     const dashboard = await Dashboard.findOne(
       { _id: id },

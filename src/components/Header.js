@@ -24,6 +24,7 @@ import SideDrawer from "./SideDrawer";
 import { globalContext } from "@/context/globalContext";
 import { ReactSortable } from "react-sortablejs";
 import { useUser } from "@auth0/nextjs-auth0/client";
+import Link from "next/link";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
@@ -100,17 +101,31 @@ function Header() {
   };
 
   useEffect(() => {
+    // Always prefer authoritative server list for authenticated users.
     if (dbUser && user) {
-      axios.get(`/api/dashboard/addDashboard/?id=${dbUser._id}`).then((res) => {
-        if (res.data.length >= 1) {
-          setBoards((prev) => {
-            return [...res.data];
-          });
-          if (!id) {
-            router.push(`/dashboard/${res.data[0]._id}`);
+      // clear any guest data to avoid localStorage shadowing server state
+      try {
+        localStorage.removeItem("Dasify");
+      } catch (e) {
+        /* ignore */
+      }
+
+      axios
+        .get(`/api/dashboard/addDashboard/?id=${dbUser._id}&t=${Date.now()}`)
+        .then((res) => {
+          if (res && Array.isArray(res.data) && res.data.length >= 1) {
+            setBoards(res.data);
+            if (!id) {
+              router.push(`/dashboard/${res.data[0]._id}`);
+            }
+          } else {
+            setBoards([]);
           }
-        }
-      });
+        })
+        .catch((err) => {
+          console.warn("Failed to load dashboards for user", err);
+          setBoards([]);
+        });
     } else {
       if (!isLoading && !user) {
         getDefaultDashboard();
@@ -169,6 +184,8 @@ function Header() {
       backgroundAction: "color",
     };
 
+    const detailKey = dashboardKeys.detail(currentActiveBoard);
+
     if (dbUser) {
       // Оптимістичне оновлення
       const tempTile = { ...newtile, _id: `temp_${Date.now()}` };
@@ -203,12 +220,22 @@ function Header() {
               if (!oldData) return oldData;
               return {
                 ...oldData,
-                tiles: oldData.tiles.map((tile) =>
+                tiles: (oldData.tiles || []).map((tile) =>
                   tile._id === tempTile._id ? res.data : tile
                 ),
               };
             }
           );
+          // ensure subscribers see the latest data
+          queryClient.setQueryData(detailKey, (old) => {
+            if (!old) return { ...res.data };
+            return {
+              ...(old || {}),
+              tiles: (old.tiles || []).map((t) =>
+                t._id === tempTile._id ? res.data : t
+              ),
+            };
+          });
         })
         .catch((error) => {
           console.error("Error adding tile:", error);
@@ -249,6 +276,27 @@ function Header() {
       localStorage.setItem("Dasify", JSON.stringify(items));
       setBoards(items);
       setTiles(items[boardIndex].tiles);
+
+      // Update React Query cache so pages using useDashboard see the change immediately
+      try {
+        queryClient.setQueryData(detailKey, (oldData) => {
+          // If there is existing cache, replace tiles; otherwise set minimal shape from local storage
+          if (oldData) {
+            return {
+              ...oldData,
+              tiles: items[boardIndex].tiles,
+            };
+          }
+          return {
+            _id: items[boardIndex]._id,
+            name: items[boardIndex].name || "",
+            tiles: items[boardIndex].tiles,
+            pods: items[boardIndex].pods || [],
+          };
+        });
+      } catch (e) {
+        console.warn("Failed to update query cache for local board", e);
+      }
     }
   };
 
@@ -270,9 +318,24 @@ function Header() {
         };
       }
       axios.post("/api/dashboard/addDashboard", payload).then((res) => {
-        setBoards([...boards, res.data]);
+        const newBoard = res.data;
+        setBoards((prev) => [...prev, newBoard]);
+        // ensure React Query lists/cache reflect the newly created board for other contexts
+        try {
+          queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
+          queryClient.setQueryData(
+            dashboardKeys.detail(newBoard._id),
+            newBoard
+          );
+        } catch (e) {
+          console.warn(
+            "Failed to update query cache after creating dashboard",
+            e
+          );
+        }
+
         if (boardsLength === 0) {
-          router.push(`/dashboard/${res.data._id}`);
+          router.push(`/dashboard/${newBoard._id}`);
         }
       });
     } else {
@@ -346,13 +409,55 @@ function Header() {
   const deleteDashboard = (id, index) => {
     let isLastIndex = index == boards.length - 1 ? true : false;
     if (dbUser) {
-      axios.delete(`/api/dashboard/${id}`).then((res) => {
-        if (res) {
-          boards.splice(index, 1);
-          setBoards(boards);
-          setDash(isLastIndex, index);
-        }
-      });
+      axios
+        .delete(`/api/dashboard/${id}`)
+        .then((res) => {
+          if (res && (res.status === 200 || res.status === 204 || res.data)) {
+            // remove immutably so React re-renders (coerce ids to strings)
+            const newBoards = (boards || []).filter(
+              (b) => String(b._id) !== String(id)
+            );
+            setBoards(newBoards);
+
+            // update react-query cache and ensure UI re-renders
+            try {
+              queryClient.removeQueries({ queryKey: dashboardKeys.detail(id) });
+              queryClient.invalidateQueries({
+                queryKey: dashboardKeys.lists(),
+              });
+            } catch (e) {
+              console.warn("Failed to update query cache after delete", e);
+            }
+
+            // (already removed above) no-op here
+
+            // refresh authoritative list from server to ensure consistency
+            if (dbUser && dbUser._id) {
+              axios
+                .get(
+                  `/api/dashboard/addDashboard/?id=${
+                    dbUser._id
+                  }&t=${Date.now()}`
+                )
+                .then((resp) => {
+                  if (resp && Array.isArray(resp.data)) setBoards(resp.data);
+                })
+                .catch((e) =>
+                  console.warn("Failed to refresh boards after delete", e)
+                );
+            }
+
+            setDash(isLastIndex, index);
+          } else {
+            console.warn(
+              "Delete dashboard responded with unexpected status",
+              res && res.status
+            );
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to delete dashboard:", err);
+        });
     } else {
       let items = boards;
       items.splice(index, 1);
@@ -433,6 +538,7 @@ function Header() {
                   animation="200"
                   easing="ease-out"
                   className="dashboard_drag"
+                  key={(boards || []).map((b) => String(b._id)).join(",")}
                 >
                   {boards.map((board, index) => {
                     return (
@@ -569,7 +675,7 @@ function Header() {
               </Button>
             </Grid>
             <Grid item className="right_header">
-              <Image className="logo" src={logo} alt="logo" />
+              <Image className="logo" src={logo} alt="Boardzy logo" priority />
               <IconButton
                 size="large"
                 edge="end"
@@ -595,18 +701,26 @@ function Header() {
                     <div className="email">{user.email}</div>
                     <div className="horizonLine"></div>
                     <div className="logout">
-                      <a href="/api/auth/logout">Log out</a>
+                      <Link href="/api/auth/logout">Log out</Link>
                     </div>
                   </Menu>
                 </div>
               ) : (
                 <div>
-                  <a href="/api/auth/login" className="sign_btn">
+                  <Link
+                    href="/api/auth/login"
+                    prefetch={false}
+                    className="sign_btn"
+                  >
                     Sign up
-                  </a>
-                  <a href="/api/auth/login" className="login_btn">
+                  </Link>
+                  <Link
+                    href="/api/auth/login"
+                    prefetch={false}
+                    className="login_btn"
+                  >
                     Login
-                  </a>
+                  </Link>
                 </div>
               )}
             </Grid>
