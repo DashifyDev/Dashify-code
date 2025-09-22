@@ -138,8 +138,7 @@ export const getUserDashboards = async (userId, sessionId) => {
 
     // For Auth0 users, use sessionId instead of userId to avoid ObjectId casting issues
     const query = sessionId ? { sessionId } : { userId };
-    const sort = sessionId ? { position: 1 } : { createdAt: 1 };
-
+    
     const dashboards = await Dashboard.find(query, {
       _id: 1,
       name: 1,
@@ -152,8 +151,36 @@ export const getUserDashboards = async (userId, sessionId) => {
       default: 1,
       hasAdminAdded: 1,
     })
-      .sort(sort)
+      .sort({ createdAt: 1 }) // First sort by creation date to maintain original order
       .lean();
+
+    // Check if any dashboards are missing position field and assign them
+    const needsPositionUpdate = dashboards.some(dashboard => dashboard.position === undefined || dashboard.position === null);
+    
+    if (needsPositionUpdate) {
+      // Update positions for dashboards that don't have them
+      const updatePromises = dashboards.map((dashboard, index) => {
+        if (dashboard.position === undefined || dashboard.position === null) {
+          return Dashboard.updateOne(
+            { _id: dashboard._id },
+            { position: index + 1 }
+          );
+        }
+        return Promise.resolve();
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Update the local array with new positions
+      dashboards.forEach((dashboard, index) => {
+        if (dashboard.position === undefined || dashboard.position === null) {
+          dashboard.position = index + 1;
+        }
+      });
+    }
+
+    // Now sort by position
+    dashboards.sort((a, b) => (a.position || 0) - (b.position || 0));
 
     return dashboards;
   } catch (error) {

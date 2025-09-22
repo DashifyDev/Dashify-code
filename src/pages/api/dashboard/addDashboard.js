@@ -29,6 +29,17 @@ const addDashBoard = async (req, res) => {
           }
         }
 
+        // Set position for new dashboard - get the next available position
+        let existingDashboards;
+        if (data.userId) {
+          existingDashboards = await Dashboard.find({ userId: data.userId });
+        } else if (data.sessionId) {
+          existingDashboards = await Dashboard.find({ sessionId: data.sessionId });
+        } else {
+          existingDashboards = [];
+        }
+        data.position = existingDashboards.length + 1;
+        
         const dashboard = await Dashboard.create(data);
         res.status(200).json(dashboard);
 
