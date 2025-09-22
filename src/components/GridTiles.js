@@ -509,14 +509,17 @@ const GridTiles = memo(function GridTiles({
   }, []);
 
   const changedTitlehandle = (index, tile) => {
-    let tileText = tileCordinates[index].tileText;
+    // Use tile.tileText directly instead of tileCordinates[index].tileText
+    let tileText = tile.tileText;
     let content = tileText;
+    
     if (tileText) {
-      const cleanText = tileText.replace(/<[^>]*>/g, '').trim();
-      if (cleanText === '' || tileText === "<div><br></div>" || tileText === "<div></div>") {
+      // Only check for empty divs, not strip all HTML
+      if (tileText === "<div><br></div>" || tileText === "<div></div>") {
         content = "";
       }
     }
+    
     const titleVal =
       content && tile.displayTitle
         ? tileText
@@ -1143,13 +1146,15 @@ const GridTiles = memo(function GridTiles({
                 }
               }}
             >
-              <div
-                className="text_overlay"
-                style={TitlePositionStyle(tile)}
-                dangerouslySetInnerHTML={{
-                  __html: changedTitlehandle(index, tile),
-                }}
-              ></div>
+              {tile.displayTitle && (
+                <div
+                  className="text_overlay"
+                  style={TitlePositionStyle(tile)}
+                  dangerouslySetInnerHTML={{
+                    __html: changedTitlehandle(index, tile),
+                  }}
+                />
+              )}
               {isImgBackground && (
                 <Image
                   src={tile.tileBackground}

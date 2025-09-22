@@ -229,6 +229,7 @@ img.text-editor-image {
 
 .showOptions {
     display: none;
+    z-index: 3;
   }
   
 .tile:hover .showOptions {
@@ -254,6 +255,7 @@ img.text-editor-image {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    z-index: 2;
 }
 
 /* Preserve line breaks and spacing in HTML content */
