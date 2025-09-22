@@ -167,7 +167,7 @@ function Header() {
     const FIXED_X = 25;
     const FIXED_Y = 25;
 
-    // Завжди розміщуємо новий блок в одному фіксованому місці
+    // Always place new block in one fixed location
     const newX = FIXED_X;
     const newY = FIXED_Y;
 
@@ -187,11 +187,11 @@ function Header() {
     const detailKey = dashboardKeys.detail(currentActiveBoard);
 
     if (dbUser) {
-      // Оптимістичне оновлення
+      // Optimistic update
       const tempTile = { ...newtile, _id: `temp_${Date.now()}` };
       setTiles([...tiles, tempTile]);
 
-      // Оновлюємо React Query кеш оптимістично
+      // Update React Query cache optimistically
       queryClient.setQueryData(
         dashboardKeys.detail(currentActiveBoard),
         (oldData) => {
@@ -206,7 +206,7 @@ function Header() {
       axios
         .post("/api/tile/tile", newtile)
         .then((res) => {
-          // Замінюємо тимчасовий блок на справжній
+          // Replace temporary block with real one
           setTiles((prevTiles) =>
             prevTiles.map((tile) =>
               tile._id === tempTile._id ? res.data : tile
@@ -239,7 +239,7 @@ function Header() {
         })
         .catch((error) => {
           console.error("Error adding tile:", error);
-          // Видаляємо тимчасовий блок при помилці
+          // Remove temporary block on error
           setTiles((prevTiles) =>
             prevTiles.filter((tile) => tile._id !== tempTile._id)
           );

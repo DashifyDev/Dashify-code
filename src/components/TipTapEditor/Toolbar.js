@@ -37,6 +37,7 @@ import FontFamilySelector from "./FontFamilySelector";
 import "./styles/Toolbar.css";
 import { rgbToHex } from "./utils/color";
 import TableSizePicker from "./TableSizePicker";
+import ColorGridPicker from "../ColorGridPicker";
 
 Modal.setAppElement("body");
 
@@ -135,6 +136,8 @@ const Toolbar = ({ editor, activeStyles }) => {
   const dividerMenuRef = useRef(null);
   const [isTableOpen, setIsTableOpen] = useState(false);
   const tableMenuRef = useRef(null);
+  const [showColorGrid, setShowColorGrid] = useState(false);
+  const [showHighlightGrid, setShowHighlightGrid] = useState(false);
 
   const openLinkModal = useCallback(() => {
     const { from, to } = editor.state.selection;
@@ -390,46 +393,72 @@ const Toolbar = ({ editor, activeStyles }) => {
         </div>
 
         <div className="toolbar-group">
-          <button className="color-picker-button" title="Text Color">
-            <FaFont />
-            <span
-              className="color-indicator"
-              style={{
-                backgroundColor: rgbToHex(activeStyles.color) || "transparent",
+          <div className="color-picker-container">
+            <button 
+              className="color-picker-button" 
+              title="Text Color"
+              onClick={() => {
+                setShowColorGrid(!showColorGrid);
+                if (!showColorGrid) {
+                  setShowHighlightGrid(false);
+                }
               }}
-            ></span>
-            <input
-              type="color"
-              onInput={(event) =>
-                editor
-                  .chain()
-                  .focus()
-                  .setMark("textStyle", { color: event.target.value })
-                  .run()
-              }
-              value={rgbToHex(activeStyles.color) || "#000000"}
-            />
-          </button>
-          <button className="color-picker-button" title="Highlight Color">
-            <FaHighlighter />
-            <span
-              className="color-indicator"
-              style={{
-                backgroundColor: activeStyles.highlight || "transparent",
+            >
+              <FaFont />
+              <span
+                className="color-indicator"
+                style={{
+                  backgroundColor: rgbToHex(activeStyles.color) || "transparent",
+                }}
+              ></span>
+            </button>
+            {showColorGrid && (
+              <ColorGridPicker
+                onColorSelect={(color) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .setMark("textStyle", { color })
+                    .run();
+                  setShowColorGrid(false);
+                }}
+                currentColor={rgbToHex(activeStyles.color)}
+              />
+            )}
+          </div>
+          <div className="color-picker-container">
+            <button 
+              className="color-picker-button" 
+              title="Highlight Color"
+              onClick={() => {
+                setShowHighlightGrid(!showHighlightGrid);
+                if (!showHighlightGrid) {
+                  setShowColorGrid(false);
+                }
               }}
-            ></span>
-            <input
-              type="color"
-              onInput={(event) =>
-                editor
-                  .chain()
-                  .focus()
-                  .toggleHighlight({ color: event.target.value })
-                  .run()
-              }
-              value={activeStyles.highlight || "#ffffff"}
-            />
-          </button>
+            >
+              <FaHighlighter />
+              <span
+                className="color-indicator"
+                style={{
+                  backgroundColor: activeStyles.highlight || "transparent",
+                }}
+              ></span>
+            </button>
+            {showHighlightGrid && (
+              <ColorGridPicker
+                onColorSelect={(color) => {
+                  editor
+                    .chain()
+                    .focus()
+                    .toggleHighlight({ color })
+                    .run();
+                  setShowHighlightGrid(false);
+                }}
+                currentColor={activeStyles.highlight}
+              />
+            )}
+          </div>
 
           <FontFamilySelector
             editor={editor}

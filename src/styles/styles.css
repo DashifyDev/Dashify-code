@@ -8,14 +8,16 @@
     width: 100%;
     vertical-align: top;
     min-height: 100px;
+    position: relative; 
 }
 .tiles{
     width: 150px;
-    height: 150px;
+    min-height: 150px;
+    height: auto;
     background: pink;
     color: black;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     border-radius: 10px;
     text-transform: capitalize;
@@ -242,6 +244,54 @@ img.text-editor-image {
 .text_overlay {
     position: absolute;
     padding: 15px;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    width: 100%;
+    height: auto;
+    min-height: 1.2em;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* Preserve line breaks and spacing in HTML content */
+.text_overlay p {
+    margin: 0 0 10px 0 !important;
+    display: block !important;
+    line-height: 1.4 !important;
+    min-height: 1.2em !important;
+    box-sizing: border-box !important;
+}
+
+.text_overlay p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.text_overlay div {
+    margin: 0 0 10px 0 !important;
+    display: block !important;
+}
+
+.text_overlay div:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Make empty paragraphs visible as line breaks */
+.text_overlay p:empty {
+    display: block !important;
+    margin: 0 0 10px 0 !important;
+    height: 1.2em !important;
+    min-height: 1.2em !important;
+    box-sizing: border-box !important;
+}
+
+/* Handle paragraphs that only contain whitespace */
+.text_overlay p:not(:has(*)) {
+    min-height: 1em !important;
+    display: block !important;
+    margin: 0 0 10px 0 !important;
 }
 
 .highlight_text {
@@ -267,10 +317,7 @@ img.text-editor-image {
     min-width: 124px;
     max-height: 300px;
 }
-/* .css-14b29qc{
-    justify-content: space-between !important;
-} */
-/* Side Drawer */
+
 .app-drawer-style{
     width: 100%;
     font-size: x-large;

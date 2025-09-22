@@ -1,0 +1,72 @@
+.color-grid-picker {
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #e0e0e0;
+  position: absolute;
+  z-index: 1000;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  width: 320px;
+}
+
+.base-colors {
+  display: flex;
+  margin-bottom: 12px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.base-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0 !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.base-color:hover {
+  transform: scale(1.1);
+  border-color: #e0e0e0 !important;
+  z-index: 10;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 1px;
+  width: 100%;
+}
+
+.color-row {
+  display: contents;
+}
+
+.color-cell {
+  width: 21px;
+  height: 21px;
+  border: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.color-cell:hover {
+  transform: scale(1.2);
+  z-index: 10;
+  border-color: #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.color-cell.selected {
+  border-color: #007bff;
+  border-width: 2px;
+  box-shadow: 0 0 0 1px white;
+}

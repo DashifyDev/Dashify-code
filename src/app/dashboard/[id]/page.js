@@ -26,7 +26,7 @@ function OptimizedDashboardPage() {
     isFetching,
   } = useDashboardData(id);
 
-  // Попереднє завантаження наступних дощок
+  // Preload next boards
   useEffect(() => {
     if (dashboardData && dashboardData.relatedBoards) {
       dashboardData.relatedBoards.forEach((boardId) => {

@@ -290,7 +290,55 @@ const GridTiles = memo(function GridTiles({
           }
         );
 
+        // Store selectedTile before setting it to null
+        const currentSelectedTile = selectedTile;
         setSelectedTile(null);
+        
+        // Auto-resize tile after save for authenticated users
+        setTimeout(() => {
+          // Try different selectors for tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith('temp_')) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+          }
+          
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
+          
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
+            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
+            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            
+            if (Math.abs(newHeight - currentHeight) > 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${newHeight}px`
+              };
+              setTileCordinates(updatedItems);
+              
+              // Update React Query cache
+              queryClient.setQueryData(
+                dashboardKeys.detail(activeBoard),
+                (oldData) => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                      (tile) => (tile._id === tileId ? updatedItems[currentSelectedTile] : tile)
+                    ),
+                  };
+                }
+              );
+            }
+          }
+        }, 100);
       });
     } else {
       if (formValue.tileBackground instanceof File) {
@@ -319,7 +367,45 @@ const GridTiles = memo(function GridTiles({
         items[selectedTile] = item;
         setTileCordinates(items);
         updateTilesInLocalstorage(items);
+        
+        // Store selectedTile before setting it to null
+        const currentSelectedTile = selectedTile;
         setSelectedTile(null);
+        
+        // Auto-resize tile after save for guest users
+        setTimeout(() => {
+          const tileId = items[currentSelectedTile]._id;
+          
+          // Try different selectors for guest tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith('temp_')) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+          }
+          
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
+          
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
+            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
+            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            
+            if (Math.abs(newHeight - currentHeight) > 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${newHeight}px`
+              };
+              setTileCordinates(updatedItems);
+              updateTilesInLocalstorage(updatedItems);
+            }
+          }
+        }, 100);
       }
     }
   };
@@ -417,7 +503,6 @@ const GridTiles = memo(function GridTiles({
       color: "black",
       overflowWrap: "anywhere",
       borderRadius: "10px",
-      position: "relative",
     };
 
     return stylevalue;
@@ -427,9 +512,8 @@ const GridTiles = memo(function GridTiles({
     let tileText = tileCordinates[index].tileText;
     let content = tileText;
     if (tileText) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(tileText, "text/html");
-      if (tileText === "<div><br></div>") {
+      const cleanText = tileText.replace(/<[^>]*>/g, '').trim();
+      if (cleanText === '' || tileText === "<div><br></div>" || tileText === "<div></div>") {
         content = "";
       }
     }
@@ -705,7 +789,7 @@ const GridTiles = memo(function GridTiles({
     setOpenTextEdior(false);
     if (dbUser) {
       const form = new FormData();
-      const payload = { tileContent: content, editorHeading: editorTitle };
+      const payload = { tileContent: content, tileText: content, editorHeading: editorTitle };
       form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then((res) => {
         if (
@@ -735,17 +819,102 @@ const GridTiles = memo(function GridTiles({
         );
 
         setSelectedTile(null);
+        
+        // Auto-resize tile after save for authenticated users (text editor)
+        setTimeout(() => {
+          // Try different selectors for tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith('temp_')) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+          }
+          
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            textOverlay = allTextOverlays[selectedTile];
+          }
+          
+          if (textOverlay && selectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
+            const currentHeight = parseInt(items[selectedTile].height) || 150;
+            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            
+            if (Math.abs(newHeight - currentHeight) > 5) {
+              const updatedItems = [...items];
+              updatedItems[selectedTile] = {
+                ...updatedItems[selectedTile],
+                height: `${newHeight}px`
+              };
+              setTileCordinates(updatedItems);
+              
+              // Update React Query cache
+              queryClient.setQueryData(
+                dashboardKeys.detail(activeBoard),
+                (oldData) => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                      (tile) => (tile._id === tileId ? updatedItems[selectedTile] : tile)
+                    ),
+                  };
+                }
+              );
+            }
+          }
+        }, 100);
       });
     } else {
       let item = {
         ...items[selectedTile],
         tileContent: content,
+        tileText: content,
         editorHeading: editorTitle,
       };
       items[selectedTile] = item;
       setTileCordinates(items);
       updateTilesInLocalstorage(items);
+      
+      // Store selectedTile before setting it to null
+      const currentSelectedTile = selectedTile;
       setSelectedTile(null);
+      
+      // Auto-resize tile after save for guest users (text editor)
+      setTimeout(() => {
+        const tileId = items[currentSelectedTile]._id;
+        
+        // Try different selectors for guest tiles
+        let textOverlay = null;
+        if (tileId && !tileId.startsWith('temp_')) {
+          // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+          const escapedTileId = CSS.escape(tileId);
+          textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+        }
+        
+        // Fallback: try to find by index
+        if (!textOverlay) {
+          const allTextOverlays = document.querySelectorAll('.text_overlay');
+          textOverlay = allTextOverlays[currentSelectedTile];
+        }
+        
+        if (textOverlay && currentSelectedTile !== null) {
+          const contentHeight = textOverlay.scrollHeight;
+          const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
+          const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+          
+          if (Math.abs(newHeight - currentHeight) > 5) {
+            const updatedItems = [...items];
+            updatedItems[currentSelectedTile] = {
+              ...updatedItems[currentSelectedTile],
+              height: `${newHeight}px`
+            };
+            setTileCordinates(updatedItems);
+            updateTilesInLocalstorage(updatedItems);
+          }
+        }
+      }, 100);
     }
   };
 
@@ -810,7 +979,7 @@ const GridTiles = memo(function GridTiles({
   const tileClone = (index) => {
     let content = tileCordinates[index];
 
-    // Завжди розміщуємо клонований блок в фіксованому місці
+    // Always place cloned block in fixed location
     const FIXED_X = 25;
     const FIXED_Y = 25;
 
