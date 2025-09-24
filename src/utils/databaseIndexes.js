@@ -139,6 +139,9 @@ export const getUserDashboards = async (userId, sessionId) => {
     // For Auth0 users, use sessionId instead of userId to avoid ObjectId casting issues
     const query = sessionId ? { sessionId } : { userId };
     
+    // Add condition to show only user's private dashboards (not admin ones)
+    query.hasAdminAdded = { $ne: true };
+    
     const dashboards = await Dashboard.find(query, {
       _id: 1,
       name: 1,

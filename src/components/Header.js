@@ -106,6 +106,7 @@ function Header() {
       // clear any guest data to avoid localStorage shadowing server state
       try {
         localStorage.removeItem("Dasify");
+        localStorage.removeItem("sessionId");
       } catch (e) {
         /* ignore */
       }
@@ -128,6 +129,12 @@ function Header() {
         });
     } else {
       if (!isLoading && !user) {
+        // Clear user cache when switching to guest mode
+        try {
+          localStorage.removeItem("sessionId");
+        } catch (e) {
+          /* ignore */
+        }
         getDefaultDashboard();
       }
     }
@@ -263,7 +270,7 @@ function Header() {
       );
       if (boardIndex === -1) {
         console.error(
-          "Активна дошка не знайдена для збереження в localStorage"
+          "Active dashboard not found for saving to localStorage"
         );
         return;
       }

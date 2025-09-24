@@ -64,19 +64,23 @@ export const OptimizedContextProvider = ({ children }) => {
     };
   }, [user, appDbUser]);
 
+  // Clear cache when user state changes
+  useEffect(() => {
+    if (!user) {
+      // Clear all caches on logout
+      queryClient.clear();
+    }
+  }, [user, queryClient]);
+
   const {
     data: userDashboards = [],
     isLoading: dashboardsLoading,
     error: dashboardsError,
   } = useUserDashboards(
-    // if we resolved backend user id, pass it as userId; otherwise fall back to sessionId for guests
-    resolvedUserId || null,
-    resolvedUserId
-      ? null
-      : user?.sub ||
-          (typeof window !== "undefined"
-            ? localStorage.getItem("sessionId")
-            : null)
+    // Only for authenticated users
+    user ? resolvedUserId : null,
+    // Don't pass sessionId for guests
+    null
   );
 
   const { data: adminDashboards = [], isLoading: adminLoading } =
@@ -84,9 +88,11 @@ export const OptimizedContextProvider = ({ children }) => {
 
   const allBoards = useMemo(() => {
     if (user) {
+      // For authenticated users - only their private dashboards
       return userDashboards;
     } else {
-      return [...adminDashboards, ...userDashboards];
+      // For guests - ONLY admin dashboards
+      return adminDashboards;
     }
   }, [user, userDashboards, adminDashboards]);
 
