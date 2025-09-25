@@ -792,7 +792,7 @@ const GridTiles = memo(function GridTiles({
     setOpenTextEdior(false);
     if (dbUser) {
       const form = new FormData();
-      const payload = { tileContent: content, tileText: content, editorHeading: editorTitle };
+      const payload = { tileContent: content, editorHeading: editorTitle };
       form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then((res) => {
         if (
@@ -870,12 +870,11 @@ const GridTiles = memo(function GridTiles({
         }, 100);
       });
     } else {
-      let item = {
-        ...items[selectedTile],
-        tileContent: content,
-        tileText: content,
-        editorHeading: editorTitle,
-      };
+    let item = {
+      ...items[selectedTile],
+      tileContent: content,
+      editorHeading: editorTitle,
+    };
       items[selectedTile] = item;
       setTileCordinates(items);
       updateTilesInLocalstorage(items);
