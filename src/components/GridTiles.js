@@ -822,52 +822,7 @@ const GridTiles = memo(function GridTiles({
         );
 
         setSelectedTile(null);
-        
-        // Auto-resize tile after save for authenticated users (text editor)
-        setTimeout(() => {
-          // Try different selectors for tiles
-          let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
-            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-            const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-          }
-          
-          // Fallback: try to find by index
-          if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
-            textOverlay = allTextOverlays[selectedTile];
-          }
-          
-          if (textOverlay && selectedTile !== null) {
-            const contentHeight = textOverlay.scrollHeight;
-            const currentHeight = parseInt(items[selectedTile].height) || 150;
-            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-            
-            if (Math.abs(newHeight - currentHeight) > 5) {
-              const updatedItems = [...items];
-              updatedItems[selectedTile] = {
-                ...updatedItems[selectedTile],
-                height: `${newHeight}px`
-              };
-              setTileCordinates(updatedItems);
-              
-              // Update React Query cache
-              queryClient.setQueryData(
-                dashboardKeys.detail(activeBoard),
-                (oldData) => {
-                  if (!oldData) return oldData;
-                  return {
-                    ...oldData,
-                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                      (tile) => (tile._id === tileId ? updatedItems[selectedTile] : tile)
-                    ),
-                  };
-                }
-              );
-            }
-          }
-        }, 100);
+        // Do not auto-resize on save from double-click editor
       });
     } else {
     let item = {
@@ -883,40 +838,7 @@ const GridTiles = memo(function GridTiles({
       const currentSelectedTile = selectedTile;
       setSelectedTile(null);
       
-      // Auto-resize tile after save for guest users (text editor)
-      setTimeout(() => {
-        const tileId = items[currentSelectedTile]._id;
-        
-        // Try different selectors for guest tiles
-        let textOverlay = null;
-        if (tileId && !tileId.startsWith('temp_')) {
-          // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-          const escapedTileId = CSS.escape(tileId);
-          textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-        }
-        
-        // Fallback: try to find by index
-        if (!textOverlay) {
-          const allTextOverlays = document.querySelectorAll('.text_overlay');
-          textOverlay = allTextOverlays[currentSelectedTile];
-        }
-        
-        if (textOverlay && currentSelectedTile !== null) {
-          const contentHeight = textOverlay.scrollHeight;
-          const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
-          const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-          
-          if (Math.abs(newHeight - currentHeight) > 5) {
-            const updatedItems = [...items];
-            updatedItems[currentSelectedTile] = {
-              ...updatedItems[currentSelectedTile],
-              height: `${newHeight}px`
-            };
-            setTileCordinates(updatedItems);
-            updateTilesInLocalstorage(updatedItems);
-          }
-        }
-      }, 100);
+      // Do not auto-resize on save from double-click editor (guest)
     }
   };
 
