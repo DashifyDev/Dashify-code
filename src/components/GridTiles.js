@@ -313,13 +313,13 @@ const GridTiles = memo(function GridTiles({
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
             const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
-            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
             
-            if (Math.abs(newHeight - currentHeight) > 5) {
+            if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${newHeight}px`
+                height: `${desiredHeight}px`
               };
               setTileCordinates(updatedItems);
               
@@ -393,13 +393,13 @@ const GridTiles = memo(function GridTiles({
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
             const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
-            const newHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
             
-            if (Math.abs(newHeight - currentHeight) > 5) {
+            if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${newHeight}px`
+                height: `${desiredHeight}px`
               };
               setTileCordinates(updatedItems);
               updateTilesInLocalstorage(updatedItems);

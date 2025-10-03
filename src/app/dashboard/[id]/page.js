@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useContext } from "react";
 import { useParams } from "next/navigation";
 import { useDashboardData } from "@/context/optimizedContext";
 import dynamic from "next/dynamic";
@@ -13,11 +13,13 @@ const GridTiles = dynamic(() => import("@/components/GridTiles"), {
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { dashboardKeys } from "@/hooks/useDashboard";
+import { globalContext } from "@/context/globalContext";
 
 function OptimizedDashboardPage() {
   const { id } = useParams();
   const { user } = useUser();
   const queryClient = useQueryClient();
+  const { setBoards } = useContext(globalContext);
 
   const {
     data: dashboardData,
@@ -111,10 +113,11 @@ function OptimizedDashboardPage() {
             tiles: tileArray,
           };
           localStorage.setItem("Dasify", JSON.stringify(updatedBoards));
+          setBoards(updatedBoards)
         }
       }
     },
-    [user, activeBoard]
+    [user, activeBoard, setBoards]
   );
 
   if (isLoading) {
