@@ -153,14 +153,14 @@ function Header() {
       return;
     }
 
-    axios.get("/api/dashboard/defaultDashboard").then((res) => {
-      setBoards((prev) => [...res.data]);
+    axios.get("/api/dashboard/65030c4c574341733c462e95").then((res) => {
+      setBoards((prev) => [res.data]);
       if (!id) {
         if (res.data.length > 0) {
-          router.push(`/dashboard/${res.data[0]._id}`);
+          router.push(`/dashboard/${res.data._id}`);
         }
       }
-      localStorage.setItem("Dasify", JSON.stringify(res.data));
+      localStorage.setItem("Dasify", JSON.stringify([res.data]));
     });
   };
 
@@ -340,10 +340,7 @@ function Header() {
             e
           );
         }
-
-        if (boardsLength === 0) {
-          router.push(`/dashboard/${newBoard._id}`);
-        }
+        router.push(`/dashboard/${newBoard._id}`);
       });
     } else {
       payload = {
@@ -355,9 +352,7 @@ function Header() {
       items = [...items, payload];
       localStorage.setItem("Dasify", JSON.stringify(items));
       setBoards(items);
-      if (boardsLength === 0) {
-        router.push(`/dashboard/${payload._id}`);
-      }
+      router.push(`/dashboard/${payload._id}`);
     }
   };
 

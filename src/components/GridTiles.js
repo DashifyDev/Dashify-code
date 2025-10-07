@@ -221,7 +221,7 @@ const GridTiles = memo(function GridTiles({
 
   const handleSave = (index) => {
     let formData = new FormData();
-    let payload = formValue;
+    let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
       (payload.backgroundAction = "image"), (payload.displayTitle = false);
       formData.append("tileImage", payload.tileBackground);
@@ -968,7 +968,7 @@ const GridTiles = memo(function GridTiles({
     if (url) {
       const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
       let isImage = imageExtensions.some((ext) =>
-        url.toLowerCase().endsWith(ext)
+        url.toLowerCase().includes(ext)
       );
       return isImage;
     }

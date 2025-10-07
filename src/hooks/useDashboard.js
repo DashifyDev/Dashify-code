@@ -65,9 +65,9 @@ export const useAdminDashboards = () => {
     queryKey: dashboardKeys.list({ admin: true }),
     queryFn: async () => {
       const response = await optimizedAxios.get(
-        "/api/dashboard/defaultDashboard"
+        "/api/dashboard/65030c4c574341733c462e95"
       );
-      return response.data;
+      return [response.data];
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
