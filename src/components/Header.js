@@ -153,14 +153,14 @@ function Header() {
       return;
     }
 
-    axios.get("/api/dashboard/65030c4c574341733c462e95").then((res) => {
-      setBoards((prev) => [res.data]);
+    axios.get("/api/dashboard/defaultDashboard").then((res) => {
+      setBoards((prev) => [...res.data]);
       if (!id) {
         if (res.data.length > 0) {
-          router.push(`/dashboard/${res.data._id}`);
+          router.push(`/dashboard/${res.data[0]._id}`);
         }
       }
-      localStorage.setItem("Dasify", JSON.stringify([res.data]));
+      localStorage.setItem("Dasify", JSON.stringify(res.data));
     });
   };
 
