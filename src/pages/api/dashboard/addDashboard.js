@@ -3,6 +3,7 @@ import Dashboard from "@/models/dashboard";
 import User from "@/models/user";
 import mongoose from "mongoose";
 import { getUserDashboards } from "@/utils/databaseIndexes";
+import { getSession } from "@auth0/nextjs-auth0";
 
 const addDashBoard = async (req, res) => {
   try {
@@ -65,7 +66,13 @@ const addDashBoard = async (req, res) => {
           }
         }
 
-        const boards = await getUserDashboards(id, sid);
+        const session = await getSession(req, res);
+        const user = session?.user;
+
+        const roles = user?.["https://www.boardzy.app/roles"];
+        const isAdmin = roles && Array.isArray(roles) && roles.includes("admin")
+
+        const boards = await getUserDashboards(id, sid, isAdmin);
 
         if (boards && boards.length > 0) {
           res.setHeader(

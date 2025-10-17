@@ -132,7 +132,7 @@ export const getDashboardMinimal = async (id) => {
   }
 };
 
-export const getUserDashboards = async (userId, sessionId) => {
+export const getUserDashboards = async (userId, sessionId, isAdmin) => {
   try {
     await connectMongo();
 
@@ -140,7 +140,7 @@ export const getUserDashboards = async (userId, sessionId) => {
     const query = sessionId ? { sessionId } : { userId };
     
     // Add condition to show only user's private dashboards (not admin ones)
-    query.hasAdminAdded = { $ne: true };
+    if (!isAdmin) query.hasAdminAdded = { $ne: true };
     
     const dashboards = await Dashboard.find(query, {
       _id: 1,
