@@ -326,3 +326,10 @@ img.text-editor-image {
     font-weight: 600;
     margin: 0px;
 }
+
+.app-drawer-style-subtext{
+    width: 100%;
+    font-size: medium;
+    font-weight: 400;
+    margin: 0px;
+}
