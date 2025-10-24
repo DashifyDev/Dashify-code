@@ -20,7 +20,7 @@ function SideDrawer({ open, close, user }) {
   };
 
   const redirectToLife = () => {
-    router.push(`https://dashboardyourlife.com/`);
+    window.open('https://dashboardyourlife.com/', '_blank', 'noopener,noreferrer');
   };
 
   return (

@@ -132,7 +132,7 @@ export const getDashboardMinimal = async (id) => {
   }
 };
 
-export const getUserDashboards = async (userId, sessionId, isAdmin) => {
+export const getUserDashboards = async (userId, sessionId, isAdmin=false) => {
   try {
     await connectMongo();
 

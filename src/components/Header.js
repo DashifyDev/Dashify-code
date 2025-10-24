@@ -326,7 +326,29 @@ function Header() {
       }
       axios.post("/api/dashboard/addDashboard", payload).then((res) => {
         const newBoard = res.data;
-        setBoards((prev) => [...prev, newBoard]);
+        const defTile = {
+          dashboardId: newBoard._id,
+          width: `${600}px`,
+          height: `${200}px`,
+          x: 25,
+          y: 25,
+          titleX: 1,
+          titleY: 2,
+          action: "textEditor",
+          displayTitle: true,
+          backgroundAction: "color",
+          tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`
+        }
+
+        axios
+        .post("/api/tile/tile", defTile)
+        .then((res) => {
+          // Replace temporary block with real one
+          setTiles((prevTiles) => [...prevTiles, res.data]);
+          newBoard.tiles = [res.data]
+          setBoards((prev) => [...prev, newBoard]);
+        })
+
         // ensure React Query lists/cache reflect the newly created board for other contexts
         try {
           queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
@@ -343,15 +365,30 @@ function Header() {
         router.push(`/dashboard/${newBoard._id}`);
       });
     } else {
+      const boardId = uuidv4()
+      const defTile = {
+        dashboardId: boardId,
+        width: `${600}px`,
+        height: `${200}px`,
+        x: 25,
+        y: 25,
+        titleX: 1,
+        titleY: 2,
+        action: "textEditor",
+        displayTitle: true,
+        backgroundAction: "color",
+        tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`
+      }
       payload = {
-        _id: uuidv4(),
+        _id: boardId,
         name: dashBoardName,
-        tiles: [],
+        tiles: [defTile],
       };
       let items = boards;
       items = [...items, payload];
       localStorage.setItem("Dasify", JSON.stringify(items));
       setBoards(items);
+      setTiles([defTile]);
       router.push(`/dashboard/${payload._id}`);
     }
   };

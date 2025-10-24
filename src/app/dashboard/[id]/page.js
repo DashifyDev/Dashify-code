@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback, useContext } from "react";
+import axios from "axios";
 import { useParams } from "next/navigation";
 import { useDashboardData } from "@/context/optimizedContext";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useRouter } from 'next/navigation';
 
 const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   ssr: false,
@@ -14,12 +16,15 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { dashboardKeys } from "@/hooks/useDashboard";
 import { globalContext } from "@/context/globalContext";
+import useAdmin from "@/hooks/isAdmin";
 
 function OptimizedDashboardPage() {
   const { id } = useParams();
   const { user } = useUser();
   const queryClient = useQueryClient();
-  const { setBoards } = useContext(globalContext);
+  const { boards, setBoards, dbUser } = useContext(globalContext);
+  const isAdmin = useAdmin();
+  const router = useRouter();
 
   const {
     data: dashboardData,
@@ -54,8 +59,99 @@ function OptimizedDashboardPage() {
       setTiles(dashboardData.tiles || []);
       setPods(dashboardData.pods || []);
       setActiveBoard(id);
+
+      if (!boards.some(el => el._id === dashboardData._id)) {
+        addBoard(dashboardData)
+      }
     }
   }, [dashboardData, id]);
+
+  const addBoard = (data) => {
+    let payload;
+    if (dbUser) {
+      if (isAdmin) {
+        payload = {
+          name: data.name,
+          userId: dbUser._id,
+          hasAdminAdded: true,
+        };
+      } else {
+        payload = {
+          name: data.name,
+          userId: dbUser._id,
+        };
+      }
+      axios.post("/api/dashboard/addDashboard", payload).then((res) => {
+        const newBoard = res.data;
+
+        const boardTiles = data.tiles.map(el => {
+          const tileCopy = { ...el };
+          delete tileCopy._id;
+          tileCopy.dashboardId = newBoard._id;
+          return tileCopy;
+        });
+
+        axios.post("/api/tile/tiles", { dashboardId: newBoard._id, tiles: boardTiles }).then((resp) => {
+          setTiles(resp.data.tiles)
+          newBoard.tiles = resp.data.tiles
+          setBoards((prev) => [...prev, newBoard]);
+
+          try {
+            queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
+            queryClient.setQueryData(
+              dashboardKeys.detail(newBoard._id),
+              newBoard
+            );
+          } catch (e) {
+            console.warn(
+              "Failed to update query cache after creating dashboard",
+              e
+            );
+          }
+          router.push(`/dashboard/${newBoard._id}`);
+        })
+      });
+    } else {
+      const boardId = uuidv4()
+      const newTiles = data.tiles.map((tile) => {
+        tile._id = uuidv4()
+        tile.dashboardId = boardId
+        return tile
+      })
+      let payload = {
+        _id: boardId,
+        name: data.name,
+        tiles: newTiles,
+      };
+      let items = boards;
+      items = [...items, payload];
+      localStorage.setItem("Dasify", JSON.stringify(items));
+      setBoards(items);
+      setTiles(newTiles);
+
+      try {
+        const detailKey = dashboardKeys.detail(newBoard._id);
+        queryClient.setQueryData(detailKey, (oldData) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              tiles: items[newBoard._id].tiles,
+            };
+          }
+          return {
+            _id: items[newBoard._id]._id,
+            name: items[newBoard._id].name || "",
+            tiles: items[newBoard._id].tiles,
+            pods: items[newBoard._id].pods || [],
+          };
+        });
+      } catch (e) {
+        console.warn("Failed to update query cache for local board", e);
+      }
+
+      router.push(`/dashboard/${boardId}`);
+    }
+  };
 
   useEffect(() => {
     if (dashboardData?.name) {
