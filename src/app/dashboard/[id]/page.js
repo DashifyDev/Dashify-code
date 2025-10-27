@@ -7,6 +7,7 @@ import { useDashboardData } from "@/context/optimizedContext";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from "uuid";
 
 const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   ssr: false,
@@ -53,18 +54,26 @@ function OptimizedDashboardPage() {
   const [pods, setPods] = useState([]);
   const [activeBoard, setActiveBoard] = useState(id);
   const [headerWidth, setHeaderWidth] = useState(0);
+  const [addedFlag, setAddedFlag] = useState(false);
 
   useEffect(() => {
     if (dashboardData) {
       setTiles(dashboardData.tiles || []);
       setPods(dashboardData.pods || []);
       setActiveBoard(id);
-
-      if (!boards.some(el => el._id === dashboardData._id)) {
-        addBoard(dashboardData)
-      }
     }
   }, [dashboardData, id]);
+
+  useEffect(() => {
+    if (dashboardData
+        && !boards.some(el => el._id === dashboardData._id)
+        && dashboardData.userId !== dbUser._id
+        && !addedFlag
+    ) {
+      addBoard(dashboardData)
+      setAddedFlag(true)
+    }
+  }, [boards, dashboardData, dbUser])
 
   const addBoard = (data) => {
     let payload;
