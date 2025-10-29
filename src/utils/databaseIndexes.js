@@ -79,6 +79,7 @@ export const getDashboardMinimal = async (id) => {
         titleY: 1,
         editorHeading: 1,
         backgroundAction: 1,
+        tileLink: 1,
       }
     ).lean();
 
@@ -113,6 +114,7 @@ export const getDashboardMinimal = async (id) => {
           titleY: 1,
           editorHeading: 1,
           backgroundAction: 1,
+          tileLink: 1,
         }
       ).lean();
 

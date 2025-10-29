@@ -66,8 +66,8 @@ function OptimizedDashboardPage() {
 
   useEffect(() => {
     if (dashboardData
-        && !boards.some(el => el._id === dashboardData._id)
-        && dashboardData.userId !== dbUser._id
+        && !boards.some(el => el?._id === dashboardData?._id)
+        && dashboardData?.userId !== dbUser?._id
         && !addedFlag
     ) {
       addBoard(dashboardData)
@@ -103,7 +103,7 @@ function OptimizedDashboardPage() {
         axios.post("/api/tile/tiles", { dashboardId: newBoard._id, tiles: boardTiles }).then((resp) => {
           setTiles(resp.data.tiles)
           newBoard.tiles = resp.data.tiles
-          setBoards((prev) => [...prev, newBoard]);
+          setBoards((prev) => [newBoard, ...prev]);
 
           try {
             queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
@@ -133,7 +133,7 @@ function OptimizedDashboardPage() {
         tiles: newTiles,
       };
       let items = boards;
-      items = [...items, payload];
+      items = [payload, ...items];
       localStorage.setItem("Dasify", JSON.stringify(items));
       setBoards(items);
       setTiles(newTiles);

@@ -346,7 +346,7 @@ function Header() {
           // Replace temporary block with real one
           setTiles((prevTiles) => [...prevTiles, res.data]);
           newBoard.tiles = [res.data]
-          setBoards((prev) => [...prev, newBoard]);
+          setBoards((prev) => [newBoard, ...prev]);
         })
 
         // ensure React Query lists/cache reflect the newly created board for other contexts
@@ -385,7 +385,7 @@ function Header() {
         tiles: [defTile],
       };
       let items = boards;
-      items = [...items, payload];
+      items = [payload, ...items];
       localStorage.setItem("Dasify", JSON.stringify(items));
       setBoards(items);
       setTiles([defTile]);
