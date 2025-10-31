@@ -12,6 +12,7 @@ const AppContextProvider = ({ children }) => {
   const [activeBoard, setActiveBoard] = useState("");
   const [headerwidth, setHeaderWidth] = useState();
   const [boards, setBoards] = useState([]);
+  const [isBoardsLoaded, setIsBoardsLoaded] = useState(false);
 
   React.useEffect(() => {
     let localData = JSON.parse(localStorage.getItem("Dasify"));
@@ -54,6 +55,8 @@ const AppContextProvider = ({ children }) => {
         boards,
         setHeaderWidth,
         headerwidth,
+        isBoardsLoaded,
+        setIsBoardsLoaded
       }}
     >
       {children}

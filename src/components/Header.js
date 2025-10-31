@@ -59,6 +59,8 @@ function Header() {
     boards,
     setBoards,
     headerwidth,
+    isBoardsLoaded,
+    setIsBoardsLoaded
   } = useContext(globalContext);
   const divRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -122,10 +124,12 @@ function Header() {
           } else {
             setBoards([]);
           }
+          if (!isBoardsLoaded) setIsBoardsLoaded(true)
         })
         .catch((err) => {
           console.warn("Failed to load dashboards for user", err);
           setBoards([]);
+          if (!isBoardsLoaded) setIsBoardsLoaded(true)
         });
     } else {
       if (!isLoading && !user) {
@@ -150,6 +154,7 @@ function Header() {
           router.push(`/dashboard/${localData[0]._id}`);
         }
       }
+      if (!isBoardsLoaded) setIsBoardsLoaded(true)
       return;
     }
 

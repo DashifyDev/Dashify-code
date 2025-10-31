@@ -23,7 +23,7 @@ function OptimizedDashboardPage() {
   const { id } = useParams();
   const { user } = useUser();
   const queryClient = useQueryClient();
-  const { boards, setBoards, dbUser } = useContext(globalContext);
+  const { boards, setBoards, dbUser, isBoardsLoaded } = useContext(globalContext);
   const isAdmin = useAdmin();
   const router = useRouter();
 
@@ -66,6 +66,7 @@ function OptimizedDashboardPage() {
 
   useEffect(() => {
     if (dashboardData
+        && isBoardsLoaded
         && !boards.some(el => el?._id === dashboardData?._id)
         && dashboardData?.userId !== dbUser?._id
         && !addedFlag
@@ -73,7 +74,7 @@ function OptimizedDashboardPage() {
       addBoard(dashboardData)
       setAddedFlag(true)
     }
-  }, [boards, dashboardData, dbUser])
+  }, [boards, dashboardData, dbUser, isBoardsLoaded])
 
   const addBoard = (data) => {
     let payload;
