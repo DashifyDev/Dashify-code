@@ -25,7 +25,7 @@ const addDashBoard = async (req, res) => {
           } catch (err) {
             console.warn(
               "addDashboard: failed to resolve userId from auth0Id",
-              err
+              err,
             );
           }
         }
@@ -35,12 +35,14 @@ const addDashBoard = async (req, res) => {
         if (data.userId) {
           existingDashboards = await Dashboard.find({ userId: data.userId });
         } else if (data.sessionId) {
-          existingDashboards = await Dashboard.find({ sessionId: data.sessionId });
+          existingDashboards = await Dashboard.find({
+            sessionId: data.sessionId,
+          });
         } else {
           existingDashboards = [];
         }
         data.position = existingDashboards.length + 1;
-        
+
         const dashboard = await Dashboard.create(data);
         res.status(200).json(dashboard);
 
@@ -61,7 +63,7 @@ const addDashBoard = async (req, res) => {
           } catch (err) {
             console.warn(
               "addDashboard GET: failed to resolve auth0 id to userId",
-              err
+              err,
             );
           }
         }
@@ -70,14 +72,15 @@ const addDashBoard = async (req, res) => {
         const user = session?.user;
 
         const roles = user?.["https://www.boardzy.app/roles"];
-        const isAdmin = roles && Array.isArray(roles) && roles.includes("admin")
+        const isAdmin =
+          roles && Array.isArray(roles) && roles.includes("admin");
 
         const boards = await getUserDashboards(id, sid, isAdmin);
 
         if (boards && boards.length > 0) {
           res.setHeader(
             "Cache-Control",
-            "public, s-maxage=300, stale-while-revalidate=900, max-age=120"
+            "public, s-maxage=300, stale-while-revalidate=900, max-age=120",
           );
           res.setHeader("ETag", `"boards-${id || sid}-${Date.now()}"`);
           res.setHeader("Vary", "Accept-Encoding");
@@ -98,7 +101,7 @@ const addDashBoard = async (req, res) => {
         updatedData.forEach(async (item, index) => {
           await Dashboard.updateOne(
             { _id: item._id },
-            { position: item.position }
+            { position: item.position },
           );
         });
         return res.status(200).json({ message: "Position Updated" });

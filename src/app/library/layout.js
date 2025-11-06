@@ -1,13 +1,13 @@
-import React from 'react'
-import LibraryHeader from './libraryHeader'
+import React from "react";
+import LibraryHeader from "./libraryHeader";
 
-function library({children}) {
+function library({ children }) {
   return (
     <>
-    <LibraryHeader/>
-    {children}  
+      <LibraryHeader />
+      {children}
     </>
-  )
+  );
 }
 
-export default library
+export default library;

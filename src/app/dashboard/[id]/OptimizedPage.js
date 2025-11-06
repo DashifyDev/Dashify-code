@@ -24,7 +24,7 @@ const TipTapEditor = dynamic(
   {
     loading: () => <div>Loading editor...</div>,
     ssr: false,
-  }
+  },
 );
 
 const DashboardSkeleton = () => (
@@ -61,7 +61,7 @@ function OptimizedDashboard({ params }) {
         setActiveBoard(data);
       }
     },
-    [setTiles, setActiveBoard]
+    [setTiles, setActiveBoard],
   );
 
   useEffect(() => {

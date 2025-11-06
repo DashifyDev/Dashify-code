@@ -186,9 +186,9 @@ export const SafeLink = Link.extend({
       ...this.parent?.(),
       openOnClick: false,
       HTMLAttributes: {
-        target: '_blank', 
-        rel: 'noopener noreferrer nofollow', 
-        class: 'tiptap-link', 
+        target: "_blank",
+        rel: "noopener noreferrer nofollow",
+        class: "tiptap-link",
       },
     };
   },
@@ -211,8 +211,8 @@ export const CustomHorizontalRule = HorizontalRule.extend({
       variant === "dashed"
         ? "1px dashed currentColor"
         : variant === "dotted"
-        ? "1px dotted currentColor"
-        : "1px solid currentColor";
+          ? "1px dotted currentColor"
+          : "1px solid currentColor";
 
     return [
       "hr",

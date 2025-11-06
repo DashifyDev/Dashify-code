@@ -6,17 +6,26 @@ function WarningPrompt() {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const popupTimeout1 = setTimeout(() => {
-      setShowPopup(true);
-    }, 2 * 60 * 1000);
+    const popupTimeout1 = setTimeout(
+      () => {
+        setShowPopup(true);
+      },
+      2 * 60 * 1000,
+    );
 
-    const popupTimeout2 = setTimeout(() => {
-      setShowPopup(true);
-    }, 5 * 60 * 1000);
+    const popupTimeout2 = setTimeout(
+      () => {
+        setShowPopup(true);
+      },
+      5 * 60 * 1000,
+    );
 
-    const popupTimeout3 = setTimeout(() => {
-      setShowPopup(true);
-    }, 15 * 60 * 1000);
+    const popupTimeout3 = setTimeout(
+      () => {
+        setShowPopup(true);
+      },
+      15 * 60 * 1000,
+    );
 
     return () => {
       clearTimeout(popupTimeout1);

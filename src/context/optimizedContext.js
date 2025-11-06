@@ -23,7 +23,7 @@ export const useOptimizedContext = () => {
   const context = useContext(OptimizedContext);
   if (!context) {
     throw new Error(
-      "useOptimizedContext must be used within OptimizedContextProvider"
+      "useOptimizedContext must be used within OptimizedContextProvider",
     );
   }
   return context;
@@ -80,7 +80,7 @@ export const OptimizedContextProvider = ({ children }) => {
     // Only for authenticated users
     user ? resolvedUserId : null,
     // Don't pass sessionId for guests
-    null
+    null,
   );
 
   const { data: adminDashboards = [], isLoading: adminLoading } =
@@ -113,12 +113,12 @@ export const OptimizedContextProvider = ({ children }) => {
 
       setBoards: () => {
         console.warn(
-          "setBoards is deprecated. Use React Query mutations instead."
+          "setBoards is deprecated. Use React Query mutations instead.",
         );
       },
       setTiles: () => {
         console.warn(
-          "setTiles is deprecated. Use React Query mutations instead."
+          "setTiles is deprecated. Use React Query mutations instead.",
         );
       },
       setActiveBoard: () => {
@@ -133,7 +133,7 @@ export const OptimizedContextProvider = ({ children }) => {
       adminLoading,
       dashboardsError,
       queryClient,
-    ]
+    ],
   );
 
   return (
@@ -153,6 +153,6 @@ export const useCurrentUserBoards = () => {
     user?.sub,
     !user && typeof window !== "undefined"
       ? localStorage.getItem("sessionId")
-      : null
+      : null,
   );
 };

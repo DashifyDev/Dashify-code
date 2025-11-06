@@ -24,7 +24,7 @@ const TableSizePicker = ({ maxRows = 10, maxCols = 10, onSelect }) => {
                 onClick={() => onSelect(r, c)}
               />
             );
-          })
+          }),
         )}
       </div>
       <div className="table-dimension">

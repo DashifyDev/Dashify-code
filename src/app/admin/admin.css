@@ -1,40 +1,40 @@
 .side_bar {
-    width: 200px;
-    background: gray;
-    height: 100%;
+  width: 200px;
+  background: gray;
+  height: 100%;
 }
 
-.boardzy_logo{
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.boardzy_logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.boardzy_logo img{
-    width: 180px;
-    height: 43px;
-    margin: 60px 0px;
+.boardzy_logo img {
+  width: 180px;
+  height: 43px;
+  margin: 60px 0px;
 }
 
-.button{
-    display: flex;
-    flex-direction: column;
-    padding: 15px;
+.button {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
 }
-.button button{
-    color: #fff;
-    background: #63899e;
-    border: none;
-    cursor: pointer;
-    font-size: 25px;
-    margin-bottom: 10px;
-    padding: 15px 0px;
+.button button {
+  color: #fff;
+  background: #63899e;
+  border: none;
+  cursor: pointer;
+  font-size: 25px;
+  margin-bottom: 10px;
+  padding: 15px 0px;
 }
-.admin{
-    position: fixed;
-    left: 0;
-    height: 100vh;
+.admin {
+  position: fixed;
+  left: 0;
+  height: 100vh;
 }
-.admin_board{
-    margin-left: 200px;
+.admin_board {
+  margin-left: 200px;
 }

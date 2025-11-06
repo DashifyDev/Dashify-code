@@ -148,7 +148,7 @@ const VirtualizedGrid = ({
         </div>
       );
     },
-    [items, columnCount, getImageStatus, renderItem, onItemClick]
+    [items, columnCount, getImageStatus, renderItem, onItemClick],
   );
 
   if (items.length === 0) {

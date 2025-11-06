@@ -75,7 +75,7 @@ const LoadingSpinner = memo(
         `}</style>
       </div>
     );
-  }
+  },
 );
 
 LoadingSpinner.displayName = "LoadingSpinner";

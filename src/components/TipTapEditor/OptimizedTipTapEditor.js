@@ -59,7 +59,7 @@ const OptimizedTipTapEditor = memo(({ initialContent, onContentChange }) => {
       LineHeight,
       CustomHorizontalRule,
     ],
-    []
+    [],
   );
 
   const handleUpdate = useCallback(
@@ -76,7 +76,7 @@ const OptimizedTipTapEditor = memo(({ initialContent, onContentChange }) => {
         isSuperscript: editor.isActive("superscript"),
         textAlign:
           ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align })
+            editor.isActive({ textAlign: align }),
           ) || "left",
         isBulletList: editor.isActive("bulletList"),
         isOrderedList: editor.isActive("orderedList"),
@@ -87,7 +87,7 @@ const OptimizedTipTapEditor = memo(({ initialContent, onContentChange }) => {
         fontSize: editor.getAttributes("textStyle").fontSize,
       });
     },
-    [onContentChange]
+    [onContentChange],
   );
 
   const handleSelectionUpdate = useCallback(({ editor }) => {
@@ -100,7 +100,7 @@ const OptimizedTipTapEditor = memo(({ initialContent, onContentChange }) => {
       isSuperscript: editor.isActive("superscript"),
       textAlign:
         ["left", "center", "right", "justify"].find((align) =>
-          editor.isActive({ textAlign: align })
+          editor.isActive({ textAlign: align }),
         ) || "left",
       isBulletList: editor.isActive("bulletList"),
       isOrderedList: editor.isActive("orderedList"),

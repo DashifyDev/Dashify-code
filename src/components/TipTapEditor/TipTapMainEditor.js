@@ -74,7 +74,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
         isSuperscript: editor.isActive("superscript"),
         textAlign:
           ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align })
+            editor.isActive({ textAlign: align }),
           ) || "left",
         isBulletList: editor.isActive("bulletList"),
         isOrderedList: editor.isActive("orderedList"),
@@ -96,7 +96,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
         isSuperscript: editor.isActive("superscript"),
         textAlign:
           ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align })
+            editor.isActive({ textAlign: align }),
           ) || "left",
         isBulletList: editor.isActive("bulletList"),
         isOrderedList: editor.isActive("orderedList"),

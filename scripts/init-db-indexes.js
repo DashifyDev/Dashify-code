@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const MONGODB_URI =
@@ -24,10 +23,10 @@ async function createDatabaseIndexes() {
       .createIndex({ sessionId: 1, createdAt: 1 });
 
     await db.collection("tiles").createIndex({ isInsidePod: 1 });
-    await db.collection("tiles").createIndex({ x: 1, y: 1 }); 
+    await db.collection("tiles").createIndex({ x: 1, y: 1 });
 
     await db.collection("pods").createIndex({ isPod: 1 });
-    await db.collection("pods").createIndex({ x: 1, y: 1 }); 
+    await db.collection("pods").createIndex({ x: 1, y: 1 });
 
     await db.collection("users").createIndex({ email: 1 }, { unique: true });
 

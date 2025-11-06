@@ -24,7 +24,7 @@ const OptimizedModal = memo(
 
       if (open) {
         document.addEventListener("keydown", handleEscape);
-        
+
         document.body.style.overflow = "hidden";
       }
 
@@ -40,7 +40,7 @@ const OptimizedModal = memo(
           onClose();
         }
       },
-      [onClose]
+      [onClose],
     );
 
     if (!open) return null;
@@ -116,7 +116,7 @@ const OptimizedModal = memo(
         `}</style>
       </Dialog>
     );
-  }
+  },
 );
 
 OptimizedModal.displayName = "OptimizedModal";

@@ -19,7 +19,7 @@ const getTemplateData = async (req, res) => {
         if (toDeleteData.acknowledged) {
           res.status(200).send(toDeleteData);
         } else {
-          res.status(400).send("Not Found")
+          res.status(400).send("Not Found");
         }
         break;
 
@@ -42,7 +42,7 @@ const getTemplateData = async (req, res) => {
           const newBoard = await Template.findByIdAndUpdate(
             { _id: id },
             { $set: newData },
-            { new: true }
+            { new: true },
           );
           if (newBoard) {
             res.status(200).send(newBoard);

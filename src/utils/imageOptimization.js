@@ -97,7 +97,7 @@ export const optimizeImage = async (imageBuffer, options = {}) => {
  */
 export const generateResponsiveImages = async (
   imageBuffer,
-  sizes = [640, 750, 828, 1080, 1200, 1920]
+  sizes = [640, 750, 828, 1080, 1200, 1920],
 ) => {
   const optimizedImages = [];
 

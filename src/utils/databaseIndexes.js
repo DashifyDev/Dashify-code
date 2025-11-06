@@ -55,7 +55,7 @@ export const getDashboardMinimal = async (id) => {
         sessionId: 1,
         createdAt: 1,
         position: 1,
-      }
+      },
     ).lean();
 
     if (!dashboard) {
@@ -80,7 +80,7 @@ export const getDashboardMinimal = async (id) => {
         editorHeading: 1,
         backgroundAction: 1,
         tileLink: 1,
-      }
+      },
     ).lean();
 
     const pods = await Pod.find(
@@ -92,7 +92,7 @@ export const getDashboardMinimal = async (id) => {
         x: 1,
         y: 1,
         tiles: 1,
-      }
+      },
     ).lean();
 
     if (pods.length > 0) {
@@ -115,7 +115,7 @@ export const getDashboardMinimal = async (id) => {
           editorHeading: 1,
           backgroundAction: 1,
           tileLink: 1,
-        }
+        },
       ).lean();
 
       pods.forEach((pod) => {
@@ -134,16 +134,16 @@ export const getDashboardMinimal = async (id) => {
   }
 };
 
-export const getUserDashboards = async (userId, sessionId, isAdmin=false) => {
+export const getUserDashboards = async (userId, sessionId, isAdmin = false) => {
   try {
     await connectMongo();
 
     // For Auth0 users, use sessionId instead of userId to avoid ObjectId casting issues
     const query = sessionId ? { sessionId } : { userId };
-    
+
     // Add condition to show only user's private dashboards (not admin ones)
     if (!isAdmin) query.hasAdminAdded = { $ne: true };
-    
+
     const dashboards = await Dashboard.find(query, {
       _id: 1,
       name: 1,
@@ -160,22 +160,25 @@ export const getUserDashboards = async (userId, sessionId, isAdmin=false) => {
       .lean();
 
     // Check if any dashboards are missing position field and assign them
-    const needsPositionUpdate = dashboards.some(dashboard => dashboard.position === undefined || dashboard.position === null);
-    
+    const needsPositionUpdate = dashboards.some(
+      (dashboard) =>
+        dashboard.position === undefined || dashboard.position === null,
+    );
+
     if (needsPositionUpdate) {
       // Update positions for dashboards that don't have them
       const updatePromises = dashboards.map((dashboard, index) => {
         if (dashboard.position === undefined || dashboard.position === null) {
           return Dashboard.updateOne(
             { _id: dashboard._id },
-            { position: index + 1 }
+            { position: index + 1 },
           );
         }
         return Promise.resolve();
       });
-      
+
       await Promise.all(updatePromises);
-      
+
       // Update the local array with new positions
       dashboards.forEach((dashboard, index) => {
         if (dashboard.position === undefined || dashboard.position === null) {

@@ -60,7 +60,7 @@ function Header() {
     setBoards,
     headerwidth,
     isBoardsLoaded,
-    setIsBoardsLoaded
+    setIsBoardsLoaded,
   } = useContext(globalContext);
   const divRef = useRef(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -124,12 +124,12 @@ function Header() {
           } else {
             setBoards([]);
           }
-          if (!isBoardsLoaded) setIsBoardsLoaded(true)
+          if (!isBoardsLoaded) setIsBoardsLoaded(true);
         })
         .catch((err) => {
           console.warn("Failed to load dashboards for user", err);
           setBoards([]);
-          if (!isBoardsLoaded) setIsBoardsLoaded(true)
+          if (!isBoardsLoaded) setIsBoardsLoaded(true);
         });
     } else {
       if (!isLoading && !user) {
@@ -154,7 +154,7 @@ function Header() {
           router.push(`/dashboard/${localData[0]._id}`);
         }
       }
-      if (!isBoardsLoaded) setIsBoardsLoaded(true)
+      if (!isBoardsLoaded) setIsBoardsLoaded(true);
       return;
     }
 
@@ -212,7 +212,7 @@ function Header() {
             ...oldData,
             tiles: [...(oldData.tiles || []), tempTile],
           };
-        }
+        },
       );
 
       axios
@@ -221,8 +221,8 @@ function Header() {
           // Replace temporary block with real one
           setTiles((prevTiles) =>
             prevTiles.map((tile) =>
-              tile._id === tempTile._id ? res.data : tile
-            )
+              tile._id === tempTile._id ? res.data : tile,
+            ),
           );
 
           // Update React Query cache
@@ -233,10 +233,10 @@ function Header() {
               return {
                 ...oldData,
                 tiles: (oldData.tiles || []).map((tile) =>
-                  tile._id === tempTile._id ? res.data : tile
+                  tile._id === tempTile._id ? res.data : tile,
                 ),
               };
-            }
+            },
           );
           // ensure subscribers see the latest data
           queryClient.setQueryData(detailKey, (old) => {
@@ -244,7 +244,7 @@ function Header() {
             return {
               ...(old || {}),
               tiles: (old.tiles || []).map((t) =>
-                t._id === tempTile._id ? res.data : t
+                t._id === tempTile._id ? res.data : t,
               ),
             };
           });
@@ -253,7 +253,7 @@ function Header() {
           console.error("Error adding tile:", error);
           // Remove temporary block on error
           setTiles((prevTiles) =>
-            prevTiles.filter((tile) => tile._id !== tempTile._id)
+            prevTiles.filter((tile) => tile._id !== tempTile._id),
           );
 
           queryClient.setQueryData(
@@ -263,20 +263,18 @@ function Header() {
               return {
                 ...oldData,
                 tiles: oldData.tiles.filter(
-                  (tile) => tile._id !== tempTile._id
+                  (tile) => tile._id !== tempTile._id,
                 ),
               };
-            }
+            },
           );
         });
     } else {
       let boardIndex = boards.findIndex(
-        (obj) => obj._id === currentActiveBoard
+        (obj) => obj._id === currentActiveBoard,
       );
       if (boardIndex === -1) {
-        console.error(
-          "Active dashboard not found for saving to localStorage"
-        );
+        console.error("Active dashboard not found for saving to localStorage");
         return;
       }
       let items = JSON.parse(JSON.stringify(boards));
@@ -342,35 +340,33 @@ function Header() {
           action: "textEditor",
           displayTitle: true,
           backgroundAction: "color",
-          tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`
-        }
+          tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
+        };
 
-        axios
-        .post("/api/tile/tile", defTile)
-        .then((res) => {
+        axios.post("/api/tile/tile", defTile).then((res) => {
           // Replace temporary block with real one
           setTiles((prevTiles) => [...prevTiles, res.data]);
-          newBoard.tiles = [res.data]
+          newBoard.tiles = [res.data];
           setBoards((prev) => [newBoard, ...prev]);
-        })
+        });
 
         // ensure React Query lists/cache reflect the newly created board for other contexts
         try {
           queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
           queryClient.setQueryData(
             dashboardKeys.detail(newBoard._id),
-            newBoard
+            newBoard,
           );
         } catch (e) {
           console.warn(
             "Failed to update query cache after creating dashboard",
-            e
+            e,
           );
         }
         router.push(`/dashboard/${newBoard._id}`);
       });
     } else {
-      const boardId = uuidv4()
+      const boardId = uuidv4();
       const defTile = {
         dashboardId: boardId,
         width: `${600}px`,
@@ -382,8 +378,8 @@ function Header() {
         action: "textEditor",
         displayTitle: true,
         backgroundAction: "color",
-        tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`
-      }
+        tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
+      };
       payload = {
         _id: boardId,
         name: dashBoardName,
@@ -459,7 +455,7 @@ function Header() {
           if (res && (res.status === 200 || res.status === 204 || res.data)) {
             // remove immutably so React re-renders (coerce ids to strings)
             const newBoards = (boards || []).filter(
-              (b) => String(b._id) !== String(id)
+              (b) => String(b._id) !== String(id),
             );
             setBoards(newBoards);
 
@@ -481,13 +477,13 @@ function Header() {
                 .get(
                   `/api/dashboard/addDashboard/?id=${
                     dbUser._id
-                  }&t=${Date.now()}`
+                  }&t=${Date.now()}`,
                 )
                 .then((resp) => {
                   if (resp && Array.isArray(resp.data)) setBoards(resp.data);
                 })
                 .catch((e) =>
-                  console.warn("Failed to refresh boards after delete", e)
+                  console.warn("Failed to refresh boards after delete", e),
                 );
             }
 
@@ -495,7 +491,7 @@ function Header() {
           } else {
             console.warn(
               "Delete dashboard responded with unexpected status",
-              res && res.status
+              res && res.status,
             );
           }
         })
@@ -783,7 +779,7 @@ function Header() {
             className="button_cancel"
             sx={{ color: "#63899e" }}
             onClick={() => {
-              setOpenDashDeleteModel(false), setSelectedDashIndex(null);
+              (setOpenDashDeleteModel(false), setSelectedDashIndex(null));
             }}
           >
             Cancel

@@ -29,7 +29,7 @@ const AppContextProvider = ({ children }) => {
         .catch((error) => {
           console.error(
             "Error in getUser API:",
-            error.response?.data || error.message
+            error.response?.data || error.message,
           );
         });
     }
@@ -56,7 +56,7 @@ const AppContextProvider = ({ children }) => {
         setHeaderWidth,
         headerwidth,
         isBoardsLoaded,
-        setIsBoardsLoaded
+        setIsBoardsLoaded,
       }}
     >
       {children}

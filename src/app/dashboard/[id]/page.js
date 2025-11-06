@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback, useContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+} from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import { useDashboardData } from "@/context/optimizedContext";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
 const GridTiles = dynamic(() => import("@/components/GridTiles"), {
@@ -23,7 +29,8 @@ function OptimizedDashboardPage() {
   const { id } = useParams();
   const { user } = useUser();
   const queryClient = useQueryClient();
-  const { boards, setBoards, dbUser, isBoardsLoaded } = useContext(globalContext);
+  const { boards, setBoards, dbUser, isBoardsLoaded } =
+    useContext(globalContext);
   const isAdmin = useAdmin();
   const router = useRouter();
 
@@ -65,16 +72,17 @@ function OptimizedDashboardPage() {
   }, [dashboardData, id]);
 
   useEffect(() => {
-    if (dashboardData
-        && isBoardsLoaded
-        && !boards.some(el => el?._id === dashboardData?._id)
-        && dashboardData?.userId !== dbUser?._id
-        && !addedFlag
+    if (
+      dashboardData &&
+      isBoardsLoaded &&
+      !boards.some((el) => el?._id === dashboardData?._id) &&
+      dashboardData?.userId !== dbUser?._id &&
+      !addedFlag
     ) {
-      addBoard(dashboardData)
-      setAddedFlag(true)
+      addBoard(dashboardData);
+      setAddedFlag(true);
     }
-  }, [boards, dashboardData, dbUser, isBoardsLoaded])
+  }, [boards, dashboardData, dbUser, isBoardsLoaded]);
 
   const addBoard = (data) => {
     let payload;
@@ -94,40 +102,47 @@ function OptimizedDashboardPage() {
       axios.post("/api/dashboard/addDashboard", payload).then((res) => {
         const newBoard = res.data;
 
-        const boardTiles = data.tiles.map(el => {
+        const boardTiles = data.tiles.map((el) => {
           const tileCopy = { ...el };
           delete tileCopy._id;
           tileCopy.dashboardId = newBoard._id;
           return tileCopy;
         });
 
-        axios.post("/api/tile/tiles", { dashboardId: newBoard._id, tiles: boardTiles }).then((resp) => {
-          setTiles(resp.data.tiles)
-          newBoard.tiles = resp.data.tiles
-          setBoards((prev) => [newBoard, ...prev]);
+        axios
+          .post("/api/tile/tiles", {
+            dashboardId: newBoard._id,
+            tiles: boardTiles,
+          })
+          .then((resp) => {
+            setTiles(resp.data.tiles);
+            newBoard.tiles = resp.data.tiles;
+            setBoards((prev) => [newBoard, ...prev]);
 
-          try {
-            queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
-            queryClient.setQueryData(
-              dashboardKeys.detail(newBoard._id),
-              newBoard
-            );
-          } catch (e) {
-            console.warn(
-              "Failed to update query cache after creating dashboard",
-              e
-            );
-          }
-          router.push(`/dashboard/${newBoard._id}`);
-        })
+            try {
+              queryClient.invalidateQueries({
+                queryKey: dashboardKeys.lists(),
+              });
+              queryClient.setQueryData(
+                dashboardKeys.detail(newBoard._id),
+                newBoard,
+              );
+            } catch (e) {
+              console.warn(
+                "Failed to update query cache after creating dashboard",
+                e,
+              );
+            }
+            router.push(`/dashboard/${newBoard._id}`);
+          });
       });
     } else {
-      const boardId = uuidv4()
+      const boardId = uuidv4();
       const newTiles = data.tiles.map((tile) => {
-        tile._id = uuidv4()
-        tile.dashboardId = boardId
-        return tile
-      })
+        tile._id = uuidv4();
+        tile.dashboardId = boardId;
+        return tile;
+      });
       let payload = {
         _id: boardId,
         name: data.name,
@@ -176,7 +191,7 @@ function OptimizedDashboardPage() {
         const widthValue = parseInt(tile.width, 10) || 0;
         const xValue = tile.x || 0;
         return widthValue + xValue;
-      })
+      }),
     );
   }, [tiles]);
 
@@ -200,17 +215,17 @@ function OptimizedDashboardPage() {
         };
       });
     },
-    [id, queryClient]
+    [id, queryClient],
   );
 
   const updateTilesInLocalstorage = useCallback(
     (tileArray) => {
       if (!user) {
         const existingBoards = JSON.parse(
-          localStorage.getItem("Dasify") || "[]"
+          localStorage.getItem("Dasify") || "[]",
         );
         const boardIndex = existingBoards.findIndex(
-          (board) => board._id === activeBoard
+          (board) => board._id === activeBoard,
         );
         if (boardIndex >= 0) {
           const updatedBoards = [...existingBoards];
@@ -219,11 +234,11 @@ function OptimizedDashboardPage() {
             tiles: tileArray,
           };
           localStorage.setItem("Dasify", JSON.stringify(updatedBoards));
-          setBoards(updatedBoards)
+          setBoards(updatedBoards);
         }
       }
     },
-    [user, activeBoard, setBoards]
+    [user, activeBoard, setBoards],
   );
 
   if (isLoading) {

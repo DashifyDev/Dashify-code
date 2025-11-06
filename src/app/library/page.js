@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useContext } from "react";
 import { globalContext } from "@/context/globalContext";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import "./library.css";
 import axios from "axios";
 import Image from "next/image";
@@ -42,7 +42,7 @@ function Library() {
   //     if (boards && boards.length > 0 && library && library.length > 0) {
   //     // 6504db17947e478445e2ccee
   //     // 650763be47114b00ebe9dde8
-      
+
   //     const travel = boards.find(el => el.name === "Travel")
   //     const responseTravel = await fetch(`/api/dashboard/${travel._id}`).then(res => res.json())
   //     const kids = boards.find(el => el.name === "Davi")
@@ -72,13 +72,13 @@ function Library() {
       setNoSearchResult(false);
     } else {
       const result = originalLibrary.filter((item) =>
-        item.boardName.toLowerCase().includes(searchValue)
+        item.boardName.toLowerCase().includes(searchValue),
       );
       const keywordsSearch = originalLibrary
         .map((item) => ({
           ...item,
           keywords: item.keywords.filter((item) =>
-            item.toLowerCase().includes(searchValue)
+            item.toLowerCase().includes(searchValue),
           ),
         }))
         .filter((elements) => elements.keywords.length > 0);
@@ -153,7 +153,9 @@ function Library() {
                     <div
                       className="filter-result"
                       onClick={async () => {
-                        const response = await axios.get(`/api/dashboard/${data.boardLink.split("/").pop()}`);
+                        const response = await axios.get(
+                          `/api/dashboard/${data.boardLink.split("/").pop()}`,
+                        );
                         let payload;
                         if (dbUser) {
                           if (isAdmin) {
@@ -168,43 +170,54 @@ function Library() {
                               userId: dbUser._id,
                             };
                           }
-                          axios.post("/api/dashboard/addDashboard", payload).then((res) => {
-                            const newBoard = res.data;
+                          axios
+                            .post("/api/dashboard/addDashboard", payload)
+                            .then((res) => {
+                              const newBoard = res.data;
 
-                            const boardTiles = response.data.tiles.map(el => {
-                              const tileCopy = { ...el };
-                              delete tileCopy._id;
-                              tileCopy.dashboardId = newBoard._id;
-                              return tileCopy;
+                              const boardTiles = response.data.tiles.map(
+                                (el) => {
+                                  const tileCopy = { ...el };
+                                  delete tileCopy._id;
+                                  tileCopy.dashboardId = newBoard._id;
+                                  return tileCopy;
+                                },
+                              );
+
+                              axios
+                                .post("/api/tile/tiles", {
+                                  dashboardId: newBoard._id,
+                                  tiles: boardTiles,
+                                })
+                                .then((resp) => {
+                                  setTiles(resp.data.tiles);
+                                  newBoard.tiles = resp.data.tiles;
+                                  setBoards((prev) => [...prev, newBoard]);
+
+                                  try {
+                                    queryClient.invalidateQueries({
+                                      queryKey: dashboardKeys.lists(),
+                                    });
+                                    queryClient.setQueryData(
+                                      dashboardKeys.detail(newBoard._id),
+                                      newBoard,
+                                    );
+                                  } catch (e) {
+                                    console.warn(
+                                      "Failed to update query cache after creating dashboard",
+                                      e,
+                                    );
+                                  }
+                                  router.push(`/dashboard/${newBoard._id}`);
+                                });
                             });
-
-                            axios.post("/api/tile/tiles", { dashboardId: newBoard._id, tiles: boardTiles }).then((resp) => {
-                              setTiles(resp.data.tiles)
-                              newBoard.tiles = resp.data.tiles
-                              setBoards((prev) => [...prev, newBoard]);
-
-                              try {
-                                queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
-                                queryClient.setQueryData(
-                                  dashboardKeys.detail(newBoard._id),
-                                  newBoard
-                                );
-                              } catch (e) {
-                                console.warn(
-                                  "Failed to update query cache after creating dashboard",
-                                  e
-                                );
-                              }
-                              router.push(`/dashboard/${newBoard._id}`);
-                            })
-                          });
                         } else {
-                          const boardId = uuidv4()
+                          const boardId = uuidv4();
                           const newTiles = response.data.tiles.map((tile) => {
-                            tile._id = uuidv4()
-                            tile.dashboardId = boardId
-                            return tile
-                          })
+                            tile._id = uuidv4();
+                            tile.dashboardId = boardId;
+                            return tile;
+                          });
                           let payload = {
                             _id: boardId,
                             name: response.data.name,
@@ -217,7 +230,9 @@ function Library() {
                           setTiles(newTiles);
 
                           try {
-                            const detailKey = dashboardKeys.detail(newBoard._id);
+                            const detailKey = dashboardKeys.detail(
+                              newBoard._id,
+                            );
                             queryClient.setQueryData(detailKey, (oldData) => {
                               if (oldData) {
                                 return {
@@ -233,7 +248,10 @@ function Library() {
                               };
                             });
                           } catch (e) {
-                            console.warn("Failed to update query cache for local board", e);
+                            console.warn(
+                              "Failed to update query cache for local board",
+                              e,
+                            );
                           }
 
                           router.push(`/dashboard/${boardId}`);

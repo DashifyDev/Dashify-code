@@ -60,7 +60,7 @@ const ImagePreloader = ({
         img.src = src;
       });
     },
-    [priority]
+    [priority],
   );
 
   const preloadBatch = useCallback(
@@ -82,7 +82,7 @@ const ImagePreloader = ({
 
       return Promise.allSettled(promises);
     },
-    [preloadImage]
+    [preloadImage],
   );
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const ImagePreloader = ({
 
         processedImages += batch.length;
         const currentProgress = Math.round(
-          (processedImages / totalImages) * 100
+          (processedImages / totalImages) * 100,
         );
 
         if (isMountedRef.current) {

@@ -11,7 +11,7 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
   const [width, setWidth] = useState("");
   const [height, setHeight] = useState("");
   const [lockRatio, setLockRatio] = useState(true);
-  const [align, setAlign] = useState("basic"); 
+  const [align, setAlign] = useState("basic");
 
   const reset = () => {
     setFile(null);

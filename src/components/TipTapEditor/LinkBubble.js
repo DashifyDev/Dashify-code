@@ -76,7 +76,7 @@ const LinkBubble = ({ editor }) => {
             };
             if (typeof window !== "undefined") {
               window.dispatchEvent(
-                new CustomEvent("tiptap:openLinkModal", { detail })
+                new CustomEvent("tiptap:openLinkModal", { detail }),
               );
             }
           }}

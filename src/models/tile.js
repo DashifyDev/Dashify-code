@@ -1,70 +1,68 @@
-import { Schema, model, models } from 'mongoose';
+import { Schema, model, models } from "mongoose";
 
 const tileSchema = new Schema({
+  tileLink: {
+    type: String,
+  },
 
-    tileLink: {
-        type : String
-    },
+  tileText: {
+    type: String,
+  },
 
-    tileText: {
-        type : String
-    },
+  tileContent: {
+    type: String,
+  },
 
-    tileContent: {
-        type : String,
-    },
+  tileBackground: {
+    type: String,
+  },
 
-    tileBackground: {
-        type : String
-    },
+  action: {
+    type: String,
+  },
 
-    action : {
-        type : String
-    },
+  width: {
+    type: String,
+    required: true,
+  },
 
-    width: {
-        type : String,
-        required : true
-    },
-   
-    height: {
-        type : String,
-        required: true,
-    },
+  height: {
+    type: String,
+    required: true,
+  },
 
-    x:{
-        type : Number,
-        required: true,
-    },
+  x: {
+    type: Number,
+    required: true,
+  },
 
-    y:{
-        type : Number,
-        required: true,
-    },
+  y: {
+    type: Number,
+    required: true,
+  },
 
-    isInsidePod: { 
-        type: Boolean, 
-        'default': false 
-    },
-    
-    displayTitle: {
-        type: Boolean, 
-    },
-    titleX:{
-        type:Number
-    },
-    titleY:{
-        type : Number
-    },
-    editorHeading:{
-        type: String
-    },
-    backgroundAction:{
-        type:String
-    }
+  isInsidePod: {
+    type: Boolean,
+    default: false,
+  },
 
+  displayTitle: {
+    type: Boolean,
+  },
+  titleX: {
+    type: Number,
+  },
+  titleY: {
+    type: Number,
+  },
+  editorHeading: {
+    type: String,
+  },
+  backgroundAction: {
+    type: String,
+  },
 });
 
-const Tile = models.Tile || model('Tile', tileSchema);
+const Tile = models.Tile || model("Tile", tileSchema);
 
 export default Tile;

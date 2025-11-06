@@ -10,12 +10,12 @@ const addTileToPod = async (req, res) => {
     if (isAdd) {
       const updatedPod = await Pod.findOneAndUpdate(
         { _id: podId },
-        { $push: { tiles: tileId } }
+        { $push: { tiles: tileId } },
       );
       if (updatedPod) {
         const update = await Tile.updateOne(
           { _id: tileId },
-          { $set: { isInsidePod: true } }
+          { $set: { isInsidePod: true } },
         );
         if (update) {
           res.status(200).json({ message: "add Tile Succesfully" });
@@ -24,12 +24,12 @@ const addTileToPod = async (req, res) => {
     } else {
       const updatedPod = await Pod.findOneAndUpdate(
         { _id: podId },
-        { $pull: { tiles: tileId } }
+        { $pull: { tiles: tileId } },
       );
       if (updatedPod) {
         const update = await Tile.updateOne(
           { _id: tileId },
-          { $set: { isInsidePod: false } }
+          { $set: { isInsidePod: false } },
         );
         if (update) {
           res.status(200).json({ message: "remove Tile successfully" });

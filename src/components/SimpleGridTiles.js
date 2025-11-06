@@ -52,7 +52,7 @@ const SimpleGridTiles = memo(
         updateTileMutation,
         onTileUpdate,
         updateTilesInLocalstorage,
-      ]
+      ],
     );
 
     const handleResizeStop = useCallback(
@@ -83,7 +83,7 @@ const SimpleGridTiles = memo(
         updateTileMutation,
         onTileUpdate,
         updateTilesInLocalstorage,
-      ]
+      ],
     );
 
     const handleContentChange = useCallback(
@@ -95,7 +95,7 @@ const SimpleGridTiles = memo(
           });
         } else {
           const updatedTiles = tiles.map((tile) =>
-            tile._id === tileId ? { ...tile, tileText: newContent } : tile
+            tile._id === tileId ? { ...tile, tileText: newContent } : tile,
           );
           onTileUpdate(updatedTiles);
           updateTilesInLocalstorage(updatedTiles);
@@ -107,7 +107,7 @@ const SimpleGridTiles = memo(
         updateTileMutation,
         onTileUpdate,
         updateTilesInLocalstorage,
-      ]
+      ],
     );
 
     const onDoubleTap = useCallback(
@@ -123,7 +123,7 @@ const SimpleGridTiles = memo(
           onTileClick(tile, index);
         }
       },
-      [onTileClick]
+      [onTileClick],
     );
 
     const style = useCallback((tile) => {
@@ -175,8 +175,8 @@ const SimpleGridTiles = memo(
         content && tile.displayTitle
           ? tileText
           : !content && tile.displayTitle
-          ? " New Tile"
-          : "";
+            ? " New Tile"
+            : "";
       return titleVal;
     }, []);
 
@@ -269,7 +269,7 @@ const SimpleGridTiles = memo(
         ))}
       </div>
     );
-  }
+  },
 );
 
 SimpleGridTiles.displayName = "SimpleGridTiles";

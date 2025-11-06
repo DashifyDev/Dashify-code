@@ -20,7 +20,11 @@ function SideDrawer({ open, close, user }) {
   };
 
   const redirectToLife = () => {
-    window.open('https://dashboardyourlife.com/', '_blank', 'noopener,noreferrer');
+    window.open(
+      "https://dashboardyourlife.com/",
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   return (
@@ -51,17 +55,33 @@ function SideDrawer({ open, close, user }) {
           <ListItem button onClick={() => reDirectToInfo("3qw")}>
             <p className="app-drawer-style">How to use it</p>
           </ListItem> */}
-          <ListItem button style={{ flexDirection: "column" }} onClick={() => redirectToHomepage()}>
+          <ListItem
+            button
+            style={{ flexDirection: "column" }}
+            onClick={() => redirectToHomepage()}
+          >
             <p className="app-drawer-style">Homepage</p>
-            <p className="app-drawer-style-subtext">What is Boardzy & How to use it!</p>
+            <p className="app-drawer-style-subtext">
+              What is Boardzy & How to use it!
+            </p>
           </ListItem>
-          <ListItem button style={{ flexDirection: "column" }} onClick={() => redirectToLibrary()}>
+          <ListItem
+            button
+            style={{ flexDirection: "column" }}
+            onClick={() => redirectToLibrary()}
+          >
             <p className="app-drawer-style">Boards Library</p>
             <p className="app-drawer-style-subtext">Quick-start templates</p>
           </ListItem>
-          <ListItem button style={{ flexDirection: "column" }} onClick={() => redirectToLife()}>
+          <ListItem
+            button
+            style={{ flexDirection: "column" }}
+            onClick={() => redirectToLife()}
+          >
             <p className="app-drawer-style">Dashboard Your Life</p>
-            <p className="app-drawer-style-subtext">Get help creating your boards</p>
+            <p className="app-drawer-style-subtext">
+              Get help creating your boards
+            </p>
           </ListItem>
         </List>
       </Drawer>

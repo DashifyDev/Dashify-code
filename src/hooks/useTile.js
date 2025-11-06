@@ -45,7 +45,7 @@ export const useUpdateTile = () => {
         if (!oldData || !oldData.tiles) return oldData;
 
         const tileIndex = oldData.tiles.findIndex(
-          (tile) => tile._id === tileId
+          (tile) => tile._id === tileId,
         );
         if (tileIndex === -1) return oldData;
 

@@ -13,7 +13,8 @@
     "init-db": "node scripts/init-db-indexes.js",
     "perf-test": "lighthouse http://localhost:3000 --output html --output-path ./lighthouse-report.html",
     "perf-report": "node scripts/performance-test.js",
-    "analyze": "ANALYZE=true npm run build"
+    "analyze": "ANALYZE=true npm run build",
+    "format": "npx prettier --write ."
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^2.6.3",

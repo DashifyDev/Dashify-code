@@ -19,7 +19,7 @@ const getDashboardData = async (req, res) => {
         if (data) {
           res.setHeader(
             "Cache-Control",
-            "public, s-maxage=300, stale-while-revalidate=600, max-age=60"
+            "public, s-maxage=300, stale-while-revalidate=600, max-age=60",
           );
           res.setHeader("ETag", `"${id}-${data.updatedAt || Date.now()}"`);
           res.setHeader("Vary", "Accept-Encoding");
@@ -61,7 +61,7 @@ const getDashboardData = async (req, res) => {
         const updated = await Dashboard.findByIdAndUpdate(
           { _id: id },
           { $set: updatedData },
-          { new: true }
+          { new: true },
         );
         if (updated) {
           res.status(200).json(updated);

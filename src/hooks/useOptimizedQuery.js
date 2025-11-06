@@ -42,7 +42,7 @@ optimizedAxios.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 optimizedAxios.interceptors.response.use(
@@ -52,5 +52,5 @@ optimizedAxios.interceptors.response.use(
   (error) => {
     console.error("API Error:", error);
     return Promise.reject(error);
-  }
+  },
 );

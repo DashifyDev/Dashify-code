@@ -169,14 +169,21 @@
   text-transform: uppercase;
   animation: neonFlicker 1.5s infinite alternate;
 
-  box-shadow: rgb(255, 255, 255) 0px 0px 0.5px 0px,
-    rgb(255, 255, 255) 0px 0px 0.5px 0px inset, rgb(0, 136, 255) 0px 0px 2px 0px,
-    rgb(0, 136, 255) 0px 0px 2px 0px inset, rgb(0, 136, 255) 0px 0px 4px 0px,
+  box-shadow:
+    rgb(255, 255, 255) 0px 0px 0.5px 0px,
+    rgb(255, 255, 255) 0px 0px 0.5px 0px inset,
+    rgb(0, 136, 255) 0px 0px 2px 0px,
+    rgb(0, 136, 255) 0px 0px 2px 0px inset,
+    rgb(0, 136, 255) 0px 0px 4px 0px,
     rgb(0, 136, 255) 0px 0px 4px 0px inset;
-  text-shadow: rgb(255, 255, 255) -3.2px -3.2px 16px,
-    rgb(255, 255, 255) 3.2px 3.2px 16px, rgb(255, 68, 0) 0px 0px 2px,
-    rgb(255, 68, 0) 0px 0px 4px, rgb(255, 68, 0) 0px 0px 6px,
-    rgb(255, 68, 0) 0px 0px 8px, rgb(255, 68, 0) 0px 0px 10px;
+  text-shadow:
+    rgb(255, 255, 255) -3.2px -3.2px 16px,
+    rgb(255, 255, 255) 3.2px 3.2px 16px,
+    rgb(255, 68, 0) 0px 0px 2px,
+    rgb(255, 68, 0) 0px 0px 4px,
+    rgb(255, 68, 0) 0px 0px 6px,
+    rgb(255, 68, 0) 0px 0px 8px,
+    rgb(255, 68, 0) 0px 0px 10px;
 }
 
 .text-style-dropdown {
@@ -208,12 +215,12 @@
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   list-style: none;
   margin-top: 4px;
   padding: 4px;
-  width: 200px; 
-  z-index: 1000; 
+  width: 200px;
+  z-index: 1000;
 }
 
 .dropdown-menu li {
@@ -253,14 +260,21 @@
   border-radius: 6px;
   text-transform: uppercase;
 
-  box-shadow: rgb(255, 255, 255) 0px 0px 0.5px 0px,
-    rgb(255, 255, 255) 0px 0px 0.5px 0px inset, rgb(0, 136, 255) 0px 0px 2px 0px,
-    rgb(0, 136, 255) 0px 0px 2px 0px inset, rgb(0, 136, 255) 0px 0px 4px 0px,
+  box-shadow:
+    rgb(255, 255, 255) 0px 0px 0.5px 0px,
+    rgb(255, 255, 255) 0px 0px 0.5px 0px inset,
+    rgb(0, 136, 255) 0px 0px 2px 0px,
+    rgb(0, 136, 255) 0px 0px 2px 0px inset,
+    rgb(0, 136, 255) 0px 0px 4px 0px,
     rgb(0, 136, 255) 0px 0px 4px 0px inset;
-  text-shadow: rgb(255, 255, 255) -3.2px -3.2px 16px,
-    rgb(255, 255, 255) 3.2px 3.2px 16px, rgb(255, 68, 0) 0px 0px 2px,
-    rgb(255, 68, 0) 0px 0px 4px, rgb(255, 68, 0) 0px 0px 6px,
-    rgb(255, 68, 0) 0px 0px 8px, rgb(255, 68, 0) 0px 0px 10px;
+  text-shadow:
+    rgb(255, 255, 255) -3.2px -3.2px 16px,
+    rgb(255, 255, 255) 3.2px 3.2px 16px,
+    rgb(255, 68, 0) 0px 0px 2px,
+    rgb(255, 68, 0) 0px 0px 4px,
+    rgb(255, 68, 0) 0px 0px 6px,
+    rgb(255, 68, 0) 0px 0px 8px,
+    rgb(255, 68, 0) 0px 0px 10px;
 }
 
 .dropdown-item.text-style-bordered {
@@ -274,7 +288,14 @@
 }
 
 @keyframes neonFlicker {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
     text-shadow:
       0 0 5px #fff,
       0 0 10px #ff5733,
@@ -287,7 +308,9 @@
       0 0 20px #0077ff;
   }
 
-  20%, 24%, 55% {
+  20%,
+  24%,
+  55% {
     text-shadow: none;
     box-shadow: none;
   }

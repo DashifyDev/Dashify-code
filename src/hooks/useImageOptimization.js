@@ -50,7 +50,7 @@ export const useImageOptimization = (images = [], options = {}) => {
         img.src = src;
       });
     },
-    [priority]
+    [priority],
   );
 
   const preloadImages = useCallback(async () => {
@@ -113,7 +113,7 @@ export const useImageOptimization = (images = [], options = {}) => {
         return null;
       }
     },
-    [enableBlurPlaceholder]
+    [enableBlurPlaceholder],
   );
 
   // Get image loading status
@@ -123,7 +123,7 @@ export const useImageOptimization = (images = [], options = {}) => {
       if (failedImages.has(src)) return "failed";
       return "loading";
     },
-    [loadedImages, failedImages]
+    [loadedImages, failedImages],
   );
 
   // Check if all images are loaded
@@ -181,7 +181,7 @@ export const useResponsiveImage = (src, options = {}) => {
       onLoad: handleLoad,
       onError: handleError,
     }),
-    [src, sizes, priority, quality, handleLoad, handleError]
+    [src, sizes, priority, quality, handleLoad, handleError],
   );
 
   return {

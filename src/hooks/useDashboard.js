@@ -18,7 +18,7 @@ export const useDashboard = (id) => {
       if (typeof window !== "undefined") {
         try {
           const localBoards = JSON.parse(
-            localStorage.getItem("Dasify") || "[]"
+            localStorage.getItem("Dasify") || "[]",
           );
           const localBoard = localBoards.find((b) => b._id === id);
           if (localBoard) {
@@ -40,7 +40,7 @@ export const useDashboard = (id) => {
         tiles: data.tiles || [],
         pods: data.pods || [],
       }),
-    }
+    },
   );
 };
 
@@ -65,7 +65,7 @@ export const useAdminDashboards = () => {
     queryKey: dashboardKeys.list({ admin: true }),
     queryFn: async () => {
       const response = await optimizedAxios.get(
-        "/api/dashboard/defaultDashboard"
+        "/api/dashboard/defaultDashboard",
       );
       return response.data;
     },
@@ -81,7 +81,7 @@ export const useCreateDashboard = () => {
     mutationFn: async (dashboardData) => {
       const response = await optimizedAxios.post(
         "/api/dashboard/addDashboard",
-        dashboardData
+        dashboardData,
       );
       return response.data;
     },
@@ -89,7 +89,7 @@ export const useCreateDashboard = () => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
       queryClient.setQueryData(
         dashboardKeys.detail(newDashboard._id),
-        newDashboard
+        newDashboard,
       );
     },
   });
@@ -106,7 +106,7 @@ export const useUpdateDashboard = () => {
     onSuccess: (updatedDashboard) => {
       queryClient.setQueryData(
         dashboardKeys.detail(updatedDashboard._id),
-        updatedDashboard
+        updatedDashboard,
       );
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
     },

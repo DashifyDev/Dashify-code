@@ -20,7 +20,7 @@ const tile = async (req, res) => {
           { _id: boardId },
           {
             $set: { tiles: dashboard.tiles },
-          }
+          },
         );
         if (updatedDashBoard) {
           res.status(200).json(tile);

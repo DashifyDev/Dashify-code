@@ -165,7 +165,7 @@ const Toolbar = ({ editor, activeStyles }) => {
         url: href.startsWith(window.location.origin)
           ? href.replace(
               `${window.location.origin}${window.location.pathname}`,
-              ""
+              "",
             )
           : href,
         text: detail.text || "",
@@ -394,8 +394,8 @@ const Toolbar = ({ editor, activeStyles }) => {
 
         <div className="toolbar-group">
           <div className="color-picker-container">
-            <button 
-              className="color-picker-button" 
+            <button
+              className="color-picker-button"
               title="Text Color"
               onClick={() => {
                 setShowColorGrid(!showColorGrid);
@@ -408,18 +408,15 @@ const Toolbar = ({ editor, activeStyles }) => {
               <span
                 className="color-indicator"
                 style={{
-                  backgroundColor: rgbToHex(activeStyles.color) || "transparent",
+                  backgroundColor:
+                    rgbToHex(activeStyles.color) || "transparent",
                 }}
               ></span>
             </button>
             {showColorGrid && (
               <ColorGridPicker
                 onColorSelect={(color) => {
-                  editor
-                    .chain()
-                    .focus()
-                    .setMark("textStyle", { color })
-                    .run();
+                  editor.chain().focus().setMark("textStyle", { color }).run();
                   setShowColorGrid(false);
                 }}
                 currentColor={rgbToHex(activeStyles.color)}
@@ -427,8 +424,8 @@ const Toolbar = ({ editor, activeStyles }) => {
             )}
           </div>
           <div className="color-picker-container">
-            <button 
-              className="color-picker-button" 
+            <button
+              className="color-picker-button"
               title="Highlight Color"
               onClick={() => {
                 setShowHighlightGrid(!showHighlightGrid);
@@ -448,11 +445,7 @@ const Toolbar = ({ editor, activeStyles }) => {
             {showHighlightGrid && (
               <ColorGridPicker
                 onColorSelect={(color) => {
-                  editor
-                    .chain()
-                    .focus()
-                    .toggleHighlight({ color })
-                    .run();
+                  editor.chain().focus().toggleHighlight({ color }).run();
                   setShowHighlightGrid(false);
                 }}
                 currentColor={activeStyles.highlight}

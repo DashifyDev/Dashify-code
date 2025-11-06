@@ -82,7 +82,7 @@ const SkeletonLoader = memo(
         ))}
       </div>
     );
-  }
+  },
 );
 
 SkeletonLoader.displayName = "SkeletonLoader";

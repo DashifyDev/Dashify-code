@@ -31,7 +31,7 @@ const TipTapMainEditor = dynamic(
   {
     loading: () => <div>Loading editor...</div>,
     ssr: false,
-  }
+  },
 );
 
 const TipTapTextEditorDialog = dynamic(
@@ -39,7 +39,7 @@ const TipTapTextEditorDialog = dynamic(
   {
     loading: () => <div>Loading dialog...</div>,
     ssr: false,
-  }
+  },
 );
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
@@ -117,13 +117,13 @@ const GridTiles = memo(function GridTiles({
         // replace temp tile with server tile in cache
         queryClient.setQueryData(detailKey, (old) => {
           const tiles = (old && Array.isArray(old.tiles) ? old.tiles : []).map(
-            (t) => (t._id === context.tempTile._id ? data : t)
+            (t) => (t._id === context.tempTile._id ? data : t),
           );
           return { ...(old || {}), tiles };
         });
 
         setTileCordinates((prev) =>
-          prev.map((t) => (t._id === context.tempTile._id ? data : t))
+          prev.map((t) => (t._id === context.tempTile._id ? data : t)),
         );
       },
       onSettled: () => {
@@ -131,7 +131,7 @@ const GridTiles = memo(function GridTiles({
           queryKey: dashboardKeys.detail(activeBoard),
         });
       },
-    }
+    },
   );
   const hiddenFileInput = useRef(null);
   let firstNewLine = true;
@@ -150,7 +150,7 @@ const GridTiles = memo(function GridTiles({
       values.backgroundAction = e.target.value;
       setFormValue(values);
     },
-    [selectedTileDetail, formValue]
+    [selectedTileDetail, formValue],
   );
 
   const changeAction = (e) => {
@@ -223,7 +223,7 @@ const GridTiles = memo(function GridTiles({
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
-      (payload.backgroundAction = "image"), (payload.displayTitle = false);
+      ((payload.backgroundAction = "image"), (payload.displayTitle = false));
       formData.append("tileImage", payload.tileBackground);
       delete payload.tileBackground;
     }
@@ -284,45 +284,48 @@ const GridTiles = memo(function GridTiles({
             return {
               ...oldData,
               tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                (tile) => (tile._id === tileId ? res.data : tile)
+                (tile) => (tile._id === tileId ? res.data : tile),
               ),
             };
-          }
+          },
         );
 
         // Store selectedTile before setting it to null
         const currentSelectedTile = selectedTile;
         setSelectedTile(null);
-        
+
         // Auto-resize tile after save for authenticated users
         setTimeout(() => {
           // Try different selectors for tiles
           let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
+          if (tileId && !tileId.startsWith("temp_")) {
             // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
             const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+            textOverlay = document.querySelector(
+              `#${escapedTileId} .text_overlay`,
+            );
           }
-          
+
           // Fallback: try to find by index
           if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            const allTextOverlays = document.querySelectorAll(".text_overlay");
             textOverlay = allTextOverlays[currentSelectedTile];
           }
-          
+
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
-            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
+            const currentHeight =
+              parseInt(items[currentSelectedTile].height) || 150;
             const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-            
+
             if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
+                height: `${desiredHeight}px`,
               };
               setTileCordinates(updatedItems);
-              
+
               // Update React Query cache
               queryClient.setQueryData(
                 dashboardKeys.detail(activeBoard),
@@ -330,11 +333,16 @@ const GridTiles = memo(function GridTiles({
                   if (!oldData) return oldData;
                   return {
                     ...oldData,
-                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                      (tile) => (tile._id === tileId ? updatedItems[currentSelectedTile] : tile)
+                    tiles: (Array.isArray(oldData.tiles)
+                      ? oldData.tiles
+                      : []
+                    ).map((tile) =>
+                      tile._id === tileId
+                        ? updatedItems[currentSelectedTile]
+                        : tile,
                     ),
                   };
-                }
+                },
               );
             }
           }
@@ -367,39 +375,42 @@ const GridTiles = memo(function GridTiles({
         items[selectedTile] = item;
         setTileCordinates(items);
         updateTilesInLocalstorage(items);
-        
+
         // Store selectedTile before setting it to null
         const currentSelectedTile = selectedTile;
         setSelectedTile(null);
-        
+
         // Auto-resize tile after save for guest users
         setTimeout(() => {
           const tileId = items[currentSelectedTile]._id;
-          
+
           // Try different selectors for guest tiles
           let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
+          if (tileId && !tileId.startsWith("temp_")) {
             // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
             const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+            textOverlay = document.querySelector(
+              `#${escapedTileId} .text_overlay`,
+            );
           }
-          
+
           // Fallback: try to find by index
           if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            const allTextOverlays = document.querySelectorAll(".text_overlay");
             textOverlay = allTextOverlays[currentSelectedTile];
           }
-          
+
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
-            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
+            const currentHeight =
+              parseInt(items[currentSelectedTile].height) || 150;
             const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-            
+
             if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
+                height: `${desiredHeight}px`,
               };
               setTileCordinates(updatedItems);
               updateTilesInLocalstorage(updatedItems);
@@ -455,7 +466,7 @@ const GridTiles = memo(function GridTiles({
                   : []
                 ).filter((tile) => tile._id !== tileId),
               };
-            }
+            },
           );
         }
       });
@@ -512,20 +523,20 @@ const GridTiles = memo(function GridTiles({
     // Use tile.tileText directly instead of tileCordinates[index].tileText
     let tileText = tile.tileText;
     let content = tileText;
-    
+
     if (tileText) {
       // Only check for empty divs, not strip all HTML
       if (tileText === "<div><br></div>" || tileText === "<div></div>") {
         content = "";
       }
     }
-    
+
     const titleVal =
       content && tile.displayTitle
         ? tileText
         : !content && tile.displayTitle
-        ? " New Tile"
-        : "";
+          ? " New Tile"
+          : "";
     return titleVal;
   };
 
@@ -585,7 +596,7 @@ const GridTiles = memo(function GridTiles({
     let tiles = tileCordinates;
     let removableTileIds = [dragTile._id, dropTile._id];
     const filteredArray = tiles.filter(
-      (obj) => !removableTileIds.includes(obj._id)
+      (obj) => !removableTileIds.includes(obj._id),
     );
     setTileCordinates(filteredArray);
 
@@ -607,7 +618,7 @@ const GridTiles = memo(function GridTiles({
 
   const updatePods = (dragtile, droppablePod) => {
     let dragTileIndex = tileCordinates.findIndex(
-      (obj) => obj._id === dragtile._id
+      (obj) => obj._id === dragtile._id,
     );
     let tiles = tileCordinates;
     tiles.splice(dragTileIndex, 1);
@@ -664,10 +675,10 @@ const GridTiles = memo(function GridTiles({
                 ...oldData,
                 tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
                   (tile) =>
-                    tile._id === tileId ? { ...tile, ...res.data } : tile
+                    tile._id === tileId ? { ...tile, ...res.data } : tile,
                 ),
               };
-            }
+            },
           );
         }
       });
@@ -699,10 +710,10 @@ const GridTiles = memo(function GridTiles({
                 ...oldData,
                 tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
                   (tile) =>
-                    tile._id === tileId ? { ...tile, ...res.data } : tile
+                    tile._id === tileId ? { ...tile, ...res.data } : tile,
                 ),
               };
-            }
+            },
           );
         }
       });
@@ -815,29 +826,29 @@ const GridTiles = memo(function GridTiles({
             return {
               ...oldData,
               tiles: oldData.tiles.map((tile) =>
-                tile._id === tileId ? res.data : tile
+                tile._id === tileId ? res.data : tile,
               ),
             };
-          }
+          },
         );
 
         setSelectedTile(null);
         // Do not auto-resize on save from double-click editor
       });
     } else {
-    let item = {
-      ...items[selectedTile],
-      tileContent: content,
-      editorHeading: editorTitle,
-    };
+      let item = {
+        ...items[selectedTile],
+        tileContent: content,
+        editorHeading: editorTitle,
+      };
       items[selectedTile] = item;
       setTileCordinates(items);
       updateTilesInLocalstorage(items);
-      
+
       // Store selectedTile before setting it to null
       const currentSelectedTile = selectedTile;
       setSelectedTile(null);
-      
+
       // Do not auto-resize on save from double-click editor (guest)
     }
   };
@@ -968,7 +979,7 @@ const GridTiles = memo(function GridTiles({
     if (url) {
       const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
       let isImage = imageExtensions.some((ext) =>
-        url.toLowerCase().includes(ext)
+        url.toLowerCase().includes(ext),
       );
       return isImage;
     }
@@ -980,7 +991,7 @@ const GridTiles = memo(function GridTiles({
     return tileCordinates
       .map(
         (t) =>
-          `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`
+          `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`,
       )
       .join(",");
   }, [tileCordinates]);
@@ -1054,7 +1065,7 @@ const GridTiles = memo(function GridTiles({
                     tile.tileContent,
                     tile,
                     index,
-                    null
+                    null,
                   );
                 } else {
                   setShowOption(`tile_${index}`);
