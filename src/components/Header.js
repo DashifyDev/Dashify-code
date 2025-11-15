@@ -512,7 +512,7 @@ const addBoard = () => {
                 </div>
               ) : (
                 <div>
-                  <a href=/api/auth/login?screen_hint=signup className="sign_btn">
+                  <a href="/api/auth/login?screen_hint=signup" className="sign_btn">
                     Sign up
                   </a>
                   <a href="/api/auth/login" className="login_btn">
@@ -636,5 +636,6 @@ const addBoard = () => {
 }
 
 export default Header
+
 
 
