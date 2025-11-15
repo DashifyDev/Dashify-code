@@ -33,12 +33,24 @@ function SideDrawer({ open, close, user }) {
           },
         }}
       >
-     <List>
-  <ListItem button component="a" href="https://home.boardzy.app/">
+<List>
+  <ListItem
+    button
+    component="a"
+    href="https://home.boardzy.app/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <p className="app-drawer-style">Welcome To Boardzy</p>
   </ListItem>
 
-  <ListItem button component="a" href="https://home.boardzy.app/">
+  <ListItem
+    button
+    component="a"
+    href="https://home.boardzy.app/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <p className="app-drawer-style">What is Boardzy?</p>
   </ListItem>
 
@@ -46,10 +58,12 @@ function SideDrawer({ open, close, user }) {
     <p className="app-drawer-style">Boards Library</p>
   </ListItem>
 
-  <ListItem button component="a" href="https://home.boardzy.app/">
-    <p className="app-drawer-style">Dashboard your Life</p>
-  </ListItem>
-</List>
+  <ListItem
+    button
+    component="a"
+    href="https://home.boardzy.app/"
+    target="_blank"
+
 
       </Drawer>
     </div>
@@ -57,5 +71,6 @@ function SideDrawer({ open, close, user }) {
 }
 
 export default SideDrawer;
+
 
 
