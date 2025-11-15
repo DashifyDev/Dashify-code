@@ -63,6 +63,11 @@ function SideDrawer({ open, close, user }) {
     component="a"
     href="https://home.boardzy.app/"
     target="_blank"
+    rel="noopener noreferrer"
+  >
+    <p className="app-drawer-style">Dashboard your Life</p>
+  </ListItem>
+</List>
 
 
       </Drawer>
@@ -71,6 +76,7 @@ function SideDrawer({ open, close, user }) {
 }
 
 export default SideDrawer;
+
 
 
 
