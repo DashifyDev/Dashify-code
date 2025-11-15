@@ -33,27 +33,29 @@ function SideDrawer({ open, close, user }) {
           },
         }}
       >
-        <List>
-          <ListItem button onClick={() => goToUrl("https://home.boardzy.app/")}>
-            <p className="app-drawer-style">Welcome To Boardzy</p>
-          </ListItem>
-          <ListItem button onClick={() => goToUrl("https://home.boardzy.app/")}>
-            <p className="app-drawer-style">What is Boardzy?</p>
-          </ListItem>
-          <ListItem button onClick={() => goToUrl("https://home.boardzy.app/")}>
-            <p className="app-drawer-style">How to use it</p>
-          </ListItem>
-          <ListItem button onClick={() => redirectToLibrary()}>
-            <p className="app-drawer-style">Boards Library</p>
-          </ListItem>
-          <ListItem button onClick={() => goToUrl("https://home.boardzy.app/")}>
-            <p className="app-drawer-style">Dashboard your Life</p>
-          </ListItem>
-        </List>
+     <List>
+  <ListItem button component="a" href="https://home.boardzy.app/">
+    <p className="app-drawer-style">Welcome To Boardzy</p>
+  </ListItem>
+
+  <ListItem button component="a" href="https://home.boardzy.app/">
+    <p className="app-drawer-style">What is Boardzy?</p>
+  </ListItem>
+
+  <ListItem button onClick={redirectToLibrary}>
+    <p className="app-drawer-style">Boards Library</p>
+  </ListItem>
+
+  <ListItem button component="a" href="https://home.boardzy.app/">
+    <p className="app-drawer-style">Dashboard your Life</p>
+  </ListItem>
+</List>
+
       </Drawer>
     </div>
   );
 }
 
 export default SideDrawer;
+
 
