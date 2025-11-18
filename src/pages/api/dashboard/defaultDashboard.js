@@ -17,14 +17,23 @@ const defaultDashboard = async (req, res) => {
           userId: adminUser._id,
         })
           .populate("tiles")
-          .sort({ createdAt: 1 });
+          .sort({ position: 1, createdAt: 1 });
 
-        let adminBoards = allAdminBoards.filter((board) => board.hasAdminAdded === true);
+        let adminBoards = allAdminBoards.filter((board) => {
+          const userIdMatch =
+            board.userId?.toString() === adminUser._id.toString() ||
+            (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
+          const hasAdminFlag = board.hasAdminAdded === true;
+          return userIdMatch && hasAdminFlag;
+        });
 
         if (allAdminBoards.length > adminBoards.length) {
-          const missingBoards = allAdminBoards.filter((b) => b.hasAdminAdded !== true);
-
-          adminBoards = allAdminBoards;
+          adminBoards = allAdminBoards.filter((board) => {
+            const userIdMatch =
+              board.userId?.toString() === adminUser._id.toString() ||
+              (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
+            return userIdMatch;
+          });
         }
 
         if (adminBoards && adminBoards.length > 0) {
