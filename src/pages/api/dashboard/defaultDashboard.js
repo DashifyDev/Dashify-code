@@ -13,11 +13,21 @@ const defaultDashboard = async (req, res) => {
           return res.status(400).send("Admin user not found");
         }
 
-        let adminBoards = await Dashboard.find({
-          hasAdminAdded: true,
+        const allAdminBoards = await Dashboard.find({
           userId: adminUser._id,
-        }).populate("tiles");
-        if (adminBoards) {
+        })
+          .populate("tiles")
+          .sort({ createdAt: 1 });
+
+        let adminBoards = allAdminBoards.filter((board) => board.hasAdminAdded === true);
+
+        if (allAdminBoards.length > adminBoards.length) {
+          const missingBoards = allAdminBoards.filter((b) => b.hasAdminAdded !== true);
+
+          adminBoards = allAdminBoards;
+        }
+
+        if (adminBoards && adminBoards.length > 0) {
           res.status(200).send(adminBoards);
         } else {
           res.status(400).send("No Admin Board Found");
