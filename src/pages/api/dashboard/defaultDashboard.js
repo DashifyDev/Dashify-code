@@ -47,3 +47,4 @@ const defaultDashboard = async (req, res) => {
   }
 };
 export default defaultDashboard;
+

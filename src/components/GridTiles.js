@@ -1,9 +1,18 @@
 "use client";
 "use strict";
 import dynamic from "next/dynamic";
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+  memo,
+  useCallback,
+  useMemo,
+} from "react";
 import "../styles/styles.css";
 import { Rnd } from "react-rnd";
+
 import MoreHorizSharpIcon from "@mui/icons-material/MoreHorizSharp";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -12,21 +21,42 @@ import FormControl from "@mui/material/FormControl";
 import DifferenceOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
 import ColorPicker from "./ColorPicker";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { Dialog, Button, DialogContent, DialogActions } from "@mui/material";
-import TextEditor from "./TextEditor";
+import Dialog from "@mui/material/Dialog";
+import Button from "@mui/material/Button";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+
+const TipTapMainEditor = dynamic(
+  () => import("./TipTapEditor/TipTapMainEditor"),
+  {
+    loading: () => <div>Loading editor...</div>,
+    ssr: false,
+  },
+);
+
+const TipTapTextEditorDialog = dynamic(
+  () => import("./TipTapEditor/TipTapTextEditorDialog"),
+  {
+    loading: () => <div>Loading dialog...</div>,
+    ssr: false,
+  },
+);
 import axios from "axios";
 import { globalContext } from "@/context/globalContext";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { dashboardKeys } from "@/hooks/useDashboard";
 import "suneditor/dist/css/suneditor.min.css";
 import { fonts, colors } from "@/constants/textEditorConstant";
 import imageUpload from "../assets/imageUpload.jpg";
 import text from "../assets/text.png";
 import Image from "next/image";
+
 const SunEditor = dynamic(() => import("suneditor-react"), {
   ssr: false,
 });
 
-export default function GridTiles({
+const GridTiles = memo(function GridTiles({
   tileCordinates,
   setTileCordinates,
   activeBoard,
@@ -50,6 +80,59 @@ export default function GridTiles({
   const [colorBackground, setColorBackground] = useState();
   const [editorOpen, setEditorOpen] = useState(false);
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
+  const queryClient = useQueryClient();
+  const cloneMutation = useMutation(
+    async (tileToCreate) => {
+      const response = await axios.post("/api/tile/tile", tileToCreate);
+      return response.data;
+    },
+    {
+      // optimistic update
+      onMutate: async (newTile) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        await queryClient.cancelQueries({ queryKey: detailKey });
+        const previous = queryClient.getQueryData(detailKey);
+
+        const tempTile = { ...newTile, _id: `temp_clone_${Date.now()}` };
+
+        // update cache only (do not touch local state here to avoid duplicates)
+        queryClient.setQueryData(detailKey, (old) => {
+          return {
+            ...(old || {}),
+            tiles: [...((old && old.tiles) || []), tempTile],
+          };
+        });
+
+        return { previous, tempTile };
+      },
+      onError: (err, newTile, context) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        if (context?.previous) {
+          queryClient.setQueryData(detailKey, context.previous);
+        }
+        if (context?.previous?.tiles) setTileCordinates(context.previous.tiles);
+      },
+      onSuccess: (data, newTile, context) => {
+        const detailKey = dashboardKeys.detail(activeBoard);
+        // replace temp tile with server tile in cache
+        queryClient.setQueryData(detailKey, (old) => {
+          const tiles = (old && Array.isArray(old.tiles) ? old.tiles : []).map(
+            (t) => (t._id === context.tempTile._id ? data : t),
+          );
+          return { ...(old || {}), tiles };
+        });
+
+        setTileCordinates((prev) =>
+          prev.map((t) => (t._id === context.tempTile._id ? data : t)),
+        );
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({
+          queryKey: dashboardKeys.detail(activeBoard),
+        });
+      },
+    },
+  );
   const hiddenFileInput = useRef(null);
   let firstNewLine = true;
 
@@ -57,15 +140,18 @@ export default function GridTiles({
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   }, [tileCordinates]);
 
-  const handleColorImage = (e) => {
-    setSelectedTileDetail({
-      ...selectedTileDetail,
-      backgroundAction: e.target.value,
-    });
-    const values = formValue;
-    values.backgroundAction = e.target.value;
-    setFormValue(values);
-  };
+  const handleColorImage = useCallback(
+    (e) => {
+      setSelectedTileDetail({
+        ...selectedTileDetail,
+        backgroundAction: e.target.value,
+      });
+      const values = formValue;
+      values.backgroundAction = e.target.value;
+      setFormValue(values);
+    },
+    [selectedTileDetail, formValue],
+  );
 
   const changeAction = (e) => {
     setSelectedTileDetail({ ...selectedTileDetail, action: e.target.value });
@@ -135,9 +221,9 @@ export default function GridTiles({
 
   const handleSave = (index) => {
     let formData = new FormData();
-    let payload = formValue;
+    let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
-      (payload.backgroundAction = "image"), (payload.displayTitle = false);
+      ((payload.backgroundAction = "image"), (payload.displayTitle = false));
       formData.append("tileImage", payload.tileBackground);
       delete payload.tileBackground;
     }
@@ -189,7 +275,78 @@ export default function GridTiles({
         let item = { ...items[selectedTile], ...res.data };
         items[selectedTile] = item;
         setTileCordinates(items);
+
+        // Update React Query cache
+        queryClient.setQueryData(
+          dashboardKeys.detail(activeBoard),
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                (tile) => (tile._id === tileId ? res.data : tile),
+              ),
+            };
+          },
+        );
+
+        // Store selectedTile before setting it to null
+        const currentSelectedTile = selectedTile;
         setSelectedTile(null);
+
+        // Auto-resize tile after save for authenticated users
+        setTimeout(() => {
+          // Try different selectors for tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith("temp_")) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(
+              `#${escapedTileId} .text_overlay`,
+            );
+          }
+
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll(".text_overlay");
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
+
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
+            const currentHeight =
+              parseInt(items[currentSelectedTile].height) || 150;
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+            if (desiredHeight > currentHeight + 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${desiredHeight}px`,
+              };
+              setTileCordinates(updatedItems);
+
+              // Update React Query cache
+              queryClient.setQueryData(
+                dashboardKeys.detail(activeBoard),
+                (oldData) => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    tiles: (Array.isArray(oldData.tiles)
+                      ? oldData.tiles
+                      : []
+                    ).map((tile) =>
+                      tile._id === tileId
+                        ? updatedItems[currentSelectedTile]
+                        : tile,
+                    ),
+                  };
+                },
+              );
+            }
+          }
+        }, 100);
       });
     } else {
       if (formValue.tileBackground instanceof File) {
@@ -204,7 +361,7 @@ export default function GridTiles({
             return;
           }
           let updatedData = JSON.parse(formData.get("formValue"));
-          updatedData.tileBackground = e.target.result; // base64 string
+          updatedData.tileBackground = e.target.result;
           let item = { ...items[selectedTile], ...updatedData };
           items[selectedTile] = item;
           setTileCordinates(items);
@@ -218,7 +375,48 @@ export default function GridTiles({
         items[selectedTile] = item;
         setTileCordinates(items);
         updateTilesInLocalstorage(items);
+
+        // Store selectedTile before setting it to null
+        const currentSelectedTile = selectedTile;
         setSelectedTile(null);
+
+        // Auto-resize tile after save for guest users
+        setTimeout(() => {
+          const tileId = items[currentSelectedTile]._id;
+
+          // Try different selectors for guest tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith("temp_")) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(
+              `#${escapedTileId} .text_overlay`,
+            );
+          }
+
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll(".text_overlay");
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
+
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
+            const currentHeight =
+              parseInt(items[currentSelectedTile].height) || 150;
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+            if (desiredHeight > currentHeight + 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${desiredHeight}px`,
+              };
+              setTileCordinates(updatedItems);
+              updateTilesInLocalstorage(updatedItems);
+            }
+          }
+        }, 100);
       }
     }
   };
@@ -255,6 +453,21 @@ export default function GridTiles({
         if (res) {
           tileCordinates.splice(index, 1);
           setTileCordinates([...tileCordinates]);
+
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: (Array.isArray(oldData.tiles)
+                  ? oldData.tiles
+                  : []
+                ).filter((tile) => tile._id !== tileId),
+              };
+            },
+          );
         }
       });
     } else {
@@ -283,7 +496,7 @@ export default function GridTiles({
     setFormValue(values);
   };
 
-  const style = (index, tile) => {
+  const style = useCallback((index, tile) => {
     let isImageBackground;
     if (tile.tileBackground) {
       isImageBackground = isBackgroundImage(tile.tileBackground);
@@ -304,24 +517,26 @@ export default function GridTiles({
     };
 
     return stylevalue;
-  };
+  }, []);
 
   const changedTitlehandle = (index, tile) => {
-    let tileText = tileCordinates[index].tileText;
+    // Use tile.tileText directly instead of tileCordinates[index].tileText
+    let tileText = tile.tileText;
     let content = tileText;
+
     if (tileText) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(tileText, "text/html");
-      if (tileText === "<div><br></div>") {
+      // Only check for empty divs, not strip all HTML
+      if (tileText === "<div><br></div>" || tileText === "<div></div>") {
         content = "";
       }
     }
+
     const titleVal =
       content && tile.displayTitle
         ? tileText
         : !content && tile.displayTitle
-        ? " New Tile"
-        : "";
+          ? " New Tile"
+          : "";
     return titleVal;
   };
 
@@ -381,7 +596,7 @@ export default function GridTiles({
     let tiles = tileCordinates;
     let removableTileIds = [dragTile._id, dropTile._id];
     const filteredArray = tiles.filter(
-      (obj) => !removableTileIds.includes(obj._id)
+      (obj) => !removableTileIds.includes(obj._id),
     );
     setTileCordinates(filteredArray);
 
@@ -403,7 +618,7 @@ export default function GridTiles({
 
   const updatePods = (dragtile, droppablePod) => {
     let dragTileIndex = tileCordinates.findIndex(
-      (obj) => obj._id === dragtile._id
+      (obj) => obj._id === dragtile._id,
     );
     let tiles = tileCordinates;
     tiles.splice(dragTileIndex, 1);
@@ -451,7 +666,20 @@ export default function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
-          // console.log("update Drag Coordinate")
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                  (tile) =>
+                    tile._id === tileId ? { ...tile, ...res.data } : tile,
+                ),
+              };
+            },
+          );
         }
       });
     } else {
@@ -473,7 +701,20 @@ export default function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
         if (res.data) {
-          // console.log("update resize")
+          // Update React Query cache
+          queryClient.setQueryData(
+            dashboardKeys.detail(activeBoard),
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
+                  (tile) =>
+                    tile._id === tileId ? { ...tile, ...res.data } : tile,
+                ),
+              };
+            },
+          );
         }
       });
     } else {
@@ -576,7 +817,23 @@ export default function GridTiles({
         let item = { ...items[selectedTile], ...res.data };
         items[selectedTile] = item;
         setTileCordinates(items);
+
+        // Update React Query cache
+        queryClient.setQueryData(
+          dashboardKeys.detail(activeBoard),
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: oldData.tiles.map((tile) =>
+                tile._id === tileId ? res.data : tile,
+              ),
+            };
+          },
+        );
+
         setSelectedTile(null);
+        // Do not auto-resize on save from double-click editor
       });
     } else {
       let item = {
@@ -587,7 +844,12 @@ export default function GridTiles({
       items[selectedTile] = item;
       setTileCordinates(items);
       updateTilesInLocalstorage(items);
+
+      // Store selectedTile before setting it to null
+      const currentSelectedTile = selectedTile;
       setSelectedTile(null);
+
+      // Do not auto-resize on save from double-click editor (guest)
     }
   };
 
@@ -652,28 +914,21 @@ export default function GridTiles({
   const tileClone = (index) => {
     let content = tileCordinates[index];
 
-    const newTileWidth = parseInt(content.width);
-    const newTileMargin = 5;
-    const windowWidth = window.innerWidth;
-    const maxTileX = windowWidth - newTileWidth - newTileMargin - 10;
-    let newTileX = content.x + newTileWidth + newTileMargin;
-
-    if (newTileX > maxTileX) {
-      newTileX = content.x - newTileWidth - newTileMargin;
-    }
+    // Always place cloned block in fixed location
+    const FIXED_X = 25;
+    const FIXED_Y = 25;
 
     const newTile = {
       ...content,
-      x: newTileX,
-      y: content.y,
+      x: FIXED_X,
+      y: FIXED_Y,
     };
 
     setShowModel(false);
     if (dbUser) {
       newTile.dashboardId = activeBoard;
-      axios.post("/api/tile/tile", newTile).then((res) => {
-        setTileCordinates([...tileCordinates, res.data]);
-      });
+      // Use mutation for optimistic clone
+      cloneMutation.mutate(newTile);
     } else {
       let items = [...tileCordinates, newTile];
       setTileCordinates(items);
@@ -720,18 +975,36 @@ export default function GridTiles({
     return style;
   };
 
-  const isBackgroundImage = (url) => {
+  const isBackgroundImage = useCallback((url) => {
     if (url) {
-      // if (url.startsWith("data:image/")) {
-      //   return true;
-      // }
       const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
       let isImage = imageExtensions.some((ext) =>
-        url.toLowerCase().endsWith(ext)
+        url.toLowerCase().includes(ext),
       );
       return isImage;
     }
-  };
+  }, []);
+
+  // Memoize per-tile styles keyed by tile coordinates and background to
+  // avoid stale styles while allowing updates when position/size/background changes.
+  const tileDepsKey = useMemo(() => {
+    return tileCordinates
+      .map(
+        (t) =>
+          `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`,
+      )
+      .join(",");
+  }, [tileCordinates]);
+
+  const tileStyles = useMemo(() => {
+    return tileCordinates.map((tile, index) => ({
+      index,
+      style: style(index, tile),
+      isImageBackground: tile.tileBackground
+        ? isBackgroundImage(tile.tileBackground)
+        : false,
+    }));
+  }, [tileDepsKey, style, isBackgroundImage]);
 
   const currentBackground = (tile) => {
     if (tile.tileBackground) {
@@ -758,77 +1031,99 @@ export default function GridTiles({
   return (
     <div className="main_grid_container">
       <div className="tiles_container">
-        {tileCordinates.map((tile, index) => (
-          <Rnd
-            key={index}
-            onMouseLeave={() => setShowOption(null)}
-            className="tile"
-            style={style(index, tile)}
-            size={{ width: tile.width, height: tile.height }}
-            position={{ x: tile.x, y: tile.y }}
-            onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
-            onResizeStop={(e, direction, ref, delta, position) =>
-              handleResizeStop(e, direction, ref, delta, position, index)
-            }
-            onDoubleClick={(e) =>
-              onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
-            }
-            minWidth={minHeightWidth[index]?.width || 50}
-            minHeight={minHeightWidth[index]?.height || 50}
-            onResize={(e, direction, ref, delta, position) =>
-              onResize(index, e, direction, ref, delta, position)
-            }
-            id={tile._id}
-            onResizeStart={() => setResizeCount(0)}
-            dragGrid={[5, 5]}
-            onTouchStart={(e) => {
-              if (isDblTouchTap(e)) {
-                onDoubleTap(
-                  e,
-                  tile.action,
-                  tile.tileContent,
-                  tile,
-                  index,
-                  null
-                );
-              } else {
-                setShowOption(`tile_${index}`);
+        {tileCordinates.map((tile, index) => {
+          const computedStyle = style(index, tile);
+          const isImgBackground = isBackgroundImage(tile.tileBackground);
+          return (
+            <Rnd
+              key={tile._id || index}
+              onMouseLeave={() => setShowOption(null)}
+              className="tile"
+              style={computedStyle}
+              size={{ width: tile.width, height: tile.height }}
+              position={{ x: tile.x, y: tile.y }}
+              onDragStop={(e, d) => handleDragStop(e, d, tile, index)}
+              onResizeStop={(e, direction, ref, delta, position) =>
+                handleResizeStop(e, direction, ref, delta, position, index)
               }
-            }}
-            onDrag={(event, data) => {
-              const tileRight = data.x + parseInt(tile.width, 10);
-              if (tileRight > headerwidth) {
-                setHeaderWidth(tileRight);
+              onDoubleClick={(e) =>
+                onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
               }
-            }}
-          >
-            <div
-              className="text_overlay"
-              style={TitlePositionStyle(tile)}
-              dangerouslySetInnerHTML={{
-                __html: changedTitlehandle(index, tile),
+              minWidth={minHeightWidth[index]?.width || 50}
+              minHeight={minHeightWidth[index]?.height || 50}
+              onResize={(e, direction, ref, delta, position) =>
+                onResize(index, e, direction, ref, delta, position)
+              }
+              id={tile._id}
+              onResizeStart={() => setResizeCount(0)}
+              dragGrid={[5, 5]}
+              onTouchStart={(e) => {
+                if (isDblTouchTap(e)) {
+                  onDoubleTap(
+                    e,
+                    tile.action,
+                    tile.tileContent,
+                    tile,
+                    index,
+                    null,
+                  );
+                } else {
+                  setShowOption(`tile_${index}`);
+                }
               }}
-            ></div>
-            {isBackgroundImage(tile.tileBackground) && (
-              <img draggable="false" src={tile.tileBackground} alt="Preview" />
-            )}
-            <div
-              className="showOptions absolute top-0 right-2 cursor-pointer"
-              onClick={(e) => openModel(e, index, null)}
+              onDrag={(event, data) => {
+                const tileRight = data.x + parseInt(tile.width, 10);
+                if (tileRight > headerwidth) {
+                  setHeaderWidth(tileRight);
+                }
+              }}
             >
-              <MoreHorizSharpIcon />
-            </div>
-            {showOption == `tile_${index}` && (
+              {tile.displayTitle && (
+                <div
+                  className="text_overlay"
+                  style={TitlePositionStyle(tile)}
+                  dangerouslySetInnerHTML={{
+                    __html: changedTitlehandle(index, tile),
+                  }}
+                />
+              )}
+              {isImgBackground && (
+                <Image
+                  src={tile.tileBackground}
+                  alt="Preview"
+                  fill
+                  priority={index < 6}
+                  quality={75}
+                  // Use unoptimized for external CDN URLs to allow browser parallel loading
+                  unoptimized={
+                    tile.tileBackground &&
+                    tile.tileBackground.startsWith("http")
+                  }
+                  style={{
+                    objectFit: "cover",
+                    borderRadius: "10px",
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
               <div
-                className="absolute top-0 right-2 cursor-pointer "
-                onTouchStart={(e) => openModel(e, index, null)}
+                className="showOptions absolute top-0 right-2 cursor-pointer"
+                onClick={(e) => openModel(e, index, null)}
               >
                 <MoreHorizSharpIcon />
               </div>
-            )}{" "}
-            {/* For Mobile view port  */}
-          </Rnd>
-        ))}
+              {showOption == `tile_${index}` && (
+                <div
+                  className="absolute top-0 right-2 cursor-pointer "
+                  onTouchStart={(e) => openModel(e, index, null)}
+                >
+                  <MoreHorizSharpIcon />
+                </div>
+              )}{" "}
+              {/* For Mobile view port  */}
+            </Rnd>
+          );
+        })}
       </div>
 
       {/* Tiles Property Model */}
@@ -1020,45 +1315,24 @@ export default function GridTiles({
         </div>
       </Dialog>
 
-      <Dialog open={editorOpen}>
+      <Dialog maxWidth={"md"} open={editorOpen}>
         <DialogContent
-          sx={{ width: "600px", height: "500px", overflow: "hidden" }}
+          sx={{
+            height: "540px",
+            // overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.8rem",
+          }}
         >
-          <SunEditor
-            value={formValue.tileText}
-            defaultValue={selectedTileDetail.tileText}
-            onChange={enterText}
-            setOptions={{
-              buttonList: [
-                ["undo", "redo"],
-                [
-                  "bold",
-                  "underline",
-                  "italic",
-                  "strike",
-                  "subscript",
-                  "superscript",
-                ],
-                ["formatBlock"],
-                ["removeFormat"],
-                ["fontColor", "hiliteColor"],
-                ["lineHeight"],
-                ["font", "fontSize"],
-                ["align", "list"],
-                ["outdent", "indent"],
-
-                ["table", "horizontalRule", "link"],
-                ["paragraphStyle", "blockquote"],
-              ],
-              defaultTag: "div",
-              colorList: colors,
-              minHeight: "370px",
-              maxHeight: "370px",
-              showPathLabel: false,
-              font: fonts,
-            }}
-            width="100%"
-          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <TipTapMainEditor
+              initialContent={
+                formValue.tileText || selectedTileDetail.tileText || ""
+              }
+              onContentChange={(html) => enterText(html)}
+            />
+          </div>
         </DialogContent>
         <DialogActions>
           <div
@@ -1088,7 +1362,8 @@ export default function GridTiles({
         </DialogActions>
       </Dialog>
 
-      <TextEditor
+      {/* <TextEditor */}
+      <TipTapTextEditorDialog
         open={openTextEditor}
         onClose={handleCloseTextEditor}
         content={textEditorContent}
@@ -1099,4 +1374,6 @@ export default function GridTiles({
       />
     </div>
   );
-}
+});
+
+export default GridTiles;

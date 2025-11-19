@@ -14,7 +14,7 @@ const podData = async (req, res) => {
         const updated = await Pod.findByIdAndUpdate(
           { _id: id },
           { $set: updatedData },
-          { new: true }
+          { new: true },
         );
         if (updated) {
           res.status(200).json(updated);
@@ -31,14 +31,14 @@ const podData = async (req, res) => {
           const updateTile = await Tile.findOneAndUpdate(
             { _id: id },
             { $set: { isInsidePod: false } },
-            { new: true }
+            { new: true },
           );
         });
         if (deletedPod) {
           const deletefromBoard = await Dashboard.findOneAndUpdate(
             { pods: { $in: [id] } },
             { $pull: { pods: id } },
-            { new: true }
+            { new: true },
           );
           res.status(200).json({ message: "delete Sucess" });
         } else {

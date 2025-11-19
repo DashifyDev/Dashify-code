@@ -1,0 +1,317 @@
+.tiptap-editor-container .tiptap-link {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-editor-container .tiptap-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.tiptap-editor-container .ProseMirror {
+  min-height: 350px;
+  padding: 10px;
+  line-height: normal;
+}
+.tiptap-editor-container .ProseMirror p {
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+.tiptap-editor-container .ProseMirror .tableWrapper {
+  margin: 1em 0;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.tiptap-editor-container .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: auto;
+}
+.tiptap-editor-container .ProseMirror th,
+.tiptap-editor-container .ProseMirror td {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  min-width: 40px;
+  vertical-align: top;
+  white-space: normal;
+}
+.tiptap-editor-container .ProseMirror th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+.tiptap-editor-container .ProseMirror .selectedCell:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(59, 130, 246, 0.2);
+  pointer-events: none;
+}
+.tiptap-editor-container .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #3b82f6;
+  opacity: 0.25;
+}
+.tiptap-editor-container .ProseMirror td:hover .column-resize-handle,
+.tiptap-editor-container .ProseMirror th:hover .column-resize-handle {
+  opacity: 0.5;
+}
+
+.tiptap-editor-container .ProseMirror td p,
+.tiptap-editor-container .ProseMirror th p {
+  margin: 0;
+}
+.tiptap-editor-container .ProseMirror td,
+.tiptap-editor-container .ProseMirror th {
+  word-break: break-word;
+}
+.tiptap-editor-container .ProseMirror td img,
+.tiptap-editor-container .ProseMirror th img {
+  max-width: 100%;
+  height: auto;
+}
+
+.tiptap-editor-container .ProseMirror table[data-layout="full-width"] {
+  width: 100% !important;
+}
+.tiptap-editor-container .ProseMirror .tableWrapper.full-width {
+  display: block;
+  width: 100%;
+}
+.tiptap-editor-container .ProseMirror .tableWrapper.full-width table {
+  width: 100% !important;
+}
+
+.tiptap-editor-container .tiptap-scroll-area {
+  min-height: 350px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.link-bubble-menu,
+.table-bubble-menu {
+  z-index: 99999;
+}
+
+.tiptap-editor-container .ProseMirror blockquote {
+  border-left: 10px solid #e5e7eb;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: #f9fafb;
+}
+
+.tiptap-editor-container .ProseMirror pre {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  font-family: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 1em 0;
+  overflow-x: auto;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tiptap-editor-container .ProseMirror pre code {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  font-size: 0.9em;
+  padding: 0;
+}
+
+.tiptap-editor-container .ProseMirror pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tiptap-editor-container .ProseMirror pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap-editor-container .ProseMirror pre::-webkit-scrollbar-thumb {
+  background-color: #4a4a4a;
+  border-radius: 10px;
+  border: 2px solid #0d1117;
+}
+
+.tiptap-editor-container .ProseMirror pre::-webkit-scrollbar-thumb:hover {
+  background-color: #6a6a6a;
+}
+
+.tiptap-editor-container .ProseMirror p.text-style-spaced {
+  letter-spacing: 0.15em;
+}
+
+.tiptap-editor-container .ProseMirror p.text-style-bordered {
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  padding: 0.5em 0;
+}
+
+.tiptap-editor-container .ProseMirror p.text-style-neon {
+  font-family: "Helvetica Neue", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+  background: #000;
+  color: #fff;
+  padding: 6px 4px;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  text-transform: uppercase;
+  animation: neonFlicker 1.5s infinite alternate;
+
+  box-shadow:
+    rgb(255, 255, 255) 0px 0px 0.5px 0px,
+    rgb(255, 255, 255) 0px 0px 0.5px 0px inset,
+    rgb(0, 136, 255) 0px 0px 2px 0px,
+    rgb(0, 136, 255) 0px 0px 2px 0px inset,
+    rgb(0, 136, 255) 0px 0px 4px 0px,
+    rgb(0, 136, 255) 0px 0px 4px 0px inset;
+  text-shadow:
+    rgb(255, 255, 255) -3.2px -3.2px 16px,
+    rgb(255, 255, 255) 3.2px 3.2px 16px,
+    rgb(255, 68, 0) 0px 0px 2px,
+    rgb(255, 68, 0) 0px 0px 4px,
+    rgb(255, 68, 0) 0px 0px 6px,
+    rgb(255, 68, 0) 0px 0px 8px,
+    rgb(255, 68, 0) 0px 0px 10px;
+}
+
+.text-style-dropdown {
+  position: relative;
+  display: inline-block;
+  margin: 0 4px;
+}
+
+.dropdown-toggle-btn {
+  height: 2rem;
+  width: 2.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.dropdown-toggle-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin-top: 4px;
+  padding: 4px;
+  width: 200px;
+  z-index: 1000;
+}
+
+.dropdown-menu li {
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-item {
+  width: 100%;
+  /* text-align: left; */
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-item.is-active {
+  background-color: #e0e8f9;
+}
+
+.dropdown-item.text-style-neon {
+  font-family: "Helvetica Neue", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+  background: #000;
+  color: #fff;
+  padding: 6px 4px;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  text-transform: uppercase;
+
+  box-shadow:
+    rgb(255, 255, 255) 0px 0px 0.5px 0px,
+    rgb(255, 255, 255) 0px 0px 0.5px 0px inset,
+    rgb(0, 136, 255) 0px 0px 2px 0px,
+    rgb(0, 136, 255) 0px 0px 2px 0px inset,
+    rgb(0, 136, 255) 0px 0px 4px 0px,
+    rgb(0, 136, 255) 0px 0px 4px 0px inset;
+  text-shadow:
+    rgb(255, 255, 255) -3.2px -3.2px 16px,
+    rgb(255, 255, 255) 3.2px 3.2px 16px,
+    rgb(255, 68, 0) 0px 0px 2px,
+    rgb(255, 68, 0) 0px 0px 4px,
+    rgb(255, 68, 0) 0px 0px 6px,
+    rgb(255, 68, 0) 0px 0px 8px,
+    rgb(255, 68, 0) 0px 0px 10px;
+}
+
+.dropdown-item.text-style-bordered {
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  padding: 0.5em 0;
+}
+
+.dropdown-item.text-style-spaced {
+  letter-spacing: 0.15em;
+}
+
+@keyframes neonFlicker {
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    text-shadow:
+      0 0 5px #fff,
+      0 0 10px #ff5733,
+      0 0 15px #ff5733,
+      0 0 20px #e60000;
+
+    box-shadow:
+      0 0 5px #0077ff,
+      0 0 10px #0077ff,
+      0 0 20px #0077ff;
+  }
+
+  20%,
+  24%,
+  55% {
+    text-shadow: none;
+    box-shadow: none;
+  }
+}

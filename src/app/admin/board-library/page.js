@@ -20,6 +20,7 @@ import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
+import Image from "next/image";
 
 function board_library() {
   const [addBoardData, setAddBoardData] = useState({});
@@ -144,7 +145,14 @@ function board_library() {
                     {board.keywords.join(", ")}
                   </TableCell>
                   <TableCell align="center" className="image-cell">
-                    <img src={board.boardImage} className="image-cell-style" />
+                    <Image
+                      src={board.boardImage}
+                      alt={board.boardName || "Board image"}
+                      width={100}
+                      height={60}
+                      className="image-cell-style"
+                      style={{ objectFit: "cover" }}
+                    />
                   </TableCell>
                   <TableCell align="center">{board.boardLink}</TableCell>
                   <TableCell align="center">{board.rating}</TableCell>
@@ -253,13 +261,17 @@ function board_library() {
             />
           </div>
           <div className="modal-div-style">
-              <label>Description</label>
-              <textarea 
+            <label>Description</label>
+            <textarea
               className="modal-input-style"
               value={addBoardData.boardDescription}
-              onChange={(event)=>{
-                setAddBoardData({...addBoardData,boardDescription:event.target.value})
-              }}/>
+              onChange={(event) => {
+                setAddBoardData({
+                  ...addBoardData,
+                  boardDescription: event.target.value,
+                });
+              }}
+            />
           </div>
           <div className="modal-label-style">
             <label>Image</label>
@@ -271,7 +283,13 @@ function board_library() {
             <input {...getInputProps()} />
 
             {imageData ? (
-              <img src={imageData} alt="" />
+              <Image
+                src={imageData}
+                alt="Preview"
+                width={200}
+                height={120}
+                style={{ objectFit: "cover" }}
+              />
             ) : (
               <p>Drag 'n' drop some files here, or click to select files</p>
             )}

@@ -1,130 +1,367 @@
-"use client"
-import React, { useEffect, useContext, useState } from 'react'
-import { globalContext } from '@/context/globalContext';
-import GridTiles from '@/components/GridTiles';
-import axios from 'axios';
-import { useParams } from 'next/navigation';
+"use client";
 
-function page({params}) {
-  
-  const { id } = params
-  const { dbUser, tiles, setTiles ,boards,setBoards,
-          activeBoard, setActiveBoard,setHeaderWidth } = useContext(globalContext)
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+} from "react";
+import axios from "axios";
+import { useParams } from "next/navigation";
+import { useDashboardData } from "@/context/optimizedContext";
+import dynamic from "next/dynamic";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
-    useEffect(()=>{
-      const pageTitle=boards.filter(boardId=>activeBoard===boardId._id)
-      if(pageTitle.length>0){
-        const pageName=pageTitle[0].name
-        document.title= pageName
-      }
-    },[id,activeBoard])
+const GridTiles = dynamic(() => import("@/components/GridTiles"), {
+  ssr: false,
+  loading: () => <LoadingSpinner text={"Loading board..."} fullScreen={true} />,
+});
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { dashboardKeys } from "@/hooks/useDashboard";
+import { globalContext } from "@/context/globalContext";
+import useAdmin from "@/hooks/isAdmin";
 
-    useEffect(()=>{
-      if(tiles.length>0){
-        let maxWidth=getTileMaxWidth()
-        const windowWidth = window.innerWidth;
-        const newMaxWidth=Math.max(windowWidth,maxWidth)
-        setHeaderWidth(newMaxWidth)
-      }
-    },[tiles])
+function OptimizedDashboardPage() {
+  const { id } = useParams();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  const { boards, setBoards, dbUser, isBoardsLoaded } =
+    useContext(globalContext);
+  const isAdmin = useAdmin();
+  const router = useRouter();
+
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+    isFetching,
+  } = useDashboardData(id);
+
+  // Preload next boards
+  useEffect(() => {
+    if (dashboardData && dashboardData.relatedBoards) {
+      dashboardData.relatedBoards.forEach((boardId) => {
+        queryClient.prefetchQuery({
+          queryKey: dashboardKeys.detail(boardId),
+          queryFn: async () => {
+            const response = await fetch(`/api/dashboard/${boardId}`);
+            return response.json();
+          },
+          staleTime: 5 * 60 * 1000,
+        });
+      });
+    }
+  }, [dashboardData, queryClient]);
+
+  const [tiles, setTiles] = useState([]);
+  const [pods, setPods] = useState([]);
+  const [activeBoard, setActiveBoard] = useState(id);
+  const [headerWidth, setHeaderWidth] = useState(0);
+  const [addedFlag, setAddedFlag] = useState(false);
 
   useEffect(() => {
-    if (boards.length >= 1) {
-      if (dbUser) {
-        let index = boards.findIndex(obj => obj._id === id)
-        let isSameUser
-        if (index >= 0) {
-          isSameUser = true
-        }
-        else {
-          isSameUser = false
-        }
-        getTileDataWhileUser(isSameUser)
+    if (dashboardData) {
+      setTiles(dashboardData.tiles || []);
+      setPods(dashboardData.pods || []);
+      setActiveBoard(id);
+    }
+  }, [dashboardData, id]);
+
+  useEffect(() => {
+    if (
+      dashboardData &&
+      isBoardsLoaded &&
+      !boards.some((el) => el?._id === dashboardData?._id) &&
+      dashboardData?.userId !== dbUser?._id &&
+      !addedFlag
+    ) {
+      addBoard(dashboardData);
+      setAddedFlag(true);
+    }
+  }, [boards, dashboardData, dbUser, isBoardsLoaded]);
+
+  const addBoard = (data) => {
+    let payload;
+    if (dbUser) {
+      if (isAdmin) {
+        payload = {
+          name: data.name,
+          userId: dbUser._id,
+          hasAdminAdded: true,
+        };
+      } else {
+        payload = {
+          name: data.name,
+          userId: dbUser._id,
+        };
       }
-      else {
-        let boards = JSON.parse(localStorage.getItem("Dasify"));
-        if (boards) {
-          if (boards.length > 0) {
-            let index = boards.findIndex(obj => obj._id === id)
-            if (index >= 0) {
-              setActiveBoard(id)
-              setTiles(boards[index].tiles);
+      axios.post("/api/dashboard/addDashboard", payload).then((res) => {
+        const newBoard = res.data;
+
+        const boardTiles = data.tiles.map((el) => {
+          const tileCopy = { ...el };
+          delete tileCopy._id;
+          tileCopy.dashboardId = newBoard._id;
+          return tileCopy;
+        });
+
+        axios
+          .post("/api/tile/tiles", {
+            dashboardId: newBoard._id,
+            tiles: boardTiles,
+          })
+          .then((resp) => {
+            setTiles(resp.data.tiles);
+            newBoard.tiles = resp.data.tiles;
+            setBoards((prev) => [newBoard, ...prev]);
+
+            try {
+              queryClient.invalidateQueries({
+                queryKey: dashboardKeys.lists(),
+              });
+              queryClient.setQueryData(
+                dashboardKeys.detail(newBoard._id),
+                newBoard,
+              );
+            } catch (e) {
+              console.warn(
+                "Failed to update query cache after creating dashboard",
+                e,
+              );
             }
-            else {
-              getTileDataWhileGuestUser()
+            router.push(`/dashboard/${newBoard._id}`);
+          });
+      });
+    } else {
+      const boardId = uuidv4();
+      const newTiles = data.tiles.map((tile) => {
+        tile._id = uuidv4();
+        tile.dashboardId = boardId;
+        return tile;
+      });
+      let payload = {
+        _id: boardId,
+        name: data.name,
+        tiles: newTiles,
+      };
+      let items = boards;
+      items = [payload, ...items];
+      localStorage.setItem("Dasify", JSON.stringify(items));
+      setBoards(items);
+      setTiles(newTiles);
+
+      try {
+        const detailKey = dashboardKeys.detail(newBoard._id);
+        queryClient.setQueryData(detailKey, (oldData) => {
+          if (oldData) {
+            return {
+              ...oldData,
+              tiles: items[newBoard._id].tiles,
+            };
+          }
+          return {
+            _id: items[newBoard._id]._id,
+            name: items[newBoard._id].name || "",
+            tiles: items[newBoard._id].tiles,
+            pods: items[newBoard._id].pods || [],
+          };
+        });
+      } catch (e) {
+        console.warn("Failed to update query cache for local board", e);
+      }
+
+      router.push(`/dashboard/${boardId}`);
+    }
+  };
+
+  useEffect(() => {
+    if (dashboardData?.name) {
+      document.title = dashboardData.name;
+    }
+  }, [dashboardData?.name]);
+
+  const maxWidth = useMemo(() => {
+    if (tiles.length === 0) return 0;
+    return Math.max(
+      ...tiles.map((tile) => {
+        const widthValue = parseInt(tile.width, 10) || 0;
+        const xValue = tile.x || 0;
+        return widthValue + xValue;
+      }),
+    );
+  }, [tiles]);
+
+  useEffect(() => {
+    if (tiles.length > 0) {
+      const windowWidth = window.innerWidth;
+      const newMaxWidth = Math.max(windowWidth, maxWidth);
+      setHeaderWidth(newMaxWidth);
+    }
+  }, [tiles, maxWidth]);
+
+  const handleTileUpdate = useCallback(
+    (updatedTiles) => {
+      setTiles(updatedTiles);
+
+      queryClient.setQueryData(dashboardKeys.detail(id), (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          tiles: updatedTiles,
+        };
+      });
+    },
+    [id, queryClient],
+  );
+
+  const updateTilesInLocalstorage = useCallback(
+    (tileArray) => {
+      if (!user) {
+        const existingBoards = JSON.parse(
+          localStorage.getItem("Dasify") || "[]",
+        );
+        const boardIndex = existingBoards.findIndex(
+          (board) => board._id === activeBoard,
+        );
+        if (boardIndex >= 0) {
+          const updatedBoards = [...existingBoards];
+          updatedBoards[boardIndex] = {
+            ...updatedBoards[boardIndex],
+            tiles: tileArray,
+          };
+          localStorage.setItem("Dasify", JSON.stringify(updatedBoards));
+          setBoards(updatedBoards);
+        }
+      }
+    },
+    [user, activeBoard, setBoards],
+  );
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            border: "4px solid #f3f3f3",
+            borderTop: "4px solid #63899e",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        />
+        <div style={{ color: "#666" }}>Loading dashboard...</div>
+        <style jsx>{`
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
             }
           }
-        }
-      };
-    }
-  }, [id,dbUser, boards.length>=1])
-
-  const getTileDataWhileGuestUser = () => {
-    axios.get(`/api/dashboard/${id}`).then((res) => {
-      setActiveBoard(id)
-      setTiles(res.data.tiles)
-      setBoards((prev) => {
-        let data = [res.data, ...prev]
-       localStorage.setItem('Dasify', JSON.stringify(data));
-       return [res.data, ...prev]
-      })
-    })
+        `}</style>
+      </div>
+    );
   }
 
-  const getTileMaxWidth=()=>{
-    const maxWidth=
-      tiles.map(item => {
-        const widthValue = parseInt(item.width, 10) || 0;
-        const xValue = item.x || 0;
-        const sum = widthValue + xValue;
-        return sum;
-      })
-    return(Math.max(...maxWidth))
+  if (error) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <div style={{ color: "#e74c3c", fontSize: "18px" }}>
+          Error loading dashboard
+        </div>
+        <div style={{ color: "#666" }}>
+          {error.message || "Something went wrong"}
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#63899e",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
-  const getTileDataWhileUser = (sameUser) => {
-    axios.get(`/api/dashboard/${id}`).then((res) => {
-      if(sameUser){
-        setActiveBoard(id)
-        setTiles(res.data.tiles)
-      }
-      else if(!sameUser){
-        assignDatatoUser(res.data)
-      }
-    })
-  }
-
-  const assignDatatoUser = async(data) => {
-    const response = await axios.post(`/api/manage/addLink?id=${dbUser._id}`,data)
-    let dashboard = response.data
-    setActiveBoard(dashboard._id)
-    setTiles(dashboard.tiles)
-    setBoards((prev) =>{  
-      return [dashboard , ...prev ]
-    })
-  }
-
-
-  const updateTilesInLocalstorage= (tileArray) => {
-    let items = boards
-    let boardIndex = items.findIndex(obj => obj._id === activeBoard);
-    let item = items[boardIndex]
-    item.tiles = tileArray
-    items[boardIndex] = item
-    setBoards(items)
-    localStorage.setItem("Dasify",JSON.stringify(items))
+  if (!dashboardData) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <div style={{ color: "#666", fontSize: "18px" }}>
+          Dashboard not found
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
+      {}
+      {isFetching && (
+        <div
+          style={{
+            position: "fixed",
+            top: "10px",
+            right: "10px",
+            backgroundColor: "#63899e",
+            color: "white",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            zIndex: 1000,
+          }}
+        >
+          Updating...
+        </div>
+      )}
+
+      {}
       <GridTiles
         tileCordinates={tiles}
-        setTileCordinates={setTiles}
-        updateTilesInLocalstorage={updateTilesInLocalstorage}
+        setTileCordinates={handleTileUpdate}
         activeBoard={activeBoard}
+        updateTilesInLocalstorage={updateTilesInLocalstorage}
       />
     </div>
-  )
+  );
 }
 
-export default page
+export default OptimizedDashboardPage;

@@ -1,48 +1,47 @@
-import { Schema, model, models,mongoose } from 'mongoose';
+import { Schema, model, models, mongoose } from "mongoose";
 
 const dashboardSchema = new Schema({
-    name: {
-        type: String,
-        required: true
+  name: {
+    type: String,
+    required: true,
+  },
+  tiles: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Tile",
     },
-    tiles: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Tile'
-        }
-    ],
-    pods : [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Pod'
-        }
-    ],
-    userId : {
-        type: Schema.Types.ObjectId,
-        ref: 'User'
+  ],
+  pods: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Pod",
     },
+  ],
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
 
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 
-    sessionId : {
-        type : String,
-    },
+  sessionId: {
+    type: String,
+  },
 
-    default: {
-        type:Boolean
-    },
-    position : {
-        type : Number
-    },
-    hasAdminAdded:{
-        type:Boolean
-    }
+  default: {
+    type: Boolean,
+  },
+  position: {
+    type: Number,
+  },
+  hasAdminAdded: {
+    type: Boolean,
+  },
 });
 
-
-const Dashboard = models.Dashboard || model('Dashboard', dashboardSchema);
+const Dashboard = models.Dashboard || model("Dashboard", dashboardSchema);
 
 export default Dashboard;

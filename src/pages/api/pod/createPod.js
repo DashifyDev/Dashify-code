@@ -18,7 +18,7 @@ const createPod = async (req, res) => {
           const updateTile = await Tile.findOneAndUpdate(
             { _id: id },
             { $set: { isInsidePod: true } },
-            { new: true }
+            { new: true },
           );
         });
 
@@ -41,7 +41,7 @@ const createPod = async (req, res) => {
           { _id: boardId },
           {
             $set: { pods: dashboard.pods },
-          }
+          },
         );
         if (updatedDashBoard) {
           res.status(200).json(pod);

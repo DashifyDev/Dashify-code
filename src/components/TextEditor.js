@@ -39,7 +39,7 @@ const TextEditor = ({
   useEffect(() => {
     setTextBoxHeading(
       tileDetails[selectedTileIndex] &&
-        tileDetails[selectedTileIndex].editorHeading
+        tileDetails[selectedTileIndex].editorHeading,
     );
     setLeftArrowButtonState(true);
     setRightArrowButtonState(true);
