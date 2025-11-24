@@ -17,7 +17,7 @@ const defaultDashboard = async (req, res) => {
           userId: adminUser._id,
         })
           .populate("tiles")
-          .sort({ position: 1, createdAt: 1 });
+          .sort({ createdAt: -1 });
 
         let adminBoards = allAdminBoards.filter((board) => {
           const userIdMatch =
@@ -37,7 +37,8 @@ const defaultDashboard = async (req, res) => {
         }
 
         if (adminBoards && adminBoards.length > 0) {
-          res.status(200).send(adminBoards);
+          const newestBoard = adminBoards[0];
+          res.status(200).send([newestBoard]);
         } else {
           res.status(400).send("No Admin Board Found");
         }
@@ -47,4 +48,3 @@ const defaultDashboard = async (req, res) => {
   }
 };
 export default defaultDashboard;
-
