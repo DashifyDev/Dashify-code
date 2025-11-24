@@ -37,8 +37,20 @@ const defaultDashboard = async (req, res) => {
         }
 
         if (adminBoards && adminBoards.length > 0) {
-          const newestBoard = adminBoards[0];
-          res.status(200).send([newestBoard]);
+          const newestAdminBoard = adminBoards[0];
+
+          const nonAdminBoards = allAdminBoards.filter((board) => {
+            const userIdMatch =
+              board.userId?.toString() === adminUser._id.toString() ||
+              (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
+            const hasAdminFlag = board.hasAdminAdded === true;
+            return userIdMatch && !hasAdminFlag;
+          });
+
+          const selectedNonAdminBoards = nonAdminBoards.slice(0, 10);
+
+          const result = [newestAdminBoard, ...selectedNonAdminBoards];
+          res.status(200).send(result);
         } else {
           res.status(400).send("No Admin Board Found");
         }
