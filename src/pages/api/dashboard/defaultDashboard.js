@@ -38,13 +38,16 @@ const defaultDashboard = async (req, res) => {
 
         if (adminBoards && adminBoards.length > 0) {
           const newestAdminBoard = adminBoards[0];
+          const adminBoardId = newestAdminBoard._id.toString();
 
           const nonAdminBoards = allAdminBoards.filter((board) => {
             const userIdMatch =
               board.userId?.toString() === adminUser._id.toString() ||
               (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
             const hasAdminFlag = board.hasAdminAdded === true;
-            return userIdMatch && !hasAdminFlag;
+            const boardId = board._id.toString();
+            const isNotAdminBoard = boardId !== adminBoardId;
+            return userIdMatch && !hasAdminFlag && isNotAdminBoard;
           });
 
           const selectedNonAdminBoards = nonAdminBoards.slice(0, 10);
