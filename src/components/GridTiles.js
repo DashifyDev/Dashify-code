@@ -1,73 +1,58 @@
-"use client";
-"use strict";
-import dynamic from "next/dynamic";
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useContext,
-  memo,
-  useCallback,
-  useMemo,
-} from "react";
-import "../styles/styles.css";
-import { Rnd } from "react-rnd";
+'use client';
+'use strict';
+import dynamic from 'next/dynamic';
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Rnd } from 'react-rnd';
+import '../styles/styles.css';
 
-import MoreHorizSharpIcon from "@mui/icons-material/MoreHorizSharp";
-import Radio from "@mui/material/Radio";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import FormControl from "@mui/material/FormControl";
-import DifferenceOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
-import ColorPicker from "./ColorPicker";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import Dialog from "@mui/material/Dialog";
-import Button from "@mui/material/Button";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
+import { globalContext } from '@/context/globalContext';
+import isDblTouchTap from '@/hooks/isDblTouchTap';
+import { dashboardKeys } from '@/hooks/useDashboard';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
+import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import Image from 'next/image';
+import 'suneditor/dist/css/suneditor.min.css';
+import imageUpload from '../assets/imageUpload.jpg';
+import text from '../assets/text.png';
+import ColorPicker from './ColorPicker';
 
-const TipTapMainEditor = dynamic(
-  () => import("./TipTapEditor/TipTapMainEditor"),
-  {
-    loading: () => <div>Loading editor...</div>,
-    ssr: false,
-  },
-);
+const TipTapMainEditor = dynamic(() => import('./TipTapEditor/TipTapMainEditor'), {
+  loading: () => <div>Loading editor...</div>,
+  ssr: false
+});
 
-const TipTapTextEditorDialog = dynamic(
-  () => import("./TipTapEditor/TipTapTextEditorDialog"),
-  {
-    loading: () => <div>Loading dialog...</div>,
-    ssr: false,
-  },
-);
-import axios from "axios";
-import { globalContext } from "@/context/globalContext";
-import isDblTouchTap from "@/hooks/isDblTouchTap";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { dashboardKeys } from "@/hooks/useDashboard";
-import "suneditor/dist/css/suneditor.min.css";
-import { fonts, colors } from "@/constants/textEditorConstant";
-import imageUpload from "../assets/imageUpload.jpg";
-import text from "../assets/text.png";
-import Image from "next/image";
+const TipTapTextEditorDialog = dynamic(() => import('./TipTapEditor/TipTapTextEditorDialog'), {
+  loading: () => <div>Loading dialog...</div>,
+  ssr: false
+});
 
-const SunEditor = dynamic(() => import("suneditor-react"), {
-  ssr: false,
+const SunEditor = dynamic(() => import('suneditor-react'), {
+  ssr: false
 });
 
 const GridTiles = memo(function GridTiles({
   tileCordinates,
   setTileCordinates,
   activeBoard,
-  updateTilesInLocalstorage,
+  updateTilesInLocalstorage
 }) {
   const [showOption, setShowOption] = useState(null);
   const [showModel, setShowModel] = useState(false);
   const [selectedTile, setSelectedTile] = useState(null);
   const [selectedPod, setSelectedPod] = useState(null);
-  const [colorImage, setColorImage] = useState("color");
-  const [textLink, setTextLink] = useState("text");
+  const [colorImage, setColorImage] = useState('color');
+  const [textLink, setTextLink] = useState('text');
   const [imageFileName, setImageFileName] = useState(null);
   const [formValue, setFormValue] = useState({});
   const [pods, setPods] = useState([]);
@@ -82,13 +67,13 @@ const GridTiles = memo(function GridTiles({
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
   const queryClient = useQueryClient();
   const cloneMutation = useMutation(
-    async (tileToCreate) => {
-      const response = await axios.post("/api/tile/tile", tileToCreate);
+    async tileToCreate => {
+      const response = await axios.post('/api/tile/tile', tileToCreate);
       return response.data;
     },
     {
       // optimistic update
-      onMutate: async (newTile) => {
+      onMutate: async newTile => {
         const detailKey = dashboardKeys.detail(activeBoard);
         await queryClient.cancelQueries({ queryKey: detailKey });
         const previous = queryClient.getQueryData(detailKey);
@@ -96,10 +81,10 @@ const GridTiles = memo(function GridTiles({
         const tempTile = { ...newTile, _id: `temp_clone_${Date.now()}` };
 
         // update cache only (do not touch local state here to avoid duplicates)
-        queryClient.setQueryData(detailKey, (old) => {
+        queryClient.setQueryData(detailKey, old => {
           return {
             ...(old || {}),
-            tiles: [...((old && old.tiles) || []), tempTile],
+            tiles: [...((old && old.tiles) || []), tempTile]
           };
         });
 
@@ -115,23 +100,21 @@ const GridTiles = memo(function GridTiles({
       onSuccess: (data, newTile, context) => {
         const detailKey = dashboardKeys.detail(activeBoard);
         // replace temp tile with server tile in cache
-        queryClient.setQueryData(detailKey, (old) => {
-          const tiles = (old && Array.isArray(old.tiles) ? old.tiles : []).map(
-            (t) => (t._id === context.tempTile._id ? data : t),
+        queryClient.setQueryData(detailKey, old => {
+          const tiles = (old && Array.isArray(old.tiles) ? old.tiles : []).map(t =>
+            t._id === context.tempTile._id ? data : t
           );
           return { ...(old || {}), tiles };
         });
 
-        setTileCordinates((prev) =>
-          prev.map((t) => (t._id === context.tempTile._id ? data : t)),
-        );
+        setTileCordinates(prev => prev.map(t => (t._id === context.tempTile._id ? data : t)));
       },
       onSettled: () => {
         queryClient.invalidateQueries({
-          queryKey: dashboardKeys.detail(activeBoard),
+          queryKey: dashboardKeys.detail(activeBoard)
         });
-      },
-    },
+      }
+    }
   );
   const hiddenFileInput = useRef(null);
   let firstNewLine = true;
@@ -141,19 +124,19 @@ const GridTiles = memo(function GridTiles({
   }, [tileCordinates]);
 
   const handleColorImage = useCallback(
-    (e) => {
+    e => {
       setSelectedTileDetail({
         ...selectedTileDetail,
-        backgroundAction: e.target.value,
+        backgroundAction: e.target.value
       });
       const values = formValue;
       values.backgroundAction = e.target.value;
       setFormValue(values);
     },
-    [selectedTileDetail, formValue],
+    [selectedTileDetail, formValue]
   );
 
-  const changeAction = (e) => {
+  const changeAction = e => {
     setSelectedTileDetail({ ...selectedTileDetail, action: e.target.value });
     const values = formValue;
     values.action = e.target.value;
@@ -173,13 +156,13 @@ const GridTiles = memo(function GridTiles({
     }
   };
 
-  const enterText = (value) => {
+  const enterText = value => {
     let items = tileCordinates;
     if (firstNewLine && selectedTile !== null && selectedTile !== undefined) {
-      const newLineIndex = value.indexOf("<div><br></div>");
+      const newLineIndex = value.indexOf('<div><br></div>');
       if (newLineIndex !== -1) {
         const enteredText = value.substring(0, newLineIndex);
-        const enteredUserText = enteredText.replace(/<[^>]*>/g, "");
+        const enteredUserText = enteredText.replace(/<[^>]*>/g, '');
         items[selectedTile].editorHeading = enteredUserText;
         firstNewLine = false;
       }
@@ -189,45 +172,45 @@ const GridTiles = memo(function GridTiles({
     values.tileText = value;
     setFormValue(values);
   };
-  const enterLink = (e) => {
+  const enterLink = e => {
     setSelectedTileDetail({ ...selectedTileDetail, tileLink: e.target.value });
     const values = formValue;
     values.tileLink = e.target.value;
     setFormValue(values);
   };
 
-  const displayTitle = (e) => {
+  const displayTitle = e => {
     setSelectedTileDetail({
       ...selectedTileDetail,
-      displayTitle: e.target.checked,
+      displayTitle: e.target.checked
     });
     let value = formValue;
     setFormValue({ ...value, displayTitle: e.target.checked });
   };
 
-  const handleChangePositionX = (e) => {
+  const handleChangePositionX = e => {
     setSelectedTileDetail({ ...selectedTileDetail, titleX: e.target.value });
     const values = formValue;
     values.titleX = parseInt(e.target.value);
     setFormValue(values);
   };
 
-  const handleChangePositionY = (e) => {
+  const handleChangePositionY = e => {
     setSelectedTileDetail({ ...selectedTileDetail, titleY: e.target.value });
     const values = formValue;
     values.titleY = parseInt(e.target.value);
     setFormValue(values);
   };
 
-  const handleSave = (index) => {
+  const handleSave = index => {
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
-      ((payload.backgroundAction = "image"), (payload.displayTitle = false));
-      formData.append("tileImage", payload.tileBackground);
+      (payload.backgroundAction = 'image'), (payload.displayTitle = false);
+      formData.append('tileImage', payload.tileBackground);
       delete payload.tileBackground;
     }
-    formData.append("formValue", JSON.stringify(payload));
+    formData.append('formValue', JSON.stringify(payload));
 
     if (selectedPod) {
       let podIndex = selectedPod.podIndex;
@@ -240,7 +223,7 @@ const GridTiles = memo(function GridTiles({
       setImageFileName(null);
       setShowModel(false);
       setSelectedPod(null);
-      axios.patch(`/api/tile/${tileId}`, formData).then((res) => {
+      axios.patch(`/api/tile/${tileId}`, formData).then(res => {
         items[podIndex].tiles[tileIndex] = res.data;
         setPods(items);
       });
@@ -263,7 +246,7 @@ const GridTiles = memo(function GridTiles({
     setColorBackground(null);
     setShowModel(false);
     if (dbUser) {
-      axios.patch(`/api/tile/${tileId}`, formData).then((res) => {
+      axios.patch(`/api/tile/${tileId}`, formData).then(res => {
         if (
           selectedTile === null ||
           selectedTile === undefined ||
@@ -277,18 +260,15 @@ const GridTiles = memo(function GridTiles({
         setTileCordinates(items);
 
         // Update React Query cache
-        queryClient.setQueryData(
-          dashboardKeys.detail(activeBoard),
-          (oldData) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                (tile) => (tile._id === tileId ? res.data : tile),
-              ),
-            };
-          },
-        );
+        queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+              tile._id === tileId ? res.data : tile
+            )
+          };
+        });
 
         // Store selectedTile before setting it to null
         const currentSelectedTile = selectedTile;
@@ -298,52 +278,41 @@ const GridTiles = memo(function GridTiles({
         setTimeout(() => {
           // Try different selectors for tiles
           let textOverlay = null;
-          if (tileId && !tileId.startsWith("temp_")) {
+          if (tileId && !tileId.startsWith('temp_')) {
             // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
             const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(
-              `#${escapedTileId} .text_overlay`,
-            );
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
           }
 
           // Fallback: try to find by index
           if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll(".text_overlay");
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
             textOverlay = allTextOverlays[currentSelectedTile];
           }
 
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
-            const currentHeight =
-              parseInt(items[currentSelectedTile].height) || 150;
+            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
             const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
 
             if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`,
+                height: `${desiredHeight}px`
               };
               setTileCordinates(updatedItems);
 
               // Update React Query cache
-              queryClient.setQueryData(
-                dashboardKeys.detail(activeBoard),
-                (oldData) => {
-                  if (!oldData) return oldData;
-                  return {
-                    ...oldData,
-                    tiles: (Array.isArray(oldData.tiles)
-                      ? oldData.tiles
-                      : []
-                    ).map((tile) =>
-                      tile._id === tileId
-                        ? updatedItems[currentSelectedTile]
-                        : tile,
-                    ),
-                  };
-                },
-              );
+              queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                if (!oldData) return oldData;
+                return {
+                  ...oldData,
+                  tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                    tile._id === tileId ? updatedItems[currentSelectedTile] : tile
+                  )
+                };
+              });
             }
           }
         }, 100);
@@ -360,7 +329,7 @@ const GridTiles = memo(function GridTiles({
           ) {
             return;
           }
-          let updatedData = JSON.parse(formData.get("formValue"));
+          let updatedData = JSON.parse(formData.get('formValue'));
           updatedData.tileBackground = e.target.result;
           let item = { ...items[selectedTile], ...updatedData };
           items[selectedTile] = item;
@@ -370,7 +339,7 @@ const GridTiles = memo(function GridTiles({
         };
         reader.readAsDataURL(formValue.tileBackground);
       } else {
-        let updatedData = JSON.parse(formData.get("formValue"));
+        let updatedData = JSON.parse(formData.get('formValue'));
         let item = { ...items[selectedTile], ...updatedData };
         items[selectedTile] = item;
         setTileCordinates(items);
@@ -386,31 +355,28 @@ const GridTiles = memo(function GridTiles({
 
           // Try different selectors for guest tiles
           let textOverlay = null;
-          if (tileId && !tileId.startsWith("temp_")) {
+          if (tileId && !tileId.startsWith('temp_')) {
             // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
             const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(
-              `#${escapedTileId} .text_overlay`,
-            );
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
           }
 
           // Fallback: try to find by index
           if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll(".text_overlay");
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
             textOverlay = allTextOverlays[currentSelectedTile];
           }
 
           if (textOverlay && currentSelectedTile !== null) {
             const contentHeight = textOverlay.scrollHeight;
-            const currentHeight =
-              parseInt(items[currentSelectedTile].height) || 150;
+            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
             const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
 
             if (desiredHeight > currentHeight + 5) {
               const updatedItems = [...items];
               updatedItems[currentSelectedTile] = {
                 ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`,
+                height: `${desiredHeight}px`
               };
               setTileCordinates(updatedItems);
               updateTilesInLocalstorage(updatedItems);
@@ -421,7 +387,7 @@ const GridTiles = memo(function GridTiles({
     }
   };
 
-  const deleteTile = (index) => {
+  const deleteTile = index => {
     if (selectedPod) {
       let podIndex = selectedPod.podIndex;
       let tileIndex = selectedPod.tileIndex;
@@ -431,7 +397,7 @@ const GridTiles = memo(function GridTiles({
       let tileId = tiles[tileIndex]._id;
       setShowModel(false);
       setSelectedPod(null);
-      axios.delete(`/api/tile/${tileId}`).then((res) => {
+      axios.delete(`/api/tile/${tileId}`).then(res => {
         if (res) {
           tiles.splice(tileIndex, 1);
           if (tiles.length == 1) {
@@ -449,25 +415,21 @@ const GridTiles = memo(function GridTiles({
     let tileId = tileCordinates[index]._id;
     setShowModel(false);
     if (dbUser) {
-      axios.delete(`/api/tile/${tileId}`).then((res) => {
+      axios.delete(`/api/tile/${tileId}`).then(res => {
         if (res) {
           tileCordinates.splice(index, 1);
           setTileCordinates([...tileCordinates]);
 
           // Update React Query cache
-          queryClient.setQueryData(
-            dashboardKeys.detail(activeBoard),
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                tiles: (Array.isArray(oldData.tiles)
-                  ? oldData.tiles
-                  : []
-                ).filter((tile) => tile._id !== tileId),
-              };
-            },
-          );
+          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).filter(
+                tile => tile._id !== tileId
+              )
+            };
+          });
         }
       });
     } else {
@@ -478,7 +440,7 @@ const GridTiles = memo(function GridTiles({
     }
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = e => {
     const selectedImage = e.target.files[0];
     setImageFileName(selectedImage.name);
     const values = formValue;
@@ -486,11 +448,11 @@ const GridTiles = memo(function GridTiles({
     setFormValue(values);
   };
 
-  const handleImageInput = (event) => {
+  const handleImageInput = event => {
     hiddenFileInput.current.click();
   };
 
-  const handleColorChange = (color) => {
+  const handleColorChange = color => {
     const values = formValue;
     values.tileBackground = color.hex;
     setFormValue(values);
@@ -503,17 +465,14 @@ const GridTiles = memo(function GridTiles({
     }
 
     const stylevalue = {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      border: "solid 1px #ddd",
-      background:
-        tile.tileBackground && !isImageBackground
-          ? tile.tileBackground
-          : "#deedf0ff",
-      color: "black",
-      overflowWrap: "anywhere",
-      borderRadius: "10px",
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      border: 'solid 1px #ddd',
+      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : '#deedf0ff',
+      color: 'black',
+      overflowWrap: 'anywhere',
+      borderRadius: '10px'
     };
 
     return stylevalue;
@@ -526,32 +485,25 @@ const GridTiles = memo(function GridTiles({
 
     if (tileText) {
       // Only check for empty divs, not strip all HTML
-      if (tileText === "<div><br></div>" || tileText === "<div></div>") {
-        content = "";
+      if (tileText === '<div><br></div>' || tileText === '<div></div>') {
+        content = '';
       }
     }
 
     const titleVal =
-      content && tile.displayTitle
-        ? tileText
-        : !content && tile.displayTitle
-          ? " New Tile"
-          : "";
+      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' New Tile' : '';
     return titleVal;
   };
 
   const onDoubleTap = (e, action, editorHtml, tile, index, isPod) => {
-    if ((e.type === "touchstart" || e.detail == 2) && action == "link") {
+    if ((e.type === 'touchstart' || e.detail == 2) && action == 'link') {
       if (tile.tileLink) {
-        window.open(tile.tileLink, "_blank");
+        window.open(tile.tileLink, '_blank');
       }
-    } else if (
-      (e.type === "touchstart" || e.detail == 2) &&
-      action == "textEditor"
-    ) {
+    } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textEditor') {
       setEditorLabel(tile.editorHeading);
       setOpenTextEdior(true);
-      setTextEditorContent(editorHtml || "");
+      setTextEditorContent(editorHtml || '');
       if (isPod) {
         setSelectedPod(isPod);
       } else {
@@ -559,45 +511,43 @@ const GridTiles = memo(function GridTiles({
       }
     }
   };
-  const podStyle = (index) => {
+  const podStyle = index => {
     const stylevalue = {
-      display: "flex",
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-around",
-      padding: "10px",
-      border: "dashed 1px black",
-      borderRadius: "20px",
-      margin: "10px 20px",
+      display: 'flex',
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      padding: '10px',
+      border: 'dashed 1px black',
+      borderRadius: '20px',
+      margin: '10px 20px'
     };
 
     return stylevalue;
   };
-  const innerTileStyle = (tile) => {
+  const innerTileStyle = tile => {
     const stylevalue = {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: tile.tileColor ? tile.tileColor : "pink",
-      flex: "1 1 100%",
-      border: "1px solid #bbb",
-      borderRadius: "20px",
-      height: "100%",
-      margin: " 0 5px",
-      cursor: "grabbing",
-      position: "relative",
-      minHeight: "120px",
-      minWidth: "120px",
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: tile.tileColor ? tile.tileColor : 'pink',
+      flex: '1 1 100%',
+      border: '1px solid #bbb',
+      borderRadius: '20px',
+      height: '100%',
+      margin: ' 0 5px',
+      cursor: 'grabbing',
+      position: 'relative',
+      minHeight: '120px',
+      minWidth: '120px'
     };
     return stylevalue;
   };
   const createPods = (dragTile, dropTile, direction) => {
-    console.log("=====>>>..", direction);
+    console.log('=====>>>..', direction);
     let tiles = tileCordinates;
     let removableTileIds = [dragTile._id, dropTile._id];
-    const filteredArray = tiles.filter(
-      (obj) => !removableTileIds.includes(obj._id),
-    );
+    const filteredArray = tiles.filter(obj => !removableTileIds.includes(obj._id));
     setTileCordinates(filteredArray);
 
     const newPod = {
@@ -607,9 +557,9 @@ const GridTiles = memo(function GridTiles({
       height: 185,
       width: 325,
       tiles: [dropTile, dragTile],
-      dashboardId: activeBoard,
+      dashboardId: activeBoard
     };
-    axios.post("api/pod/createPod", newPod).then((res) => {
+    axios.post('api/pod/createPod', newPod).then(res => {
       let data = res.data;
       data.tiles = [dropTile, dragTile];
       setPods([...pods, data]);
@@ -617,15 +567,13 @@ const GridTiles = memo(function GridTiles({
   };
 
   const updatePods = (dragtile, droppablePod) => {
-    let dragTileIndex = tileCordinates.findIndex(
-      (obj) => obj._id === dragtile._id,
-    );
+    let dragTileIndex = tileCordinates.findIndex(obj => obj._id === dragtile._id);
     let tiles = tileCordinates;
     tiles.splice(dragTileIndex, 1);
     setTileCordinates(tiles);
 
     let tempPods = pods;
-    let objIndex = tempPods.findIndex((obj) => obj._id === droppablePod._id);
+    let objIndex = tempPods.findIndex(obj => obj._id === droppablePod._id);
     if (objIndex !== -1) {
       tempPods[objIndex].tiles.push(dragtile);
     }
@@ -633,9 +581,9 @@ const GridTiles = memo(function GridTiles({
     var payload = {
       isAdd: true,
       tileId: dragtile._id,
-      podId: droppablePod._id,
+      podId: droppablePod._id
     };
-    axios.post("api/pod/addTile", payload).then((res) => {
+    axios.post('api/pod/addTile', payload).then(res => {
       if (res.data) {
         console.log(res.data);
       }
@@ -655,7 +603,7 @@ const GridTiles = memo(function GridTiles({
     }
     let toUpdate = {
       x: x,
-      y: y,
+      y: y
     };
     if (tile.x === x && tile.y === y) {
       return;
@@ -664,22 +612,18 @@ const GridTiles = memo(function GridTiles({
     items[index] = item;
     setTileCordinates(items);
     if (dbUser) {
-      axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+      axios.patch(`/api/tile/${tileId}`, toUpdate).then(res => {
         if (res.data) {
           // Update React Query cache
-          queryClient.setQueryData(
-            dashboardKeys.detail(activeBoard),
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                  (tile) =>
-                    tile._id === tileId ? { ...tile, ...res.data } : tile,
-                ),
-              };
-            },
-          );
+          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                tile._id === tileId ? { ...tile, ...res.data } : tile
+              )
+            };
+          });
         }
       });
     } else {
@@ -693,28 +637,24 @@ const GridTiles = memo(function GridTiles({
     let tileId = tileCordinates[index]._id;
     let toUpdate = {
       width: ref.style.width,
-      height: ref.style.height,
+      height: ref.style.height
     };
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setTileCordinates(items);
     if (dbUser) {
-      axios.patch(`/api/tile/${tileId}`, toUpdate).then((res) => {
+      axios.patch(`/api/tile/${tileId}`, toUpdate).then(res => {
         if (res.data) {
           // Update React Query cache
-          queryClient.setQueryData(
-            dashboardKeys.detail(activeBoard),
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(
-                  (tile) =>
-                    tile._id === tileId ? { ...tile, ...res.data } : tile,
-                ),
-              };
-            },
-          );
+          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                tile._id === tileId ? { ...tile, ...res.data } : tile
+              )
+            };
+          });
         }
       });
     } else {
@@ -728,14 +668,14 @@ const GridTiles = memo(function GridTiles({
     let podId = pods[index]._id;
     let toUpdate = {
       x: x,
-      y: y,
+      y: y
     };
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setPods(items);
-    axios.patch(`/api/pod/${podId}`, toUpdate).then((res) => {
+    axios.patch(`/api/pod/${podId}`, toUpdate).then(res => {
       if (res.data) {
-        console.log("update Drag Coordinate");
+        console.log('update Drag Coordinate');
       }
     });
   };
@@ -745,19 +685,19 @@ const GridTiles = memo(function GridTiles({
     let podId = pods[index]._id;
     let toUpdate = {
       width: ref.style.width,
-      height: ref.style.height,
+      height: ref.style.height
     };
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setPods([...items]);
-    axios.patch(`/api/pod/${podId}`, toUpdate).then((res) => {
+    axios.patch(`/api/pod/${podId}`, toUpdate).then(res => {
       if (res.data) {
-        console.log("update resize");
+        console.log('update resize');
       }
     });
   };
 
-  const handleCloseTextEditor = (content) => {
+  const handleCloseTextEditor = content => {
     setOpenTextEdior(false);
     setTextEditorContent(null);
     setSelectedTile(null);
@@ -778,8 +718,8 @@ const GridTiles = memo(function GridTiles({
       setTextEditorContent(null);
       const form = new FormData();
       const payload = { tileContent: content, editorHeading: editorTitle };
-      form.append("formValue", JSON.stringify(payload));
-      axios.patch(`/api/tile/${tileId}`, form).then((res) => {
+      form.append('formValue', JSON.stringify(payload));
+      axios.patch(`/api/tile/${tileId}`, form).then(res => {
         if (res.data) {
           items[podIndex].tiles[tileIndex] = res.data;
           setPods(items);
@@ -804,8 +744,8 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       const form = new FormData();
       const payload = { tileContent: content, editorHeading: editorTitle };
-      form.append("formValue", JSON.stringify(payload));
-      axios.patch(`/api/tile/${tileId}`, form).then((res) => {
+      form.append('formValue', JSON.stringify(payload));
+      axios.patch(`/api/tile/${tileId}`, form).then(res => {
         if (
           selectedTile === null ||
           selectedTile === undefined ||
@@ -819,18 +759,13 @@ const GridTiles = memo(function GridTiles({
         setTileCordinates(items);
 
         // Update React Query cache
-        queryClient.setQueryData(
-          dashboardKeys.detail(activeBoard),
-          (oldData) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: oldData.tiles.map((tile) =>
-                tile._id === tileId ? res.data : tile,
-              ),
-            };
-          },
-        );
+        queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile))
+          };
+        });
 
         setSelectedTile(null);
         // Do not auto-resize on save from double-click editor
@@ -839,7 +774,7 @@ const GridTiles = memo(function GridTiles({
       let item = {
         ...items[selectedTile],
         tileContent: content,
-        editorHeading: editorTitle,
+        editorHeading: editorTitle
       };
       items[selectedTile] = item;
       setTileCordinates(items);
@@ -854,29 +789,27 @@ const GridTiles = memo(function GridTiles({
   };
 
   const onSortEnd = (tileList, pod, podIndex) => {
-    const tileListIdArray = tileList.map((tile) => {
+    const tileListIdArray = tileList.map(tile => {
       return tile._id;
     });
-    pod["tiles"] = tileList;
+    pod['tiles'] = tileList;
     let podsArray = [...pods];
     podsArray[podIndex] = pod;
     setPods(podsArray);
     if (pod._id && pod.tiles.length == tileListIdArray.length) {
-      axios
-        .patch(`api/pod/${pod._id}`, { tiles: tileListIdArray })
-        .then((res) => {
-          console.log("update indexing success");
-        });
+      axios.patch(`api/pod/${pod._id}`, { tiles: tileListIdArray }).then(res => {
+        console.log('update indexing success');
+      });
     }
   };
 
-  const deletePod = (index) => {
+  const deletePod = index => {
     let podId = pods[index]._id;
     let podsArray = [...pods];
     podsArray.splice(index, 1);
     setPods(podsArray);
-    axios.delete(`/api/pod/${podId}`).then((res) => {
-      console.log("===>>", res.data);
+    axios.delete(`/api/pod/${podId}`).then(res => {
+      console.log('===>>', res.data);
     });
   };
 
@@ -884,7 +817,7 @@ const GridTiles = memo(function GridTiles({
     const { oldIndex, newIndex, originalEvent } = event;
     let dragType = originalEvent.type;
     let tile = pod.tiles[newIndex];
-    if (dragType === "dragend") {
+    if (dragType === 'dragend') {
       if (pod.tiles.length === 2) {
         let tiles = pod.tiles;
         deletePod(podIndex);
@@ -900,9 +833,9 @@ const GridTiles = memo(function GridTiles({
         let payload = {
           isAdd: false,
           tileId: tile._id,
-          podId: pod._id,
+          podId: pod._id
         };
-        axios.post("api/pod/addTile", payload).then((res) => {
+        axios.post('api/pod/addTile', payload).then(res => {
           if (res.data) {
             console.log(res.data);
           }
@@ -911,7 +844,7 @@ const GridTiles = memo(function GridTiles({
     }
   };
 
-  const tileClone = (index) => {
+  const tileClone = index => {
     let content = tileCordinates[index];
 
     // Always place cloned block in fixed location
@@ -921,7 +854,7 @@ const GridTiles = memo(function GridTiles({
     const newTile = {
       ...content,
       x: FIXED_X,
-      y: FIXED_Y,
+      y: FIXED_Y
     };
 
     setShowModel(false);
@@ -939,21 +872,18 @@ const GridTiles = memo(function GridTiles({
   const onResize = (index, e, direction, ref, delta, position) => {
     const tile = tileCordinates[index];
     if (tile && ref) {
-      const contentElement = ref.querySelector(".text_overlay");
+      const contentElement = ref.querySelector('.text_overlay');
       if (contentElement) {
         const contentWidth = contentElement.scrollWidth;
         const contentHeight = contentElement.scrollHeight;
         const boxWidth = parseInt(ref.style.width);
         const boxHeight = parseInt(ref.style.height);
-        if (
-          resizeCount == 0 &&
-          (contentHeight >= boxHeight || contentWidth >= boxWidth)
-        ) {
-          setResizeCount((prevCount) => {
+        if (resizeCount == 0 && (contentHeight >= boxHeight || contentWidth >= boxWidth)) {
+          setResizeCount(prevCount => {
             return prevCount + 1;
           });
 
-          setMinHeightWidth((prevSizes) => {
+          setMinHeightWidth(prevSizes => {
             const newSizes = [...prevSizes];
             newSizes[index] = { width: contentWidth, height: contentHeight };
             return newSizes;
@@ -963,24 +893,21 @@ const GridTiles = memo(function GridTiles({
     }
   };
 
-  const TitlePositionStyle = (tile) => {
+  const TitlePositionStyle = tile => {
     let style = {
-      top: tile.titleY == 1 ? 0 : "auto",
-      bottom: tile.titleY == 3 ? 0 : "auto",
-      left: tile.titleX == 1 ? 0 : "auto",
-      right: tile.titleX == 3 ? 0 : "auto",
-      textAlign:
-        tile.titleX == 3 ? "right" : tile.titleX == 2 ? "center" : "left",
+      top: tile.titleY == 1 ? 0 : 'auto',
+      bottom: tile.titleY == 3 ? 0 : 'auto',
+      left: tile.titleX == 1 ? 0 : 'auto',
+      right: tile.titleX == 3 ? 0 : 'auto',
+      textAlign: tile.titleX == 3 ? 'right' : tile.titleX == 2 ? 'center' : 'left'
     };
     return style;
   };
 
-  const isBackgroundImage = useCallback((url) => {
+  const isBackgroundImage = useCallback(url => {
     if (url) {
-      const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
-      let isImage = imageExtensions.some((ext) =>
-        url.toLowerCase().includes(ext),
-      );
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      let isImage = imageExtensions.some(ext => url.toLowerCase().includes(ext));
       return isImage;
     }
   }, []);
@@ -989,30 +916,25 @@ const GridTiles = memo(function GridTiles({
   // avoid stale styles while allowing updates when position/size/background changes.
   const tileDepsKey = useMemo(() => {
     return tileCordinates
-      .map(
-        (t) =>
-          `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`,
-      )
-      .join(",");
+      .map(t => `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`)
+      .join(',');
   }, [tileCordinates]);
 
   const tileStyles = useMemo(() => {
     return tileCordinates.map((tile, index) => ({
       index,
       style: style(index, tile),
-      isImageBackground: tile.tileBackground
-        ? isBackgroundImage(tile.tileBackground)
-        : false,
+      isImageBackground: tile.tileBackground ? isBackgroundImage(tile.tileBackground) : false
     }));
   }, [tileDepsKey, style, isBackgroundImage]);
 
-  const currentBackground = (tile) => {
+  const currentBackground = tile => {
     if (tile.tileBackground) {
       if (isBackgroundImage(tile.tileBackground)) {
-        if (tile.tileBackground.startsWith("data:image/")) {
-          setImageFileName("uploaded-image.png");
+        if (tile.tileBackground.startsWith('data:image/')) {
+          setImageFileName('uploaded-image.png');
         } else {
-          const segments = tile.tileBackground.split("/");
+          const segments = tile.tileBackground.split('/');
           const imageName = segments[segments.length - 1];
           setImageFileName(imageName);
         }
@@ -1020,7 +942,7 @@ const GridTiles = memo(function GridTiles({
         setColorBackground(tile.tileBackground);
       }
     } else {
-      setColorBackground("#deedf0ff");
+      setColorBackground('#deedf0ff');
     }
   };
 
@@ -1029,8 +951,8 @@ const GridTiles = memo(function GridTiles({
   };
 
   return (
-    <div className="main_grid_container">
-      <div className="tiles_container">
+    <div className='main_grid_container'>
+      <div className='tiles_container'>
         {tileCordinates.map((tile, index) => {
           const computedStyle = style(index, tile);
           const isImgBackground = isBackgroundImage(tile.tileBackground);
@@ -1038,7 +960,7 @@ const GridTiles = memo(function GridTiles({
             <Rnd
               key={tile._id || index}
               onMouseLeave={() => setShowOption(null)}
-              className="tile"
+              className='tile'
               style={computedStyle}
               size={{ width: tile.width, height: tile.height }}
               position={{ x: tile.x, y: tile.y }}
@@ -1046,9 +968,7 @@ const GridTiles = memo(function GridTiles({
               onResizeStop={(e, direction, ref, delta, position) =>
                 handleResizeStop(e, direction, ref, delta, position, index)
               }
-              onDoubleClick={(e) =>
-                onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)
-              }
+              onDoubleClick={e => onDoubleTap(e, tile.action, tile.tileContent, tile, index, null)}
               minWidth={minHeightWidth[index]?.width || 50}
               minHeight={minHeightWidth[index]?.height || 50}
               onResize={(e, direction, ref, delta, position) =>
@@ -1057,16 +977,9 @@ const GridTiles = memo(function GridTiles({
               id={tile._id}
               onResizeStart={() => setResizeCount(0)}
               dragGrid={[5, 5]}
-              onTouchStart={(e) => {
+              onTouchStart={e => {
                 if (isDblTouchTap(e)) {
-                  onDoubleTap(
-                    e,
-                    tile.action,
-                    tile.tileContent,
-                    tile,
-                    index,
-                    null,
-                  );
+                  onDoubleTap(e, tile.action, tile.tileContent, tile, index, null);
                 } else {
                   setShowOption(`tile_${index}`);
                 }
@@ -1080,46 +993,43 @@ const GridTiles = memo(function GridTiles({
             >
               {tile.displayTitle && (
                 <div
-                  className="text_overlay"
+                  className='text_overlay'
                   style={TitlePositionStyle(tile)}
                   dangerouslySetInnerHTML={{
-                    __html: changedTitlehandle(index, tile),
+                    __html: changedTitlehandle(index, tile)
                   }}
                 />
               )}
               {isImgBackground && (
                 <Image
                   src={tile.tileBackground}
-                  alt="Preview"
+                  alt='Preview'
                   fill
                   priority={index < 6}
                   quality={75}
                   // Use unoptimized for external CDN URLs to allow browser parallel loading
-                  unoptimized={
-                    tile.tileBackground &&
-                    tile.tileBackground.startsWith("http")
-                  }
+                  unoptimized={tile.tileBackground && tile.tileBackground.startsWith('http')}
                   style={{
-                    objectFit: "cover",
-                    borderRadius: "10px",
-                    pointerEvents: "none",
+                    objectFit: 'cover',
+                    borderRadius: '10px',
+                    pointerEvents: 'none'
                   }}
                 />
               )}
               <div
-                className="showOptions absolute top-0 right-2 cursor-pointer"
-                onClick={(e) => openModel(e, index, null)}
+                className='showOptions absolute top-0 right-2 cursor-pointer'
+                onClick={e => openModel(e, index, null)}
               >
                 <MoreHorizSharpIcon />
               </div>
               {showOption == `tile_${index}` && (
                 <div
-                  className="absolute top-0 right-2 cursor-pointer "
-                  onTouchStart={(e) => openModel(e, index, null)}
+                  className='absolute top-0 right-2 cursor-pointer '
+                  onTouchStart={e => openModel(e, index, null)}
                 >
                   <MoreHorizSharpIcon />
                 </div>
-              )}{" "}
+              )}{' '}
               {/* For Mobile view port  */}
             </Rnd>
           );
@@ -1128,125 +1038,103 @@ const GridTiles = memo(function GridTiles({
 
       {/* Tiles Property Model */}
       <Dialog open={showModel} id={`model_${selectedTile}`}>
-        <div className="all_options">
+        <div className='all_options'>
           <ul>
             <li>
-              <h3 className="menu_header">Box Background</h3>
-              <div className="radio_menu">
-                <div className="radiosets">
+              <h3 className='menu_header'>Box Background</h3>
+              <div className='radio_menu'>
+                <div className='radiosets'>
                   <FormControl>
                     <RadioGroup
-                      aria-labelledby="demo-radio-buttons-group-label"
+                      aria-labelledby='demo-radio-buttons-group-label'
                       defaultValue={selectedTileDetail.backgroundAction}
-                      name="radio-buttonsColor"
+                      name='radio-buttonsColor'
                       onChange={handleColorImage}
                     >
-                      <FormControlLabel
-                        value="color"
-                        control={<Radio />}
-                        label="Select Color"
-                      />
-                      <FormControlLabel
-                        value="image"
-                        control={<Radio />}
-                        label="Upload Image"
-                      />
+                      <FormControlLabel value='color' control={<Radio />} label='Select Color' />
+                      <FormControlLabel value='image' control={<Radio />} label='Upload Image' />
                     </RadioGroup>
                   </FormControl>
                 </div>
-                {selectedTileDetail.backgroundAction === "color" && (
+                {selectedTileDetail.backgroundAction === 'color' && (
                   <ColorPicker
                     handleColorChange={handleColorChange}
                     colorBackground={colorBackground}
                   />
                 )}
-                {selectedTileDetail.backgroundAction === "image" && (
-                  <div className="image_value">
+                {selectedTileDetail.backgroundAction === 'image' && (
+                  <div className='image_value'>
                     <Image
                       src={imageUpload}
-                      alt="image"
+                      alt='image'
                       width={60}
                       height={60}
                       onClick={handleImageInput}
                     />
-                    <div className="file_Name">
+                    <div className='file_Name'>
                       <span>{imageFileName}</span>
                     </div>
                   </div>
                 )}
                 <input
-                  type="file"
-                  accept="image/*"
+                  type='file'
+                  accept='image/*'
                   ref={hiddenFileInput}
-                  style={{ display: "none" }}
+                  style={{ display: 'none' }}
                   onChange={handleImageChange}
                 />
               </div>
             </li>
             <li>
-              <h3 className="menu_header">Box Action</h3>
-              <div className="radio_control">
-                <div className="radiosets">
+              <h3 className='menu_header'>Box Action</h3>
+              <div className='radio_control'>
+                <div className='radiosets'>
                   <FormControl>
                     <RadioGroup
-                      aria-labelledby="demo-radio-buttons-group-label"
+                      aria-labelledby='demo-radio-buttons-group-label'
                       defaultValue={selectedTileDetail.action}
-                      name="radio-buttonsLink"
+                      name='radio-buttonsLink'
                       onChange={changeAction}
                     >
+                      <FormControlLabel value='link' control={<Radio />} label='Opens Link' />
                       <FormControlLabel
-                        value="link"
+                        value='textEditor'
                         control={<Radio />}
-                        label="Opens Link"
+                        label='Opens Text Editor'
                       />
-                      <FormControlLabel
-                        value="textEditor"
-                        control={<Radio />}
-                        label="Opens Text Editor"
-                      />
-                      <FormControlLabel
-                        value="noAction"
-                        control={<Radio />}
-                        label="No Action"
-                      />
+                      <FormControlLabel value='noAction' control={<Radio />} label='No Action' />
                     </RadioGroup>
                   </FormControl>
                   <input
-                    type="text"
-                    className="url_text"
+                    type='text'
+                    className='url_text'
                     value={selectedTileDetail.tileLink}
                     onChange={enterLink}
-                    placeholder="Add URL here"
-                    disabled={selectedTileDetail.action !== "link"}
+                    placeholder='Add URL here'
+                    disabled={selectedTileDetail.action !== 'link'}
                   />
                 </div>
               </div>
             </li>
             <li>
-              <h3 className="menu_header">Box Text</h3>
-              <div className="title_editor">
-                <div className="display_title">
-                  <div className="display_title_check">
+              <h3 className='menu_header'>Box Text</h3>
+              <div className='title_editor'>
+                <div className='display_title'>
+                  <div className='display_title_check'>
                     <input
-                      type="checkbox"
+                      type='checkbox'
                       checked={selectedTileDetail.displayTitle}
                       onChange={displayTitle}
                     />
                     <label>Display Text</label>
                   </div>
-                  <div className="position">
-                    <select
-                      value={selectedTileDetail.titleX}
-                      onChange={handleChangePositionX}
-                    >
+                  <div className='position'>
+                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
                       <option value={1}>Left</option>
                       <option value={2}>Center</option>
                       <option value={3}>Right</option>
                     </select>
-                    <select
-                      value={selectedTileDetail.titleY}
-                      onChange={handleChangePositionY}
-                    >
+                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
                       <option value={1}>Top</option>
                       <option value={2}>Center</option>
                       <option value={3}>Bottom</option>
@@ -1255,23 +1143,23 @@ const GridTiles = memo(function GridTiles({
                 </div>
                 <Image
                   src={text}
-                  alt="TEXT"
+                  alt='TEXT'
                   onClick={() => setEditorOpen(true)}
-                  className="text-editor-image"
+                  className='text-editor-image'
                 />
               </div>
             </li>
           </ul>
-          <div className="line_break"></div>
-          <div className="menu_action">
+          <div className='line_break'></div>
+          <div className='menu_action'>
             <div>
-              <div className="delete_duplicate_action">
+              <div className='delete_duplicate_action'>
                 <span onClick={() => tileClone(selectedTile)}>
                   <DifferenceOutlinedIcon />
                 </span>
                 <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
               </div>
-              <div className="delete_duplicate_action">
+              <div className='delete_duplicate_action'>
                 <span onClick={() => deleteTile(selectedTile)}>
                   <DeleteOutlineIcon />
                 </span>
@@ -1280,14 +1168,14 @@ const GridTiles = memo(function GridTiles({
             </div>
             <div
               sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                paddingRight: "25px",
+                display: 'flex',
+                justifyContent: 'flex-end',
+                paddingRight: '25px'
               }}
             >
               <Button
-                className="button_cancel"
-                sx={{ color: "#63899e", marginRight: "3px" }}
+                className='button_cancel'
+                sx={{ color: '#63899e', marginRight: '3px' }}
                 onClick={() => {
                   setShowModel(false);
                   setSelectedPod(null);
@@ -1300,13 +1188,13 @@ const GridTiles = memo(function GridTiles({
                 Cancel
               </Button>
               <Button
-                className="button_filled"
+                className='button_filled'
                 sx={{
-                  background: "#63899e",
-                  color: "#fff",
-                  "&:hover": { backgroundColor: "#63899e", opacity: 0.8 },
+                  background: '#63899e',
+                  color: '#fff',
+                  '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
                 }}
-                onClick={(index) => handleSave(`tiles_${selectedTile}`)}
+                onClick={index => handleSave(`tiles_${selectedTile}`)}
               >
                 Save
               </Button>
@@ -1315,45 +1203,40 @@ const GridTiles = memo(function GridTiles({
         </div>
       </Dialog>
 
-      <Dialog maxWidth={"md"} open={editorOpen}>
+      <Dialog maxWidth={'md'} open={editorOpen}>
         <DialogContent
           sx={{
-            height: "540px",
+            height: '540px',
             // overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.8rem",
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.8rem'
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
             <TipTapMainEditor
-              initialContent={
-                formValue.tileText || selectedTileDetail.tileText || ""
-              }
-              onContentChange={(html) => enterText(html)}
+              initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
+              onContentChange={html => enterText(html)}
             />
           </div>
         </DialogContent>
         <DialogActions>
           <div
             sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              paddingRight: "25px",
+              display: 'flex',
+              justifyContent: 'flex-end',
+              paddingRight: '25px'
             }}
           >
-            <Button
-              onClick={() => setEditorOpen(false)}
-              sx={{ color: "#63899e" }}
-            >
+            <Button onClick={() => setEditorOpen(false)} sx={{ color: '#63899e' }}>
               Close
             </Button>
             <Button
               onClick={saveEditorText}
               sx={{
-                background: "#63899e",
-                color: "#fff",
-                "&:hover": { backgroundColor: "#63899e", opacity: 0.8 },
+                background: '#63899e',
+                color: '#fff',
+                '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
               }}
             >
               Save

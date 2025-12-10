@@ -1,38 +1,38 @@
-"use client";
-import React, { useEffect, useState, useContext } from "react";
-import { globalContext } from "@/context/globalContext";
-import { useRouter } from "next/navigation";
-import "./library.css";
-import axios from "axios";
-import Image from "next/image";
-import { useQueryClient } from "@tanstack/react-query";
-import useAdmin from "@/hooks/isAdmin";
-import { dashboardKeys } from "@/hooks/useDashboard";
-import { v4 as uuidv4 } from "uuid";
+'use client';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import { globalContext } from '@/context/globalContext';
+import useAdmin from '@/hooks/isAdmin';
+import { dashboardKeys } from '@/hooks/useDashboard';
+import { useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useContext, useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import './library.css';
 
 function Library() {
   const [library, setLibrary] = useState([]);
   const [originalLibrary, setOriginalLibrary] = useState([]);
   const [noSearchResult, setNoSearchResult] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("mostPopular");
+  const [selectedFilter, setSelectedFilter] = useState('mostPopular');
+  const [loadingBoardId, setLoadingBoardId] = useState(null); // Track which board is loading
   const { dbUser, setBoards, boards, setTiles } = useContext(globalContext);
   const queryClient = useQueryClient();
   const isAdmin = useAdmin();
   const router = useRouter();
 
   const filterOption = [
-    { id: "mostPopular", filter: "Most Popular" },
-    { id: "newest", filter: "Newest" },
-    { id: "aToz", filter: "A-to-Z" },
+    { id: 'mostPopular', filter: 'Most Popular' },
+    { id: 'newest', filter: 'Newest' },
+    { id: 'aToz', filter: 'A-to-Z' }
   ];
 
   useEffect(() => {
-    axios
-      .get(`/api/template/addTemplate?filter=${selectedFilter}`)
-      .then((res) => {
-        setOriginalLibrary(res.data);
-        setLibrary(res.data);
-      });
+    axios.get(`/api/template/addTemplate?filter=${selectedFilter}`).then(res => {
+      setOriginalLibrary(res.data);
+      setLibrary(res.data);
+    });
   }, []);
 
   // useEffect(() => {
@@ -59,29 +59,27 @@ function Library() {
   //   })()
   // }, [boards, library])
 
-  const selectFilter = async (id) => {
+  const selectFilter = async id => {
     setSelectedFilter(id);
     const result = await axios.get(`/api/template/addTemplate?filter=${id}`);
     setLibrary(result.data);
   };
 
-  var handleSearch = (event) => {
+  var handleSearch = event => {
     let searchValue = event.target.value.toLowerCase();
-    if (searchValue == "") {
+    if (searchValue == '') {
       setLibrary(originalLibrary);
       setNoSearchResult(false);
     } else {
-      const result = originalLibrary.filter((item) =>
-        item.boardName.toLowerCase().includes(searchValue),
+      const result = originalLibrary.filter(item =>
+        item.boardName.toLowerCase().includes(searchValue)
       );
       const keywordsSearch = originalLibrary
-        .map((item) => ({
+        .map(item => ({
           ...item,
-          keywords: item.keywords.filter((item) =>
-            item.toLowerCase().includes(searchValue),
-          ),
+          keywords: item.keywords.filter(item => item.toLowerCase().includes(searchValue))
         }))
-        .filter((elements) => elements.keywords.length > 0);
+        .filter(elements => elements.keywords.length > 0);
       if (result.length) {
         setLibrary(result);
       } else if (keywordsSearch.length) {
@@ -92,19 +90,19 @@ function Library() {
     }
   };
 
-  const redirectToUser = (link) => {
-    window.open(link, "_blank");
+  const redirectToUser = link => {
+    window.open(link, '_blank');
   };
 
   return (
-    <div className="library">
-      <div className="library-board-heading">
+    <div className='library'>
+      <div className='library-board-heading'>
         <h1>Boards Library</h1>
       </div>
-      <div className="library-body">
-        <div className="library-Style-Filter">
+      <div className='library-body'>
+        <div className='library-Style-Filter'>
           <h2>
-            <span className="paraStyle">FILTER:</span>
+            <span className='paraStyle'>FILTER:</span>
             {filterOption.map((filter, index) => (
               <span
                 onClick={() => {
@@ -113,10 +111,9 @@ function Library() {
                 key={filter.id}
                 style={{
                   fontWeight: selectedFilter === filter.id ? 700 : 200,
-                  textDecoration:
-                    selectedFilter === filter.id ? "underline" : "none",
-                  marginLeft: "5px",
-                  cursor: "pointer",
+                  textDecoration: selectedFilter === filter.id ? 'underline' : 'none',
+                  marginLeft: '5px',
+                  cursor: 'pointer'
                 }}
               >
                 {filter.filter}
@@ -124,19 +121,19 @@ function Library() {
             ))}
           </h2>
           <h2>
-            <span className="paraStyle">
+            <span className='paraStyle'>
               SEARCH:
               <input
-                className="input-style"
-                placeholder="Search Boards"
-                onChange={(e) => {
+                className='input-style'
+                placeholder='Search Boards'
+                onChange={e => {
                   handleSearch(e);
                 }}
               />
             </span>
           </h2>
         </div>
-        <div className="lib_container">
+        <div className='lib_container'>
           {noSearchResult ? (
             <div>
               <hr />
@@ -151,127 +148,144 @@ function Library() {
                   <div key={index}>
                     <hr />
                     <div
-                      className="filter-result"
+                      className='filter-result cursor-pointer transition-all duration-300 hover:bg-gray-50 hover:shadow-md hover:scale-[1.02] rounded-lg p-2 -m-2 relative'
                       onClick={async () => {
-                        const response = await axios.get(
-                          `/api/dashboard/${data.boardLink.split("/").pop()}`,
-                        );
-                        let payload;
-                        if (dbUser) {
-                          if (isAdmin) {
-                            payload = {
-                              name: response.data.name,
-                              userId: dbUser._id,
-                              hasAdminAdded: true,
-                            };
-                          } else {
-                            payload = {
-                              name: response.data.name,
-                              userId: dbUser._id,
-                            };
-                          }
-                          axios
-                            .post("/api/dashboard/addDashboard", payload)
-                            .then((res) => {
-                              const newBoard = res.data;
+                        // Set loading state for this board
+                        const boardId = data.boardLink.split('/').pop();
+                        setLoadingBoardId(boardId);
 
-                              const boardTiles = response.data.tiles.map(
-                                (el) => {
+                        try {
+                          const response = await axios.get(`/api/dashboard/${boardId}`);
+                          let payload;
+                          if (dbUser) {
+                            if (isAdmin) {
+                              payload = {
+                                name: response.data.name,
+                                userId: dbUser._id,
+                                hasAdminAdded: true
+                              };
+                            } else {
+                              payload = {
+                                name: response.data.name,
+                                userId: dbUser._id
+                              };
+                            }
+                            axios
+                              .post('/api/dashboard/addDashboard', payload)
+                              .then(res => {
+                                const newBoard = res.data;
+
+                                const boardTiles = response.data.tiles.map(el => {
                                   const tileCopy = { ...el };
                                   delete tileCopy._id;
                                   tileCopy.dashboardId = newBoard._id;
                                   return tileCopy;
-                                },
-                              );
-
-                              axios
-                                .post("/api/tile/tiles", {
-                                  dashboardId: newBoard._id,
-                                  tiles: boardTiles,
-                                })
-                                .then((resp) => {
-                                  setTiles(resp.data.tiles);
-                                  newBoard.tiles = resp.data.tiles;
-                                  setBoards((prev) => [...prev, newBoard]);
-
-                                  try {
-                                    queryClient.invalidateQueries({
-                                      queryKey: dashboardKeys.lists(),
-                                    });
-                                    queryClient.setQueryData(
-                                      dashboardKeys.detail(newBoard._id),
-                                      newBoard,
-                                    );
-                                  } catch (e) {
-                                    console.warn(
-                                      "Failed to update query cache after creating dashboard",
-                                      e,
-                                    );
-                                  }
-                                  router.push(`/dashboard/${newBoard._id}`);
                                 });
-                            });
-                        } else {
-                          const boardId = uuidv4();
-                          const newTiles = response.data.tiles.map((tile) => {
-                            tile._id = uuidv4();
-                            tile.dashboardId = boardId;
-                            return tile;
-                          });
-                          let payload = {
-                            _id: boardId,
-                            name: response.data.name,
-                            tiles: newTiles,
-                          };
-                          let items = boards;
-                          items = [...items, payload];
-                          localStorage.setItem("Dasify", JSON.stringify(items));
-                          setBoards(items);
-                          setTiles(newTiles);
 
-                          try {
-                            const detailKey = dashboardKeys.detail(
-                              newBoard._id,
-                            );
-                            queryClient.setQueryData(detailKey, (oldData) => {
-                              if (oldData) {
+                                axios
+                                  .post('/api/tile/tiles', {
+                                    dashboardId: newBoard._id,
+                                    tiles: boardTiles
+                                  })
+                                  .then(resp => {
+                                    setTiles(resp.data.tiles);
+                                    newBoard.tiles = resp.data.tiles;
+                                    setBoards(prev => [...prev, newBoard]);
+
+                                    try {
+                                      queryClient.invalidateQueries({
+                                        queryKey: dashboardKeys.lists()
+                                      });
+                                      queryClient.setQueryData(
+                                        dashboardKeys.detail(newBoard._id),
+                                        newBoard
+                                      );
+                                    } catch (e) {
+                                      console.warn(
+                                        'Failed to update query cache after creating dashboard',
+                                        e
+                                      );
+                                    }
+                                    setLoadingBoardId(null); // Clear loading state
+                                    router.push(`/dashboard/${newBoard._id}`);
+                                  })
+                                  .catch(err => {
+                                    console.error('Error creating tiles:', err);
+                                    setLoadingBoardId(null); // Clear loading state on error
+                                  });
+                              })
+                              .catch(err => {
+                                console.error('Error creating dashboard:', err);
+                                setLoadingBoardId(null); // Clear loading state on error
+                              });
+                          } else {
+                            const boardId = uuidv4();
+                            const newTiles = response.data.tiles.map(tile => {
+                              tile._id = uuidv4();
+                              tile.dashboardId = boardId;
+                              return tile;
+                            });
+                            let payload = {
+                              _id: boardId,
+                              name: response.data.name,
+                              tiles: newTiles
+                            };
+                            let items = boards;
+                            items = [...items, payload];
+                            localStorage.setItem('Dasify', JSON.stringify(items));
+                            setBoards(items);
+                            setTiles(newTiles);
+
+                            try {
+                              const detailKey = dashboardKeys.detail(boardId);
+                              queryClient.setQueryData(detailKey, oldData => {
+                                if (oldData) {
+                                  return {
+                                    ...oldData,
+                                    tiles: payload.tiles
+                                  };
+                                }
                                 return {
-                                  ...oldData,
-                                  tiles: items[newBoard._id].tiles,
+                                  _id: payload._id,
+                                  name: payload.name || '',
+                                  tiles: payload.tiles,
+                                  pods: payload.pods || []
                                 };
-                              }
-                              return {
-                                _id: items[newBoard._id]._id,
-                                name: items[newBoard._id].name || "",
-                                tiles: items[newBoard._id].tiles,
-                                pods: items[newBoard._id].pods || [],
-                              };
-                            });
-                          } catch (e) {
-                            console.warn(
-                              "Failed to update query cache for local board",
-                              e,
-                            );
-                          }
+                              });
+                            } catch (e) {
+                              console.warn('Failed to update query cache for local board', e);
+                            }
 
-                          router.push(`/dashboard/${boardId}`);
+                            setLoadingBoardId(null); // Clear loading state
+                            router.push(`/dashboard/${boardId}`);
+                          }
+                        } catch (error) {
+                          console.error('Error loading board:', error);
+                          setLoadingBoardId(null); // Clear loading state on error
                         }
                       }}
                     >
+                      {/* Loading overlay */}
+                      {loadingBoardId === data.boardLink.split('/').pop() && (
+                        <div className='absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded-lg'>
+                          <LoadingSpinner size='medium' text='Loading board...' />
+                        </div>
+                      )}
+
                       <Image
                         src={data.boardImage}
-                        alt={data.boardName || "board-image"}
+                        alt={data.boardName || 'board-image'}
                         width={150}
                         height={90}
-                        className="filter-image"
-                        style={{ objectFit: "cover" }}
+                        className='filter-image'
+                        style={{ objectFit: 'cover' }}
                       />
-                      <div className="board-details">
-                        <h2 className="paraStyle1">{data.boardName}</h2>
+                      <div className='board-details'>
+                        <h2 className='paraStyle1'>{data.boardName}</h2>
                         <p>{data.boardDescription}</p>
                         <small>
-                          <span className="paraStyle">Keywords: </span>
-                          {data.keywords.join(",")}
+                          <span className='paraStyle'>Keywords: </span>
+                          {data.keywords.join(',')}
                         </small>
                       </div>
                     </div>
