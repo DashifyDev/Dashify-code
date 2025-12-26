@@ -352,9 +352,13 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const width = tile.mobileWidth || `${windowWidth - 32}px`;
-    const height = tile.mobileHeight || tile.height || '150px';
 
-    return {
+    // If user has manually set mobileHeight (exists and is not null/undefined), use fixed height
+    // Otherwise, use min-height to allow content to expand naturally
+    const hasCustomHeight = tile.mobileHeight != null && tile.mobileHeight !== '';
+    const defaultMinHeight = '150px';
+
+    const styleObj = {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -364,11 +368,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
       overflowWrap: 'anywhere',
       borderRadius: '10px',
       width: width,
-      height: height,
       position: 'relative',
       margin: '8px 16px',
       touchAction: 'pan-y'
     };
+
+    if (hasCustomHeight) {
+      // User has manually resized - use fixed height
+      styleObj.height = tile.mobileHeight;
+    } else {
+      // Default - use min-height to allow content to expand
+      styleObj.minHeight = defaultMinHeight;
+    }
+
+    return styleObj;
   }, []);
 
   const changedTitlehandle = tile => {
@@ -609,7 +622,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
       mobileX: 0,
       mobileY: sortedTiles.length * 166, // Approximate position
       mobileWidth: `${windowWidth - 32}px`,
-      mobileHeight: content.mobileHeight || content.height || '150px',
+      // Only copy mobileHeight if it was manually set (not default)
+      // If content had mobileHeight set, keep it; otherwise don't set it (use min-height)
+      ...(content.mobileHeight ? { mobileHeight: content.mobileHeight } : {}),
       order: sortedTiles.length + 1
     };
 

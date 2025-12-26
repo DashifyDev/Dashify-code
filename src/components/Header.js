@@ -205,7 +205,7 @@ function Header() {
     // Calculate mobile profile defaults
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const mobileWidth = `${windowWidth - 32}px`;
-    const mobileHeight = '150px';
+    // Don't set mobileHeight by default - let it use min-height until user resizes
     const mobileY = tiles.length * 166; // Approximate position based on existing tiles
 
     const newtile = {
@@ -222,8 +222,8 @@ function Header() {
       order: newOrder,
       mobileX: 0,
       mobileY: mobileY,
-      mobileWidth: mobileWidth,
-      mobileHeight: mobileHeight
+      mobileWidth: mobileWidth
+      // mobileHeight not set - will use min-height by default
     };
 
     const detailKey = dashboardKeys.detail(currentActiveBoard);
@@ -367,8 +367,8 @@ function Header() {
           order: 1,
           mobileX: 0,
           mobileY: 0,
-          mobileWidth: `${windowWidth - 32}px`,
-          mobileHeight: '200px'
+          mobileWidth: `${windowWidth - 32}px`
+          // mobileHeight not set - will use min-height by default
         };
 
         // Add temporary ID for optimistic update
