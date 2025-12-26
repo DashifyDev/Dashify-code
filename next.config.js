@@ -6,45 +6,44 @@ const nextConfig = {
 
   // Disable ESLint during build
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true
   },
 
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 512, 768],
     minimumCacheTTL: 31536000, // 1 year
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    loader: "default",
-    quality: 85,
+    loader: 'default',
     unoptimized: false,
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**'
       },
       {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**'
       },
       {
-        protocol: "https",
-        hostname: "via.placeholder.com",
-        port: "",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**'
       },
       {
-        protocol: "https",
-        hostname: "**.cloudinary.com",
-        port: "",
-        pathname: "/**",
-      },
-    ],
+        protocol: 'https',
+        hostname: '**.cloudinary.com',
+        port: '',
+        pathname: '/**'
+      }
+    ]
   },
 
   compress: true,
@@ -53,7 +52,7 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        fs: false,
+        fs: false
       };
     }
 
@@ -120,78 +119,78 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/favicon.ico",
+        source: '/favicon.ico',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           },
           {
-            key: "Content-Type",
-            value: "image/x-icon",
-          },
-        ],
+            key: 'Content-Type',
+            value: 'image/x-icon'
+          }
+        ]
       },
       {
-        source: "/favicon-:size.ico",
+        source: '/favicon-:size.ico',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           },
           {
-            key: "Content-Type",
-            value: "image/x-icon",
-          },
-        ],
+            key: 'Content-Type',
+            value: 'image/x-icon'
+          }
+        ]
       },
       {
-        source: "/api/dashboard/:path*",
+        source: '/api/dashboard/:path*',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
-          },
-        ],
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=300'
+          }
+        ]
       },
       {
-        source: "/api/tile/:path*",
+        source: '/api/tile/:path*',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, s-maxage=30, stale-while-revalidate=120",
-          },
-        ],
+            key: 'Cache-Control',
+            value: 'public, s-maxage=30, stale-while-revalidate=120'
+          }
+        ]
       },
       {
-        source: "/_next/static/:path*",
+        source: '/_next/static/:path*',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
       },
       {
-        source: "/_next/image/:path*",
+        source: '/_next/image/:path*',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
       },
       {
-        source: "/api/uploadImage",
+        source: '/api/uploadImage',
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=3600, s-maxage=86400",
-          },
-        ],
-      },
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, s-maxage=86400'
+          }
+        ]
+      }
     ];
-  },
+  }
 };
 
 module.exports = nextConfig;
