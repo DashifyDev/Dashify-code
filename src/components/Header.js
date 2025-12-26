@@ -204,7 +204,8 @@ function Header() {
 
     // Calculate mobile profile defaults
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-    const mobileWidth = `${windowWidth - 32}px`;
+    // Increased side padding: 24px on each side (48px total)
+    const mobileWidth = `${windowWidth - 48}px`;
     // Don't set mobileHeight by default - let it use min-height until user resizes
     const mobileY = tiles.length * 166; // Approximate position based on existing tiles
 
@@ -367,7 +368,7 @@ function Header() {
           order: 1,
           mobileX: 0,
           mobileY: 0,
-          mobileWidth: `${windowWidth - 32}px`
+          mobileWidth: `${windowWidth - 48}px`
           // mobileHeight not set - will use min-height by default
         };
 

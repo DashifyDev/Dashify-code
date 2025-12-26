@@ -141,7 +141,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
           ...tile,
           mobileX: 0,
           mobileY: newY,
-          mobileWidth: `${windowWidth - 32}px`, // Full width minus padding
+          mobileWidth: `${windowWidth - 48}px`, // Full width minus padding (24px on each side)
           order: index + 1
         };
       });
@@ -282,7 +282,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
           updatedTiles[tileUpdateIndex] = {
             ...updatedTiles[tileUpdateIndex],
             mobileY: currentY,
-            mobileWidth: `${windowWidth - 32}px`
+            mobileWidth: `${windowWidth - 48}px`
           };
           currentY += tileHeight + 16;
         }
@@ -351,7 +351,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
     const isImageBackground = tile.tileBackground ? isBackgroundImage(tile.tileBackground) : false;
 
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-    const width = tile.mobileWidth || `${windowWidth - 32}px`;
+    // Increased side padding: 24px on each side (48px total) instead of 16px (32px total)
+    const width = tile.mobileWidth || `${windowWidth - 48}px`;
 
     // If user has manually set mobileHeight (exists and is not null/undefined), use fixed height
     // Otherwise, use min-height to allow content to expand naturally
@@ -369,7 +370,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
       borderRadius: '10px',
       width: width,
       position: 'relative',
-      margin: '8px 16px',
+      margin: '8px 24px', // Increased side margins from 16px to 24px
       touchAction: 'pan-y'
     };
 
@@ -621,7 +622,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
       ...content,
       mobileX: 0,
       mobileY: sortedTiles.length * 166, // Approximate position
-      mobileWidth: `${windowWidth - 32}px`,
+      mobileWidth: `${windowWidth - 48}px`,
       // Only copy mobileHeight if it was manually set (not default)
       // If content had mobileHeight set, keep it; otherwise don't set it (use min-height)
       ...(content.mobileHeight ? { mobileHeight: content.mobileHeight } : {}),
