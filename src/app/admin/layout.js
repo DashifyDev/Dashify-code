@@ -7,6 +7,7 @@ import React from "react";
 function layout({ children }) {
   const isAdmin = useAdmin();
   const route = useRouter();
+  console.log("isAdmin", isAdmin);
 
   useEffect(() => {
     if (isAdmin !== null) {

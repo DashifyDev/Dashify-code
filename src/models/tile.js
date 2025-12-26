@@ -61,6 +61,26 @@ const tileSchema = new Schema({
   backgroundAction: {
     type: String,
   },
+  // Order field for box ordering (used in text editor navigation)
+  order: {
+    type: Number,
+    default: 0,
+  },
+  // Mobile profile specific fields
+  mobileX: {
+    type: Number,
+    default: 0,
+  },
+  mobileY: {
+    type: Number,
+    default: 0,
+  },
+  mobileWidth: {
+    type: String,
+  },
+  mobileHeight: {
+    type: String,
+  },
 });
 
 const Tile = models.Tile || model("Tile", tileSchema);

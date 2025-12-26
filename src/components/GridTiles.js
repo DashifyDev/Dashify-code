@@ -1149,6 +1149,35 @@ const GridTiles = memo(function GridTiles({
                 />
               </div>
             </li>
+            <li>
+              <h3 className='menu_header'>Box Order</h3>
+              <div style={{ padding: '10px 0' }}>
+                <label style={{ display: 'block', marginBottom: '8px' }}>
+                  Order (used for text editor navigation):
+                </label>
+                <input
+                  type='number'
+                  min='1'
+                  value={selectedTileDetail.order || 0}
+                  onChange={(e) => {
+                    const orderValue = parseInt(e.target.value) || 0;
+                    setSelectedTileDetail({ ...selectedTileDetail, order: orderValue });
+                    const values = formValue;
+                    values.order = orderValue;
+                    setFormValue(values);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  This determines the order when navigating between boxes in the text editor
+                </p>
+              </div>
+            </li>
           </ul>
           <div className='line_break'></div>
           <div className='menu_action'>
