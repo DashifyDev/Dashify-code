@@ -819,23 +819,46 @@ const MobileGridTiles = memo(function MobileGridTiles({
     hasMoved.current = false;
   };
 
-  // Exit edit mode when clicking outside
+  // Exit edit mode when clicking outside the editing tile
   useEffect(() => {
     const handleClickOutside = e => {
-      if (editingTileId && containerRef.current && !containerRef.current.contains(e.target)) {
+      if (!editingTileId) return;
+
+      const target = e.target;
+
+      // Don't exit if clicking on resize handles or settings button
+      if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
+        return;
+      }
+
+      // Find the tile element that contains the click
+      const clickedTile = target.closest('[data-tile-id]');
+
+      if (clickedTile) {
+        const clickedTileId = clickedTile.getAttribute('data-tile-id');
+        // If clicked on a different tile or outside any tile, exit edit mode
+        if (clickedTileId !== String(editingTileId)) {
+          setEditingTileId(null);
+        }
+      } else {
+        // Clicked outside all tiles - exit edit mode
         setEditingTileId(null);
       }
     };
 
     if (editingTileId) {
-      document.addEventListener('touchstart', handleClickOutside);
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+      // Use a small delay to avoid immediate exit when entering edit mode
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('touchstart', handleClickOutside, { passive: true });
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
 
-    return () => {
-      document.removeEventListener('touchstart', handleClickOutside);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('touchstart', handleClickOutside);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, [editingTileId]);
 
   return (
@@ -849,17 +872,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
             right: '0',
             backgroundColor: '#63899e',
             color: 'white',
-            padding: '12px 24px',
+            padding: '6пpx 12px',
             borderRadius: '0 0 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
-            zIndex: 99999, // Very high z-index
+            zIndex: 99, // Very high z-index
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'none',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
             whiteSpace: 'nowrap',
             width: 'auto',
-            minWidth: '120px',
             textAlign: 'center'
           }}
         >
