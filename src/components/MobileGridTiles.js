@@ -374,7 +374,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       width: width,
       position: 'relative',
       margin: '8px 24px', // Increased side margins from 16px to 24px
-      touchAction: 'pan-y'
+      touchAction: 'pan-y',
+      userSelect: 'none', // Prevent text selection
+      WebkitUserSelect: 'none', // Safari
+      MozUserSelect: 'none', // Firefox
+      msUserSelect: 'none' // IE/Edge
     };
 
     if (hasCustomHeight) {
@@ -885,7 +889,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
                 touchAction: isResizing ? 'none' : isEditing ? 'none' : 'pan-y',
                 opacity: isEditing ? 0.95 : 1,
                 boxShadow: isEditing ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
-                transition: isEditing ? 'box-shadow 0.2s ease' : 'none'
+                transform: isEditing ? 'scaleX(1.02)' : 'scaleX(1)',
+                transition: isEditing
+                  ? 'box-shadow 0.2s ease, transform 0.2s ease'
+                  : 'transform 0.2s ease',
+                userSelect: 'none', // Prevent text selection
+                WebkitUserSelect: 'none', // Safari
+                MozUserSelect: 'none', // Firefox
+                msUserSelect: 'none' // IE/Edge
               }}
               onTouchStart={e => {
                 // Don't handle if resizing or clicking on interactive elements
@@ -1113,7 +1124,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
               {tile.displayTitle && (
                 <div
                   className='text_overlay'
-                  style={TitlePositionStyle(tile)}
+                  style={{
+                    ...TitlePositionStyle(tile),
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    pointerEvents: 'none' // Prevent text selection
+                  }}
                   dangerouslySetInnerHTML={{
                     __html: changedTitlehandle(tile)
                   }}
