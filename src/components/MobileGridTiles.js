@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { memo, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import '../styles/styles.css';
 
@@ -58,9 +58,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const [editorOpen, setEditorOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after long press)
+  const [longPressTimer, setLongPressTimer] = useState(null);
   const { dbUser } = useContext(globalContext);
   const queryClient = useQueryClient();
   const hiddenFileInput = useRef(null);
+  const containerRef = useRef(null);
 
   // Sort tiles by order (mobileY position) for display
   const sortedTiles = useMemo(() => {
@@ -751,15 +754,103 @@ const MobileGridTiles = memo(function MobileGridTiles({
     [handleHeightResize]
   );
 
+  // Handle long press to enter edit mode
+  const longPressStartPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+
+  const handleLongPressStart = (tileId, e) => {
+    // Don't start long press on interactive elements
+    const target = e.target;
+    if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
+      return;
+    }
+
+    // Store initial touch position
+    const touch = e.touches?.[0] || { clientX: e.clientX, clientY: e.clientY };
+    longPressStartPos.current = { x: touch.clientX, y: touch.clientY };
+    hasMoved.current = false;
+
+    // Track movement during long press
+    const handleMove = moveEvent => {
+      const currentTouch = moveEvent.touches?.[0] || {
+        clientX: moveEvent.clientX,
+        clientY: moveEvent.clientY
+      };
+      const deltaX = Math.abs(currentTouch.clientX - longPressStartPos.current.x);
+      const deltaY = Math.abs(currentTouch.clientY - longPressStartPos.current.y);
+
+      // If moved more than 10px, cancel long press (user is scrolling)
+      if (deltaX > 10 || deltaY > 10) {
+        hasMoved.current = true;
+        handleLongPressEnd();
+        document.removeEventListener('touchmove', handleMove);
+        document.removeEventListener('mousemove', handleMove);
+      }
+    };
+
+    document.addEventListener('touchmove', handleMove, { passive: true });
+    document.addEventListener('mousemove', handleMove);
+
+    const timer = setTimeout(() => {
+      if (!hasMoved.current) {
+        setEditingTileId(tileId);
+        // Haptic feedback if available
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('mousemove', handleMove);
+    }, 1500); // 1.5 seconds
+
+    setLongPressTimer(timer);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    hasMoved.current = false;
+  };
+
+  // Exit edit mode when clicking outside
+  useEffect(() => {
+    const handleClickOutside = e => {
+      if (editingTileId && containerRef.current && !containerRef.current.contains(e.target)) {
+        setEditingTileId(null);
+      }
+    };
+
+    if (editingTileId) {
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingTileId]);
+
   return (
-    <div className='mobile-grid-container' style={{ paddingBottom: '20px' }}>
+    <div ref={containerRef} className='mobile-grid-container' style={{ paddingBottom: '20px' }}>
       <ReactSortable
         list={sortedTiles}
         setList={handleSortEnd}
         animation={200}
+        disabled={!editingTileId} // Disable drag by default, enable only in edit mode
         filter='.drag-handle, .resize-handle'
         preventOnFilter={false}
         onStart={evt => {
+          // Only allow drag if tile is in edit mode
+          const draggedTile = evt.item;
+          const tileId = draggedTile.getAttribute('data-tile-id');
+
+          if (tileId !== editingTileId) {
+            return false; // Prevent drag if not in edit mode
+          }
+
           // Check if drag started on resize handle or settings button
           const clickedResize = evt.originalEvent?.target?.closest('.resize-handle');
           const clickedSettings = evt.originalEvent?.target?.closest('.drag-handle');
@@ -771,6 +862,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
         }}
         onEnd={() => {
           setIsDragging(false);
+          // Exit edit mode after drag ends
+          setEditingTileId(null);
         }}
         style={{ display: 'flex', flexDirection: 'column' }}
       >
@@ -779,26 +872,42 @@ const MobileGridTiles = memo(function MobileGridTiles({
           const isImgBackground = isBackgroundImage(tile.tileBackground);
           const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
 
+          const isEditing = editingTileId === String(tile._id || '');
+
           return (
             <div
               key={tile._id || index}
+              data-tile-id={tile._id}
               style={{
                 ...computedStyle,
                 position: 'relative',
                 marginBottom: '16px',
-                touchAction: isResizing ? 'none' : 'pan-y'
+                touchAction: isResizing ? 'none' : isEditing ? 'none' : 'pan-y',
+                opacity: isEditing ? 0.95 : 1,
+                boxShadow: isEditing ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
+                transition: isEditing ? 'box-shadow 0.2s ease' : 'none'
               }}
               onTouchStart={e => {
-                // Don't handle double tap if resizing or clicking on interactive elements
+                // Don't handle if resizing or clicking on interactive elements
                 if (isResizing) return;
                 const target = e.target;
                 if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
                   return;
                 }
+
+                // If not in edit mode, start long press timer
+                if (!isEditing) {
+                  handleLongPressStart(tile._id, e);
+                }
+
+                // Handle double tap for actions
                 if (isDblTouchTap(e)) {
+                  handleLongPressEnd(); // Cancel long press
                   onDoubleTap(e, tile.action, tile.tileContent, tile, index);
                 }
               }}
+              onTouchEnd={handleLongPressEnd}
+              onTouchCancel={handleLongPressEnd}
               onDoubleClick={e => {
                 if (isResizing) return;
                 const target = e.target;
@@ -822,10 +931,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   alignItems: 'center',
                   justifyContent: 'center',
                   zIndex: 10,
-                  opacity: 0.7,
+                  opacity: isEditing ? 1 : 0.7,
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   borderRadius: '4px',
-                  padding: '2px'
+                  padding: '2px',
+                  transition: 'opacity 0.2s ease'
                 }}
                 onClick={e => {
                   e.stopPropagation();
@@ -833,138 +943,172 @@ const MobileGridTiles = memo(function MobileGridTiles({
                 }}
                 onTouchStart={e => {
                   e.stopPropagation();
+                  handleLongPressEnd(); // Cancel long press
                   // Prevent drag when clicking settings button
                 }}
               >
                 <MoreHorizSharpIcon style={{ fontSize: '20px' }} />
               </div>
 
-              {/* Resize handle for top edge */}
-              <div
-                className='resize-handle resize-handle-top'
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '12px',
-                  cursor: 'ns-resize',
-                  zIndex: 15,
-                  touchAction: 'none'
-                }}
-                onTouchStart={e => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setIsResizing(true);
-                  const startY = e.touches[0].clientY;
-                  const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-                  const startTop = tile.mobileY || 0;
+              {/* Edit mode indicator */}
+              {isEditing && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '8px',
+                    backgroundColor: 'rgba(99, 137, 158, 0.9)',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    zIndex: 20,
+                    pointerEvents: 'none'
+                  }}
+                >
+                  Edit Mode
+                </div>
+              )}
 
-                  const handleMove = moveEvent => {
-                    moveEvent.preventDefault();
-                    const currentY = moveEvent.touches[0].clientY;
-                    const deltaY = startY - currentY; // Inverted for top resize
-                    const newHeight = Math.max(100, startHeight + deltaY);
-                    handleResize(tile._id, newHeight, true);
-                  };
+              {/* Resize handle for top edge - only visible in edit mode */}
+              {isEditing && (
+                <div
+                  className='resize-handle resize-handle-top'
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '12px',
+                    cursor: 'ns-resize',
+                    zIndex: 15,
+                    touchAction: 'none'
+                  }}
+                  onTouchStart={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsResizing(true);
+                    const startY = e.touches[0].clientY;
+                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                    const startTop = tile.mobileY || 0;
 
-                  const handleEnd = () => {
-                    setIsResizing(false);
-                    document.removeEventListener('touchmove', handleMove, { passive: false });
-                    document.removeEventListener('touchend', handleEnd);
-                  };
+                    const handleMove = moveEvent => {
+                      moveEvent.preventDefault();
+                      const currentY = moveEvent.touches[0].clientY;
+                      const deltaY = startY - currentY; // Inverted for top resize
+                      const newHeight = Math.max(100, startHeight + deltaY);
+                      handleResize(tile._id, newHeight, true);
+                    };
 
-                  document.addEventListener('touchmove', handleMove, { passive: false });
-                  document.addEventListener('touchend', handleEnd);
-                }}
-                onMouseDown={e => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setIsResizing(true);
-                  const startY = e.clientY;
-                  const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                    const handleEnd = () => {
+                      setIsResizing(false);
+                      // Exit edit mode after resize ends
+                      setEditingTileId(null);
+                      document.removeEventListener('touchmove', handleMove, { passive: false });
+                      document.removeEventListener('touchend', handleEnd);
+                    };
 
-                  const handleMove = moveEvent => {
-                    moveEvent.preventDefault();
-                    const currentY = moveEvent.clientY;
-                    const deltaY = startY - currentY; // Inverted for top resize
-                    const newHeight = Math.max(100, startHeight + deltaY);
-                    handleResize(tile._id, newHeight, true);
-                  };
+                    document.addEventListener('touchmove', handleMove, { passive: false });
+                    document.addEventListener('touchend', handleEnd);
+                  }}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsResizing(true);
+                    const startY = e.clientY;
+                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
 
-                  const handleEnd = () => {
-                    setIsResizing(false);
-                    document.removeEventListener('mousemove', handleMove);
-                    document.removeEventListener('mouseup', handleEnd);
-                  };
+                    const handleMove = moveEvent => {
+                      moveEvent.preventDefault();
+                      const currentY = moveEvent.clientY;
+                      const deltaY = startY - currentY; // Inverted for top resize
+                      const newHeight = Math.max(100, startHeight + deltaY);
+                      handleResize(tile._id, newHeight, true);
+                    };
 
-                  document.addEventListener('mousemove', handleMove);
-                  document.addEventListener('mouseup', handleEnd);
-                }}
-              />
+                    const handleEnd = () => {
+                      setIsResizing(false);
+                      // Exit edit mode after resize ends
+                      setEditingTileId(null);
+                      document.removeEventListener('mousemove', handleMove);
+                      document.removeEventListener('mouseup', handleEnd);
+                    };
 
-              {/* Resize handle for bottom edge */}
-              <div
-                className='resize-handle resize-handle-bottom'
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '12px',
-                  cursor: 'ns-resize',
-                  zIndex: 15,
-                  touchAction: 'none'
-                }}
-                onTouchStart={e => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setIsResizing(true);
-                  const startY = e.touches[0].clientY;
-                  const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                    document.addEventListener('mousemove', handleMove);
+                    document.addEventListener('mouseup', handleEnd);
+                  }}
+                />
+              )}
 
-                  const handleMove = moveEvent => {
-                    moveEvent.preventDefault();
-                    const currentY = moveEvent.touches[0].clientY;
-                    const deltaY = currentY - startY;
-                    const newHeight = Math.max(100, startHeight + deltaY);
-                    handleResize(tile._id, newHeight, false);
-                  };
+              {/* Resize handle for bottom edge - only visible in edit mode */}
+              {isEditing && (
+                <div
+                  className='resize-handle resize-handle-bottom'
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '12px',
+                    cursor: 'ns-resize',
+                    zIndex: 15,
+                    touchAction: 'none'
+                  }}
+                  onTouchStart={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsResizing(true);
+                    const startY = e.touches[0].clientY;
+                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
 
-                  const handleEnd = () => {
-                    setIsResizing(false);
-                    document.removeEventListener('touchmove', handleMove, { passive: false });
-                    document.removeEventListener('touchend', handleEnd);
-                  };
+                    const handleMove = moveEvent => {
+                      moveEvent.preventDefault();
+                      const currentY = moveEvent.touches[0].clientY;
+                      const deltaY = currentY - startY;
+                      const newHeight = Math.max(100, startHeight + deltaY);
+                      handleResize(tile._id, newHeight, false);
+                    };
 
-                  document.addEventListener('touchmove', handleMove, { passive: false });
-                  document.addEventListener('touchend', handleEnd);
-                }}
-                onMouseDown={e => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setIsResizing(true);
-                  const startY = e.clientY;
-                  const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                    const handleEnd = () => {
+                      setIsResizing(false);
+                      // Exit edit mode after resize ends
+                      setEditingTileId(null);
+                      document.removeEventListener('touchmove', handleMove, { passive: false });
+                      document.removeEventListener('touchend', handleEnd);
+                    };
 
-                  const handleMove = moveEvent => {
-                    moveEvent.preventDefault();
-                    const currentY = moveEvent.clientY;
-                    const deltaY = currentY - startY;
-                    const newHeight = Math.max(100, startHeight + deltaY);
-                    handleResize(tile._id, newHeight, false);
-                  };
+                    document.addEventListener('touchmove', handleMove, { passive: false });
+                    document.addEventListener('touchend', handleEnd);
+                  }}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setIsResizing(true);
+                    const startY = e.clientY;
+                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
 
-                  const handleEnd = () => {
-                    setIsResizing(false);
-                    document.removeEventListener('mousemove', handleMove);
-                    document.removeEventListener('mouseup', handleEnd);
-                  };
+                    const handleMove = moveEvent => {
+                      moveEvent.preventDefault();
+                      const currentY = moveEvent.clientY;
+                      const deltaY = currentY - startY;
+                      const newHeight = Math.max(100, startHeight + deltaY);
+                      handleResize(tile._id, newHeight, false);
+                    };
 
-                  document.addEventListener('mousemove', handleMove);
-                  document.addEventListener('mouseup', handleEnd);
-                }}
-              />
+                    const handleEnd = () => {
+                      setIsResizing(false);
+                      // Exit edit mode after resize ends
+                      setEditingTileId(null);
+                      document.removeEventListener('mousemove', handleMove);
+                      document.removeEventListener('mouseup', handleEnd);
+                    };
+
+                    document.addEventListener('mousemove', handleMove);
+                    document.addEventListener('mouseup', handleEnd);
+                  }}
+                />
+              )}
 
               {tile.displayTitle && (
                 <div
