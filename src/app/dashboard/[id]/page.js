@@ -369,7 +369,7 @@ function OptimizedDashboardPage() {
   }
 
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       {}
       {isFetching && (
         <div
