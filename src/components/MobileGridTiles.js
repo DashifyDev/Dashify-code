@@ -11,6 +11,7 @@ import { dashboardKeys } from '@/hooks/useDashboard';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -872,7 +873,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
             right: '0',
             backgroundColor: '#63899e',
             color: 'white',
-            padding: '6пpx 12px',
+            padding: '6px 12px',
             borderRadius: '0 0 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
@@ -1020,10 +1021,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: '12px',
+                      height: '24px', // Increased from 12px for easier touch
                       cursor: 'ns-resize',
                       zIndex: 15,
-                      touchAction: 'none'
+                      touchAction: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(99, 137, 158, 0.2)', // Visual indicator
+                      borderTop: '2px dashed rgba(99, 137, 158, 0.6)',
+                      borderTopLeftRadius: '10px',
+                      borderTopRightRadius: '10px'
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1078,7 +1086,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       document.addEventListener('mousemove', handleMove);
                       document.addEventListener('mouseup', handleEnd);
                     }}
-                  />
+                  >
+                    {/* Visual indicator - resize icon */}
+                    <UnfoldMoreIcon
+                      style={{
+                        fontSize: '18px',
+                        color: 'rgba(99, 137, 158, 0.8)',
+                        transform: 'rotate(180deg)',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </div>
                 )}
 
                 {/* Resize handle for bottom edge - only visible in edit mode */}
@@ -1090,10 +1108,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: '12px',
+                      height: '24px', // Increased from 12px for easier touch
                       cursor: 'ns-resize',
                       zIndex: 15,
-                      touchAction: 'none'
+                      touchAction: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(99, 137, 158, 0.2)', // Visual indicator
+                      borderBottom: '2px dashed rgba(99, 137, 158, 0.6)',
+                      borderBottomLeftRadius: '10px',
+                      borderBottomRightRadius: '10px'
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1147,7 +1172,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       document.addEventListener('mousemove', handleMove);
                       document.addEventListener('mouseup', handleEnd);
                     }}
-                  />
+                  >
+                    {/* Visual indicator - resize icon */}
+                    <UnfoldMoreIcon
+                      style={{
+                        fontSize: '18px',
+                        color: 'rgba(99, 137, 158, 0.8)',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </div>
                 )}
 
                 {tile.displayTitle && (
