@@ -797,6 +797,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
     const timer = setTimeout(() => {
       if (!hasMoved.current) {
+        console.log('Entering edit mode for tile:', tileId);
         setEditingTileId(tileId);
         // Haptic feedback if available
         if (navigator.vibrate) {
@@ -805,7 +806,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
       }
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('mousemove', handleMove);
-    }, 1500); // 1.5 seconds
+    }, 750); // 0.75 seconds
 
     setLongPressTimer(timer);
   };
@@ -838,455 +839,515 @@ const MobileGridTiles = memo(function MobileGridTiles({
   }, [editingTileId]);
 
   return (
-    <div ref={containerRef} className='mobile-grid-container' style={{ paddingBottom: '20px' }}>
-      <ReactSortable
-        list={sortedTiles}
-        setList={handleSortEnd}
-        animation={200}
-        disabled={!editingTileId} // Disable drag by default, enable only in edit mode
-        filter='.drag-handle, .resize-handle'
-        preventOnFilter={false}
-        onStart={evt => {
-          // Only allow drag if tile is in edit mode
-          const draggedTile = evt.item;
-          const tileId = draggedTile.getAttribute('data-tile-id');
+    <>
+      {/* Edit mode badge - shown at top of page under header */}
+      {editingTileId && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '0px', // Start from very top for testing
+            left: '0',
+            backgroundColor: '#63899e',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '0 0 8px 0',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            zIndex: 99999, // Very high z-index
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            pointerEvents: 'none',
+            transition: 'opacity 0.2s ease, transform 0.2s ease',
+            whiteSpace: 'nowrap',
+            width: 'auto',
+            minWidth: '120px',
+            opacity: 0.8,
+            textAlign: 'center'
+          }}
+        >
+          Edit Mode
+        </div>
+      )}
+      <div ref={containerRef} className='mobile-grid-container' style={{ paddingBottom: '20px' }}>
+        <ReactSortable
+          list={sortedTiles}
+          setList={handleSortEnd}
+          animation={200}
+          disabled={!editingTileId} // Disable drag by default, enable only in edit mode
+          filter='.drag-handle, .resize-handle'
+          preventOnFilter={false}
+          onStart={evt => {
+            // Only allow drag if tile is in edit mode
+            const draggedTile = evt.item;
+            const tileId = draggedTile.getAttribute('data-tile-id');
 
-          if (tileId !== editingTileId) {
-            return false; // Prevent drag if not in edit mode
-          }
+            if (tileId !== editingTileId) {
+              return false; // Prevent drag if not in edit mode
+            }
 
-          // Check if drag started on resize handle or settings button
-          const clickedResize = evt.originalEvent?.target?.closest('.resize-handle');
-          const clickedSettings = evt.originalEvent?.target?.closest('.drag-handle');
+            // Check if drag started on resize handle or settings button
+            const clickedResize = evt.originalEvent?.target?.closest('.resize-handle');
+            const clickedSettings = evt.originalEvent?.target?.closest('.drag-handle');
 
-          if (clickedResize || clickedSettings) {
-            return false; // Prevent drag
-          }
-          setIsDragging(true);
-        }}
-        onEnd={() => {
-          setIsDragging(false);
-          // Exit edit mode after drag ends
-          setEditingTileId(null);
-        }}
-        style={{ display: 'flex', flexDirection: 'column' }}
-      >
-        {sortedTiles.map((tile, index) => {
-          const computedStyle = style(tile);
-          const isImgBackground = isBackgroundImage(tile.tileBackground);
-          const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+            if (clickedResize || clickedSettings) {
+              return false; // Prevent drag
+            }
+            setIsDragging(true);
+          }}
+          onEnd={() => {
+            setIsDragging(false);
+            // Exit edit mode after drag ends
+            setEditingTileId(null);
+          }}
+          style={{ display: 'flex', flexDirection: 'column' }}
+        >
+          {sortedTiles.map((tile, index) => {
+            const computedStyle = style(tile);
+            const isImgBackground = isBackgroundImage(tile.tileBackground);
+            const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
 
-          const isEditing = editingTileId === String(tile._id || '');
+            const isEditing = editingTileId === String(tile._id || '');
 
-          return (
-            <div
-              key={tile._id || index}
-              data-tile-id={tile._id}
-              style={{
-                ...computedStyle,
-                position: 'relative',
-                marginBottom: '16px',
-                touchAction: isResizing ? 'none' : isEditing ? 'none' : 'pan-y',
-                opacity: isEditing ? 0.95 : 1,
-                boxShadow: isEditing ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
-                transform: isEditing ? 'scaleX(1.02)' : 'scaleX(1)',
-                transition: isEditing
-                  ? 'box-shadow 0.2s ease, transform 0.2s ease'
-                  : 'transform 0.2s ease',
-                userSelect: 'none', // Prevent text selection
-                WebkitUserSelect: 'none', // Safari
-                MozUserSelect: 'none', // Firefox
-                msUserSelect: 'none' // IE/Edge
-              }}
-              onTouchStart={e => {
-                // Don't handle if resizing or clicking on interactive elements
-                if (isResizing) return;
-                const target = e.target;
-                if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
-                  return;
-                }
-
-                // If not in edit mode, start long press timer
-                if (!isEditing) {
-                  handleLongPressStart(tile._id, e);
-                }
-
-                // Handle double tap for actions
-                if (isDblTouchTap(e)) {
-                  handleLongPressEnd(); // Cancel long press
-                  onDoubleTap(e, tile.action, tile.tileContent, tile, index);
-                }
-              }}
-              onTouchEnd={handleLongPressEnd}
-              onTouchCancel={handleLongPressEnd}
-              onDoubleClick={e => {
-                if (isResizing) return;
-                const target = e.target;
-                if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
-                  return;
-                }
-                onDoubleTap(e, tile.action, tile.tileContent, tile, index);
-              }}
-            >
-              {/* Settings button - opens tile settings modal */}
+            return (
               <div
-                className='drag-handle'
+                key={tile._id || index}
+                data-tile-id={tile._id}
                 style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  width: '24px',
-                  height: '24px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 10,
-                  opacity: isEditing ? 1 : 0.7,
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  borderRadius: '4px',
-                  padding: '2px',
-                  transition: 'opacity 0.2s ease'
-                }}
-                onClick={e => {
-                  e.stopPropagation();
-                  openModel(e, index);
+                  ...computedStyle,
+                  position: 'relative',
+                  marginBottom: '16px',
+                  touchAction: isResizing ? 'none' : isEditing ? 'none' : 'pan-y',
+                  opacity: isEditing ? 0.95 : 1,
+                  boxShadow: isEditing ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none',
+                  transform: isEditing ? 'scaleX(1.02)' : 'scaleX(1)',
+                  transition: isEditing
+                    ? 'box-shadow 0.2s ease, transform 0.2s ease'
+                    : 'transform 0.2s ease',
+                  userSelect: 'none', // Prevent text selection
+                  WebkitUserSelect: 'none', // Safari
+                  MozUserSelect: 'none', // Firefox
+                  msUserSelect: 'none' // IE/Edge
                 }}
                 onTouchStart={e => {
-                  e.stopPropagation();
-                  handleLongPressEnd(); // Cancel long press
-                  // Prevent drag when clicking settings button
+                  // Don't handle if resizing or clicking on interactive elements
+                  if (isResizing) return;
+                  const target = e.target;
+                  if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
+                    return;
+                  }
+
+                  // If not in edit mode, start long press timer
+                  if (!isEditing) {
+                    handleLongPressStart(tile._id, e);
+                  }
+
+                  // Handle double tap for actions
+                  if (isDblTouchTap(e)) {
+                    handleLongPressEnd(); // Cancel long press
+                    onDoubleTap(e, tile.action, tile.tileContent, tile, index);
+                  }
+                }}
+                onTouchEnd={handleLongPressEnd}
+                onTouchCancel={handleLongPressEnd}
+                onDoubleClick={e => {
+                  if (isResizing) return;
+                  const target = e.target;
+                  if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
+                    return;
+                  }
+                  onDoubleTap(e, tile.action, tile.tileContent, tile, index);
                 }}
               >
-                <MoreHorizSharpIcon style={{ fontSize: '20px' }} />
-              </div>
-
-              {/* Edit mode indicator */}
-              {isEditing && (
+                {/* Settings button - opens tile settings modal */}
                 <div
+                  className='drag-handle'
                   style={{
                     position: 'absolute',
                     top: '8px',
-                    left: '8px',
-                    backgroundColor: 'rgba(99, 137, 158, 0.9)',
-                    color: 'white',
-                    padding: '4px 8px',
+                    right: '8px',
+                    width: '24px',
+                    height: '24px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    opacity: isEditing ? 1 : 0.7,
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    zIndex: 20,
-                    pointerEvents: 'none'
+                    padding: '2px',
+                    transition: 'opacity 0.2s ease'
+                  }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    openModel(e, index);
+                  }}
+                  onTouchStart={e => {
+                    e.stopPropagation();
+                    handleLongPressEnd(); // Cancel long press
+                    // Prevent drag when clicking settings button
                   }}
                 >
-                  Edit Mode
+                  <MoreHorizSharpIcon style={{ fontSize: '20px' }} />
                 </div>
-              )}
 
-              {/* Resize handle for top edge - only visible in edit mode */}
-              {isEditing && (
-                <div
-                  className='resize-handle resize-handle-top'
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '12px',
-                    cursor: 'ns-resize',
-                    zIndex: 15,
-                    touchAction: 'none'
-                  }}
-                  onTouchStart={e => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setIsResizing(true);
-                    const startY = e.touches[0].clientY;
-                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-                    const startTop = tile.mobileY || 0;
+                {/* Resize handle for top edge - only visible in edit mode */}
+                {isEditing && (
+                  <div
+                    className='resize-handle resize-handle-top'
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '12px',
+                      cursor: 'ns-resize',
+                      zIndex: 15,
+                      touchAction: 'none'
+                    }}
+                    onTouchStart={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsResizing(true);
+                      const startY = e.touches[0].clientY;
+                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                      const startTop = tile.mobileY || 0;
 
-                    const handleMove = moveEvent => {
-                      moveEvent.preventDefault();
-                      const currentY = moveEvent.touches[0].clientY;
-                      const deltaY = startY - currentY; // Inverted for top resize
-                      const newHeight = Math.max(100, startHeight + deltaY);
-                      handleResize(tile._id, newHeight, true);
-                    };
+                      const handleMove = moveEvent => {
+                        moveEvent.preventDefault();
+                        const currentY = moveEvent.touches[0].clientY;
+                        const deltaY = startY - currentY; // Inverted for top resize
+                        const newHeight = Math.max(100, startHeight + deltaY);
+                        handleResize(tile._id, newHeight, true);
+                      };
 
-                    const handleEnd = () => {
-                      setIsResizing(false);
-                      // Exit edit mode after resize ends
-                      setEditingTileId(null);
-                      document.removeEventListener('touchmove', handleMove, { passive: false });
-                      document.removeEventListener('touchend', handleEnd);
-                    };
+                      const handleEnd = () => {
+                        setIsResizing(false);
+                        // Exit edit mode after resize ends
+                        setEditingTileId(null);
+                        document.removeEventListener('touchmove', handleMove, { passive: false });
+                        document.removeEventListener('touchend', handleEnd);
+                      };
 
-                    document.addEventListener('touchmove', handleMove, { passive: false });
-                    document.addEventListener('touchend', handleEnd);
-                  }}
-                  onMouseDown={e => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setIsResizing(true);
-                    const startY = e.clientY;
-                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+                      document.addEventListener('touchmove', handleMove, { passive: false });
+                      document.addEventListener('touchend', handleEnd);
+                    }}
+                    onMouseDown={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsResizing(true);
+                      const startY = e.clientY;
+                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
 
-                    const handleMove = moveEvent => {
-                      moveEvent.preventDefault();
-                      const currentY = moveEvent.clientY;
-                      const deltaY = startY - currentY; // Inverted for top resize
-                      const newHeight = Math.max(100, startHeight + deltaY);
-                      handleResize(tile._id, newHeight, true);
-                    };
+                      const handleMove = moveEvent => {
+                        moveEvent.preventDefault();
+                        const currentY = moveEvent.clientY;
+                        const deltaY = startY - currentY; // Inverted for top resize
+                        const newHeight = Math.max(100, startHeight + deltaY);
+                        handleResize(tile._id, newHeight, true);
+                      };
 
-                    const handleEnd = () => {
-                      setIsResizing(false);
-                      // Exit edit mode after resize ends
-                      setEditingTileId(null);
-                      document.removeEventListener('mousemove', handleMove);
-                      document.removeEventListener('mouseup', handleEnd);
-                    };
+                      const handleEnd = () => {
+                        setIsResizing(false);
+                        // Exit edit mode after resize ends
+                        setEditingTileId(null);
+                        document.removeEventListener('mousemove', handleMove);
+                        document.removeEventListener('mouseup', handleEnd);
+                      };
 
-                    document.addEventListener('mousemove', handleMove);
-                    document.addEventListener('mouseup', handleEnd);
-                  }}
-                />
-              )}
-
-              {/* Resize handle for bottom edge - only visible in edit mode */}
-              {isEditing && (
-                <div
-                  className='resize-handle resize-handle-bottom'
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '12px',
-                    cursor: 'ns-resize',
-                    zIndex: 15,
-                    touchAction: 'none'
-                  }}
-                  onTouchStart={e => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setIsResizing(true);
-                    const startY = e.touches[0].clientY;
-                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-
-                    const handleMove = moveEvent => {
-                      moveEvent.preventDefault();
-                      const currentY = moveEvent.touches[0].clientY;
-                      const deltaY = currentY - startY;
-                      const newHeight = Math.max(100, startHeight + deltaY);
-                      handleResize(tile._id, newHeight, false);
-                    };
-
-                    const handleEnd = () => {
-                      setIsResizing(false);
-                      // Exit edit mode after resize ends
-                      setEditingTileId(null);
-                      document.removeEventListener('touchmove', handleMove, { passive: false });
-                      document.removeEventListener('touchend', handleEnd);
-                    };
-
-                    document.addEventListener('touchmove', handleMove, { passive: false });
-                    document.addEventListener('touchend', handleEnd);
-                  }}
-                  onMouseDown={e => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setIsResizing(true);
-                    const startY = e.clientY;
-                    const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-
-                    const handleMove = moveEvent => {
-                      moveEvent.preventDefault();
-                      const currentY = moveEvent.clientY;
-                      const deltaY = currentY - startY;
-                      const newHeight = Math.max(100, startHeight + deltaY);
-                      handleResize(tile._id, newHeight, false);
-                    };
-
-                    const handleEnd = () => {
-                      setIsResizing(false);
-                      // Exit edit mode after resize ends
-                      setEditingTileId(null);
-                      document.removeEventListener('mousemove', handleMove);
-                      document.removeEventListener('mouseup', handleEnd);
-                    };
-
-                    document.addEventListener('mousemove', handleMove);
-                    document.addEventListener('mouseup', handleEnd);
-                  }}
-                />
-              )}
-
-              {tile.displayTitle && (
-                <div
-                  className='text_overlay'
-                  style={{
-                    ...TitlePositionStyle(tile),
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none',
-                    MozUserSelect: 'none',
-                    msUserSelect: 'none',
-                    pointerEvents: 'none' // Prevent text selection
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: changedTitlehandle(tile)
-                  }}
-                />
-              )}
-              {isImgBackground && (
-                <Image
-                  src={tile.tileBackground}
-                  alt='Preview'
-                  fill
-                  priority={index < 6}
-                  quality={75}
-                  unoptimized={tile.tileBackground && tile.tileBackground.startsWith('http')}
-                  style={{
-                    objectFit: 'cover',
-                    borderRadius: '10px',
-                    pointerEvents: 'none'
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
-      </ReactSortable>
-
-      {/* Tiles Property Model - Same as desktop */}
-      <Dialog open={showModel} id={`model_${selectedTile}`}>
-        <div className='all_options'>
-          <ul>
-            <li>
-              <h3 className='menu_header'>Box Background</h3>
-              <div className='radio_menu'>
-                <div className='radiosets'>
-                  <FormControl>
-                    <RadioGroup
-                      aria-labelledby='demo-radio-buttons-group-label'
-                      defaultValue={selectedTileDetail.backgroundAction}
-                      name='radio-buttonsColor'
-                      onChange={handleColorImage}
-                    >
-                      <FormControlLabel value='color' control={<Radio />} label='Select Color' />
-                      <FormControlLabel value='image' control={<Radio />} label='Upload Image' />
-                    </RadioGroup>
-                  </FormControl>
-                </div>
-                {selectedTileDetail.backgroundAction === 'color' && (
-                  <ColorPicker
-                    handleColorChange={handleColorChange}
-                    colorBackground={colorBackground}
+                      document.addEventListener('mousemove', handleMove);
+                      document.addEventListener('mouseup', handleEnd);
+                    }}
                   />
                 )}
-                {selectedTileDetail.backgroundAction === 'image' && (
-                  <div className='image_value'>
-                    <Image
-                      src={imageUpload}
-                      alt='image'
-                      width={60}
-                      height={60}
-                      onClick={handleImageInput}
+
+                {/* Resize handle for bottom edge - only visible in edit mode */}
+                {isEditing && (
+                  <div
+                    className='resize-handle resize-handle-bottom'
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '12px',
+                      cursor: 'ns-resize',
+                      zIndex: 15,
+                      touchAction: 'none'
+                    }}
+                    onTouchStart={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsResizing(true);
+                      const startY = e.touches[0].clientY;
+                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+
+                      const handleMove = moveEvent => {
+                        moveEvent.preventDefault();
+                        const currentY = moveEvent.touches[0].clientY;
+                        const deltaY = currentY - startY;
+                        const newHeight = Math.max(100, startHeight + deltaY);
+                        handleResize(tile._id, newHeight, false);
+                      };
+
+                      const handleEnd = () => {
+                        setIsResizing(false);
+                        // Exit edit mode after resize ends
+                        setEditingTileId(null);
+                        document.removeEventListener('touchmove', handleMove, { passive: false });
+                        document.removeEventListener('touchend', handleEnd);
+                      };
+
+                      document.addEventListener('touchmove', handleMove, { passive: false });
+                      document.addEventListener('touchend', handleEnd);
+                    }}
+                    onMouseDown={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsResizing(true);
+                      const startY = e.clientY;
+                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
+
+                      const handleMove = moveEvent => {
+                        moveEvent.preventDefault();
+                        const currentY = moveEvent.clientY;
+                        const deltaY = currentY - startY;
+                        const newHeight = Math.max(100, startHeight + deltaY);
+                        handleResize(tile._id, newHeight, false);
+                      };
+
+                      const handleEnd = () => {
+                        setIsResizing(false);
+                        // Exit edit mode after resize ends
+                        setEditingTileId(null);
+                        document.removeEventListener('mousemove', handleMove);
+                        document.removeEventListener('mouseup', handleEnd);
+                      };
+
+                      document.addEventListener('mousemove', handleMove);
+                      document.addEventListener('mouseup', handleEnd);
+                    }}
+                  />
+                )}
+
+                {tile.displayTitle && (
+                  <div
+                    className='text_overlay'
+                    style={{
+                      ...TitlePositionStyle(tile),
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none',
+                      MozUserSelect: 'none',
+                      msUserSelect: 'none',
+                      pointerEvents: 'none' // Prevent text selection
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: changedTitlehandle(tile)
+                    }}
+                  />
+                )}
+                {isImgBackground && (
+                  <Image
+                    src={tile.tileBackground}
+                    alt='Preview'
+                    fill
+                    priority={index < 6}
+                    quality={75}
+                    unoptimized={tile.tileBackground && tile.tileBackground.startsWith('http')}
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: '10px',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </ReactSortable>
+
+        {/* Tiles Property Model - Same as desktop */}
+        <Dialog open={showModel} id={`model_${selectedTile}`}>
+          <div className='all_options'>
+            <ul>
+              <li>
+                <h3 className='menu_header'>Box Background</h3>
+                <div className='radio_menu'>
+                  <div className='radiosets'>
+                    <FormControl>
+                      <RadioGroup
+                        aria-labelledby='demo-radio-buttons-group-label'
+                        defaultValue={selectedTileDetail.backgroundAction}
+                        name='radio-buttonsColor'
+                        onChange={handleColorImage}
+                      >
+                        <FormControlLabel value='color' control={<Radio />} label='Select Color' />
+                        <FormControlLabel value='image' control={<Radio />} label='Upload Image' />
+                      </RadioGroup>
+                    </FormControl>
+                  </div>
+                  {selectedTileDetail.backgroundAction === 'color' && (
+                    <ColorPicker
+                      handleColorChange={handleColorChange}
+                      colorBackground={colorBackground}
                     />
-                    <div className='file_Name'>
-                      <span>{imageFileName}</span>
+                  )}
+                  {selectedTileDetail.backgroundAction === 'image' && (
+                    <div className='image_value'>
+                      <Image
+                        src={imageUpload}
+                        alt='image'
+                        width={60}
+                        height={60}
+                        onClick={handleImageInput}
+                      />
+                      <div className='file_Name'>
+                        <span>{imageFileName}</span>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    type='file'
+                    accept='image/*'
+                    ref={hiddenFileInput}
+                    style={{ display: 'none' }}
+                    onChange={handleImageChange}
+                  />
+                </div>
+              </li>
+              <li>
+                <h3 className='menu_header'>Box Action</h3>
+                <div className='radio_control'>
+                  <div className='radiosets'>
+                    <FormControl>
+                      <RadioGroup
+                        aria-labelledby='demo-radio-buttons-group-label'
+                        defaultValue={selectedTileDetail.action}
+                        name='radio-buttonsLink'
+                        onChange={changeAction}
+                      >
+                        <FormControlLabel value='link' control={<Radio />} label='Opens Link' />
+                        <FormControlLabel
+                          value='textEditor'
+                          control={<Radio />}
+                          label='Opens Text Editor'
+                        />
+                        <FormControlLabel value='noAction' control={<Radio />} label='No Action' />
+                      </RadioGroup>
+                    </FormControl>
+                    <input
+                      type='text'
+                      className='url_text'
+                      value={selectedTileDetail.tileLink}
+                      onChange={enterLink}
+                      placeholder='Add URL here'
+                      disabled={selectedTileDetail.action !== 'link'}
+                    />
+                  </div>
+                </div>
+              </li>
+              <li>
+                <h3 className='menu_header'>Box Text</h3>
+                <div className='title_editor'>
+                  <div className='display_title'>
+                    <div className='display_title_check'>
+                      <input
+                        type='checkbox'
+                        checked={selectedTileDetail.displayTitle}
+                        onChange={displayTitle}
+                      />
+                      <label>Display Text</label>
+                    </div>
+                    <div className='position'>
+                      <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
+                        <option value={1}>Left</option>
+                        <option value={2}>Center</option>
+                        <option value={3}>Right</option>
+                      </select>
+                      <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
+                        <option value={1}>Top</option>
+                        <option value={2}>Center</option>
+                        <option value={3}>Bottom</option>
+                      </select>
                     </div>
                   </div>
-                )}
-                <input
-                  type='file'
-                  accept='image/*'
-                  ref={hiddenFileInput}
-                  style={{ display: 'none' }}
-                  onChange={handleImageChange}
-                />
-              </div>
-            </li>
-            <li>
-              <h3 className='menu_header'>Box Action</h3>
-              <div className='radio_control'>
-                <div className='radiosets'>
-                  <FormControl>
-                    <RadioGroup
-                      aria-labelledby='demo-radio-buttons-group-label'
-                      defaultValue={selectedTileDetail.action}
-                      name='radio-buttonsLink'
-                      onChange={changeAction}
-                    >
-                      <FormControlLabel value='link' control={<Radio />} label='Opens Link' />
-                      <FormControlLabel
-                        value='textEditor'
-                        control={<Radio />}
-                        label='Opens Text Editor'
-                      />
-                      <FormControlLabel value='noAction' control={<Radio />} label='No Action' />
-                    </RadioGroup>
-                  </FormControl>
-                  <input
-                    type='text'
-                    className='url_text'
-                    value={selectedTileDetail.tileLink}
-                    onChange={enterLink}
-                    placeholder='Add URL here'
-                    disabled={selectedTileDetail.action !== 'link'}
+                  <Image
+                    src={text}
+                    alt='TEXT'
+                    onClick={() => setEditorOpen(true)}
+                    className='text-editor-image'
                   />
                 </div>
-              </div>
-            </li>
-            <li>
-              <h3 className='menu_header'>Box Text</h3>
-              <div className='title_editor'>
-                <div className='display_title'>
-                  <div className='display_title_check'>
-                    <input
-                      type='checkbox'
-                      checked={selectedTileDetail.displayTitle}
-                      onChange={displayTitle}
-                    />
-                    <label>Display Text</label>
-                  </div>
-                  <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
-                      <option value={1}>Left</option>
-                      <option value={2}>Center</option>
-                      <option value={3}>Right</option>
-                    </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
-                      <option value={1}>Top</option>
-                      <option value={2}>Center</option>
-                      <option value={3}>Bottom</option>
-                    </select>
-                  </div>
+              </li>
+            </ul>
+            <div className='line_break'></div>
+            <div className='menu_action'>
+              <div>
+                <div className='delete_duplicate_action'>
+                  <span onClick={() => tileClone(selectedTile)}>
+                    <DifferenceOutlinedIcon />
+                  </span>
+                  <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
                 </div>
-                <Image
-                  src={text}
-                  alt='TEXT'
-                  onClick={() => setEditorOpen(true)}
-                  className='text-editor-image'
-                />
+                <div className='delete_duplicate_action'>
+                  <span onClick={() => deleteTile(selectedTile)}>
+                    <DeleteOutlineIcon />
+                  </span>
+                  <span onClick={() => deleteTile(selectedTile)}>Delete</span>
+                </div>
               </div>
-            </li>
-          </ul>
-          <div className='line_break'></div>
-          <div className='menu_action'>
-            <div>
-              <div className='delete_duplicate_action'>
-                <span onClick={() => tileClone(selectedTile)}>
-                  <DifferenceOutlinedIcon />
-                </span>
-                <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
-              </div>
-              <div className='delete_duplicate_action'>
-                <span onClick={() => deleteTile(selectedTile)}>
-                  <DeleteOutlineIcon />
-                </span>
-                <span onClick={() => deleteTile(selectedTile)}>Delete</span>
+              <div
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  paddingRight: '25px'
+                }}
+              >
+                <Button
+                  className='button_cancel'
+                  sx={{ color: '#63899e', marginRight: '3px' }}
+                  onClick={() => {
+                    setShowModel(false);
+                    setColorBackground(null);
+                    setFormValue({});
+                    setSelectedTile(null);
+                    setImageFileName(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className='button_filled'
+                  sx={{
+                    background: '#63899e',
+                    color: '#fff',
+                    '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
+                  }}
+                  onClick={() => handleSave(selectedTile)}
+                >
+                  Save
+                </Button>
               </div>
             </div>
+          </div>
+        </Dialog>
+
+        <Dialog maxWidth={'md'} open={editorOpen}>
+          <DialogContent
+            sx={{
+              height: '540px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.8rem'
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <TipTapMainEditor
+                initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
+                onContentChange={html => enterText(html)}
+              />
+            </div>
+          </DialogContent>
+          <DialogActions>
             <div
               sx={{
                 display: 'flex',
@@ -1294,86 +1355,34 @@ const MobileGridTiles = memo(function MobileGridTiles({
                 paddingRight: '25px'
               }}
             >
-              <Button
-                className='button_cancel'
-                sx={{ color: '#63899e', marginRight: '3px' }}
-                onClick={() => {
-                  setShowModel(false);
-                  setColorBackground(null);
-                  setFormValue({});
-                  setSelectedTile(null);
-                  setImageFileName(null);
-                }}
-              >
-                Cancel
+              <Button onClick={() => setEditorOpen(false)} sx={{ color: '#63899e' }}>
+                Close
               </Button>
               <Button
-                className='button_filled'
+                onClick={saveEditorText}
                 sx={{
                   background: '#63899e',
                   color: '#fff',
                   '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
                 }}
-                onClick={() => handleSave(selectedTile)}
               >
                 Save
               </Button>
             </div>
-          </div>
-        </div>
-      </Dialog>
+          </DialogActions>
+        </Dialog>
 
-      <Dialog maxWidth={'md'} open={editorOpen}>
-        <DialogContent
-          sx={{
-            height: '540px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.8rem'
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <TipTapMainEditor
-              initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
-              onContentChange={html => enterText(html)}
-            />
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <div
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              paddingRight: '25px'
-            }}
-          >
-            <Button onClick={() => setEditorOpen(false)} sx={{ color: '#63899e' }}>
-              Close
-            </Button>
-            <Button
-              onClick={saveEditorText}
-              sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
-              }}
-            >
-              Save
-            </Button>
-          </div>
-        </DialogActions>
-      </Dialog>
-
-      <TipTapTextEditorDialog
-        open={openTextEditor}
-        onClose={handleCloseTextEditor}
-        content={textEditorContent}
-        onSave={updateEditorContent}
-        label={editorLabel}
-        tileDetails={tileCordinates}
-        selectedTileIndex={selectedTile}
-      />
-    </div>
+        <TipTapTextEditorDialog
+          open={openTextEditor}
+          onClose={handleCloseTextEditor}
+          content={textEditorContent}
+          onSave={updateEditorContent}
+          label={editorLabel}
+          tileDetails={tileCordinates}
+          selectedTileIndex={selectedTile}
+        />
+      </div>
+    </>
   );
 });
 
