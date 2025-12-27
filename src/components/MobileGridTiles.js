@@ -846,11 +846,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
           style={{
             position: 'absolute',
             top: '0px', // Start from very top for testing
-            left: '0',
+            right: '0',
             backgroundColor: '#63899e',
             color: 'white',
             padding: '12px 24px',
-            borderRadius: '0 0 8px 0',
+            borderRadius: '0 0 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
             zIndex: 99999, // Very high z-index
@@ -860,7 +860,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
             whiteSpace: 'nowrap',
             width: 'auto',
             minWidth: '120px',
-            opacity: 0.8,
             textAlign: 'center'
           }}
         >
