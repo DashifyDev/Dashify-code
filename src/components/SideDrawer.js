@@ -1,10 +1,11 @@
 "use client";
 "use strict";
-import { Drawer, ListItem, ListItemText, List } from "@mui/material";
+import { Drawer, ListItem, ListItemText, List, Button, Divider } from "@mui/material";
 import React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import "../styles/styles.css";
-function SideDrawer({ open, close, user }) {
+function SideDrawer({ open, close, user, isMobile, authUser }) {
   const router = useRouter();
 
   // const reDirectToInfo = (id) => {
@@ -84,6 +85,64 @@ function SideDrawer({ open, close, user }) {
             </p>
           </ListItem>
         </List>
+        {isMobile && !authUser && (
+          <>
+            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', my: 2 }} />
+            <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link 
+                href='/api/auth/login' 
+                prefetch={false} 
+                style={{ 
+                  textDecoration: 'none',
+                  width: '100%'
+                }}
+                onClick={close}
+              >
+                <Button
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    backgroundColor: '#fff',
+                    color: '#63899e',
+                    fontWeight: '600',
+                    padding: '10px 20px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                    }
+                  }}
+                >
+                  Sign up
+                </Button>
+              </Link>
+              <Link 
+                href='/api/auth/login' 
+                prefetch={false} 
+                style={{ 
+                  textDecoration: 'none',
+                  width: '100%'
+                }}
+                onClick={close}
+              >
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  sx={{
+                    borderColor: '#fff',
+                    color: '#fff',
+                    fontWeight: '600',
+                    padding: '10px 20px',
+                    '&:hover': {
+                      borderColor: 'rgba(255, 255, 255, 0.8)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
+                >
+                  Login
+                </Button>
+              </Link>
+            </div>
+          </>
+        )}
       </Drawer>
     </div>
   );

@@ -10,8 +10,9 @@ import isDblTouchTap from '@/hooks/isDblTouchTap';
 import { dashboardKeys } from '@/hooks/useDashboard';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -487,6 +488,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
   };
 
   const handleSave = index => {
+    console.log('[ORDER DEBUG] handleSave - START');
+    console.log('[ORDER DEBUG] formValue:', formValue);
+    console.log('[ORDER DEBUG] selectedTileDetail:', selectedTileDetail);
+    console.log(
+      '[ORDER DEBUG] tileCordinates before:',
+      tileCordinates.map(t => ({ id: t._id, order: t.order }))
+    );
+
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
@@ -511,12 +520,110 @@ const MobileGridTiles = memo(function MobileGridTiles({
     if (tileIndex < 0) return;
 
     let tileId = items[tileIndex]._id;
+    const newOrder = payload.order;
+    const currentOrder = items[tileIndex].order;
+
+    console.log(
+      '[ORDER DEBUG] tileId:',
+      tileId,
+      'currentOrder:',
+      currentOrder,
+      'newOrder:',
+      newOrder
+    );
+
+    // Recalculate order for all tiles if order was changed
+    if (newOrder !== undefined && newOrder !== null && newOrder > 0) {
+      const hasCurrentOrder =
+        currentOrder !== undefined && currentOrder !== null && currentOrder > 0;
+
+      console.log(
+        '[ORDER DEBUG] hasCurrentOrder:',
+        hasCurrentOrder,
+        'newOrder:',
+        newOrder,
+        'currentOrder:',
+        currentOrder
+      );
+
+      // Update order for all tiles to avoid duplicates
+      const updatedTiles = items.map(tile => {
+        // Skip the tile being edited
+        if (String(tile._id) === String(tileId)) {
+          console.log('[ORDER DEBUG] Updating edited tile:', tile._id, 'to order:', newOrder);
+          return { ...tile, order: newOrder };
+        }
+
+        const tileOrder = tile.order;
+        const hasTileOrder = tileOrder !== undefined && tileOrder !== null && tileOrder > 0;
+
+        // If the edited tile didn't have an order (new tile or order was 0/null)
+        if (!hasCurrentOrder) {
+          // Shift tiles with order >= newOrder up by 1 to make space
+          if (hasTileOrder && tileOrder >= newOrder) {
+            console.log(
+              '[ORDER DEBUG] Shifting tile:',
+              tile._id,
+              'from order',
+              tileOrder,
+              'to',
+              tileOrder + 1,
+              '(new tile inserted)'
+            );
+            return { ...tile, order: tileOrder + 1 };
+          }
+        }
+        // If moving to a lower order (e.g., from 4 to 2)
+        else if (newOrder < currentOrder) {
+          // Shift tiles with order >= newOrder and < currentOrder up by 1
+          if (hasTileOrder && tileOrder >= newOrder && tileOrder < currentOrder) {
+            console.log(
+              '[ORDER DEBUG] Shifting tile:',
+              tile._id,
+              'from order',
+              tileOrder,
+              'to',
+              tileOrder + 1,
+              '(moved up)'
+            );
+            return { ...tile, order: tileOrder + 1 };
+          }
+        }
+        // If moving to a higher order (e.g., from 2 to 4)
+        else if (newOrder > currentOrder) {
+          // Shift tiles with order > currentOrder and <= newOrder down by 1
+          if (hasTileOrder && tileOrder > currentOrder && tileOrder <= newOrder) {
+            console.log(
+              '[ORDER DEBUG] Shifting tile:',
+              tile._id,
+              'from order',
+              tileOrder,
+              'to',
+              tileOrder - 1,
+              '(moved down)'
+            );
+            return { ...tile, order: tileOrder - 1 };
+          }
+        }
+        // If order stays the same, no changes needed
+        return tile;
+      });
+
+      console.log(
+        '[ORDER DEBUG] tileCordinates after recalculation:',
+        updatedTiles.map(t => ({ id: t._id, order: t.order }))
+      );
+      items = updatedTiles;
+      setTileCordinates(updatedTiles);
+    }
     setFormValue({});
     setImageFileName(null);
     setColorBackground(null);
     setShowModel(false);
     if (dbUser) {
+      // Save the main tile first
       axios.patch(`/api/tile/${tileId}`, formData).then(res => {
+        console.log('[ORDER DEBUG] Main tile saved, response:', res.data);
         if (
           selectedTile === null ||
           selectedTile === undefined ||
@@ -525,19 +632,82 @@ const MobileGridTiles = memo(function MobileGridTiles({
         ) {
           return;
         }
-        let item = { ...items[tileIndex], ...res.data };
-        items[tileIndex] = item;
+
+        // Find the updated tile index again (in case items array was modified)
+        const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
+        if (updatedTileIndex < 0) {
+          console.error('[ORDER DEBUG] Tile not found after save:', tileId);
+          return;
+        }
+
+        // Update the tile with server response
+        items[updatedTileIndex] = { ...items[updatedTileIndex], ...res.data };
         setTileCordinates(items);
 
+        // Update React Query cache to sync with desktop
         queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
           if (!oldData) return oldData;
           return {
             ...oldData,
             tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
-              tile._id === tileId ? res.data : tile
+              String(tile._id) === String(tileId) ? res.data : tile
             )
           };
         });
+
+        // Invalidate queries to ensure desktop gets updated data
+        queryClient.invalidateQueries({
+          queryKey: dashboardKeys.detail(activeBoard)
+        });
+
+        // Save order for all tiles that have an order value and were affected by the recalculation
+        const orderUpdatePromises = items
+          .filter(tile => {
+            // Skip temporary IDs and the tile we just saved (it's already saved above)
+            if (String(tile._id).startsWith('temp_') || String(tile._id) === String(tileId)) {
+              return false;
+            }
+            // Only update tiles that have a valid order value (> 0)
+            return tile.order !== undefined && tile.order !== null && tile.order > 0;
+          })
+          .map(tile => {
+            console.log('[ORDER DEBUG] Saving order for tile:', tile._id, 'order:', tile.order);
+            const orderFormData = new FormData();
+            orderFormData.append('formValue', JSON.stringify({ order: tile.order }));
+            return axios.patch(`/api/tile/${tile._id}`, orderFormData).then(res => ({
+              tileId: tile._id,
+              data: res.data
+            }));
+          });
+
+        // Update all affected tiles
+        if (orderUpdatePromises.length > 0) {
+          Promise.all(orderUpdatePromises)
+            .then(responses => {
+              const updatedItems = [...items];
+              responses.forEach(({ tileId, data }) => {
+                const updateIndex = updatedItems.findIndex(t => String(t._id) === String(tileId));
+                if (updateIndex >= 0 && data) {
+                  updatedItems[updateIndex] = { ...updatedItems[updateIndex], ...data };
+                }
+              });
+              setTileCordinates(updatedItems);
+
+              queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                if (!oldData) return oldData;
+                return {
+                  ...oldData,
+                  tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile => {
+                    const updated = updatedItems.find(t => String(t._id) === String(tile._id));
+                    return updated || tile;
+                  })
+                };
+              });
+            })
+            .catch(err => {
+              console.error('Error updating tile orders:', err);
+            });
+        }
 
         setSelectedTile(null);
       });
@@ -555,8 +725,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
           }
           let updatedData = JSON.parse(formData.get('formValue'));
           updatedData.tileBackground = e.target.result;
-          let item = { ...items[tileIndex], ...updatedData };
-          items[tileIndex] = item;
+
+          // Find the updated tile index again (in case items array was modified by order recalculation)
+          const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
+          if (updatedTileIndex < 0) {
+            console.error('[ORDER DEBUG] Tile not found for guest image save:', tileId);
+            setSelectedTile(null);
+            return;
+          }
+
+          let item = { ...items[updatedTileIndex], ...updatedData };
+          items[updatedTileIndex] = item;
           setTileCordinates(items);
           updateTilesInLocalstorage(items);
           setSelectedTile(null);
@@ -564,8 +743,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
         reader.readAsDataURL(formValue.tileBackground);
       } else {
         let updatedData = JSON.parse(formData.get('formValue'));
-        let item = { ...items[tileIndex], ...updatedData };
-        items[tileIndex] = item;
+
+        // Find the updated tile index again (in case items array was modified by order recalculation)
+        const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
+        if (updatedTileIndex < 0) {
+          console.error('[ORDER DEBUG] Tile not found for guest save:', tileId);
+          setSelectedTile(null);
+          return;
+        }
+
+        let item = { ...items[updatedTileIndex], ...updatedData };
+        items[updatedTileIndex] = item;
         setTileCordinates(items);
         updateTilesInLocalstorage(items);
         setSelectedTile(null);
@@ -807,7 +995,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
       }
       document.removeEventListener('touchmove', handleMove);
       document.removeEventListener('mousemove', handleMove);
-    }, 750); // 0.75 seconds
+    }, 500); // 0.5 seconds - shorter for easier editing
 
     setLongPressTimer(timer);
   };
@@ -868,16 +1056,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
       {editingTileId && (
         <div
           style={{
-            position: 'absolute',
-            top: '0px', // Start from very top for testing
+            position: 'fixed',
+            top: '100px', // Start from very top for testing
             right: '0',
             backgroundColor: '#63899e',
             color: 'white',
             padding: '6px 12px',
-            borderRadius: '0 0 0 8px',
+            borderRadius: '8px 0 0 8px',
             fontSize: '16px',
             fontWeight: 'bold',
-            zIndex: 99, // Very high z-index
+            zIndex: 9999, // Very high z-index
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
             pointerEvents: 'none',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
@@ -889,7 +1077,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
           Edit Mode
         </div>
       )}
-      <div ref={containerRef} className='mobile-grid-container' style={{ paddingBottom: '20px' }}>
+      <div
+        ref={containerRef}
+        className='mobile-grid-container'
+        style={{ paddingBottom: '24px', paddingTop: '24px' }}
+      >
         <ReactSortable
           list={sortedTiles}
           setList={handleSortEnd}
@@ -1021,17 +1213,18 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: '24px', // Increased from 12px for easier touch
+                      height: '40px', // Even larger touch area for easier interaction
                       cursor: 'ns-resize',
                       zIndex: 15,
                       touchAction: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(99, 137, 158, 0.2)', // Visual indicator
-                      borderTop: '2px dashed rgba(99, 137, 158, 0.6)',
+                      backgroundColor: 'rgba(128, 128, 128, 0.3)', // Gray background for better visibility
+                      borderTop: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderTopLeftRadius: '10px',
-                      borderTopRightRadius: '10px'
+                      borderTopRightRadius: '10px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1087,15 +1280,34 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       document.addEventListener('mouseup', handleEnd);
                     }}
                   >
-                    {/* Visual indicator - resize icon */}
-                    <UnfoldMoreIcon
+                    {/* Visual indicator - resize icons (up and down arrows) */}
+                    <div
                       style={{
-                        fontSize: '18px',
-                        color: 'rgba(99, 137, 158, 0.8)',
-                        transform: 'rotate(180deg)',
-                        pointerEvents: 'none'
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '-4px',
+                        pointerEvents: 'none',
+                        lineHeight: 0
                       }}
-                    />
+                    >
+                      <KeyboardArrowUpIcon
+                        style={{
+                          fontSize: '24px',
+                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          pointerEvents: 'none',
+                          marginBottom: '-4px'
+                        }}
+                      />
+                      <KeyboardArrowDownIcon
+                        style={{
+                          fontSize: '24px',
+                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          pointerEvents: 'none',
+                          marginTop: '-4px'
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -1108,17 +1320,18 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: '24px', // Increased from 12px for easier touch
+                      height: '40px', // Even larger touch area for easier interaction
                       cursor: 'ns-resize',
                       zIndex: 15,
                       touchAction: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(99, 137, 158, 0.2)', // Visual indicator
-                      borderBottom: '2px dashed rgba(99, 137, 158, 0.6)',
+                      backgroundColor: 'rgba(128, 128, 128, 0.3)', // Gray background for better visibility
+                      borderBottom: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderBottomLeftRadius: '10px',
-                      borderBottomRightRadius: '10px'
+                      borderBottomRightRadius: '10px',
+                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1173,14 +1386,34 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       document.addEventListener('mouseup', handleEnd);
                     }}
                   >
-                    {/* Visual indicator - resize icon */}
-                    <UnfoldMoreIcon
+                    {/* Visual indicator - resize icons (up and down arrows) */}
+                    <div
                       style={{
-                        fontSize: '18px',
-                        color: 'rgba(99, 137, 158, 0.8)',
-                        pointerEvents: 'none'
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '-4px',
+                        pointerEvents: 'none',
+                        lineHeight: 0
                       }}
-                    />
+                    >
+                      <KeyboardArrowUpIcon
+                        style={{
+                          fontSize: '24px',
+                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          pointerEvents: 'none',
+                          marginBottom: '-4px'
+                        }}
+                      />
+                      <KeyboardArrowDownIcon
+                        style={{
+                          fontSize: '24px',
+                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          pointerEvents: 'none',
+                          marginTop: '-4px'
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -1298,6 +1531,58 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       disabled={selectedTileDetail.action !== 'link'}
                     />
                   </div>
+                </div>
+              </li>
+              <li>
+                <h3 className='menu_header'>Box Order</h3>
+                <div style={{ padding: '10px 0' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>
+                    Order (used for text editor navigation):
+                  </label>
+                  <input
+                    type='number'
+                    min='1'
+                    value={
+                      selectedTileDetail.order !== undefined && selectedTileDetail.order !== null
+                        ? selectedTileDetail.order
+                        : ''
+                    }
+                    onChange={e => {
+                      const inputValue = e.target.value;
+                      // Allow empty value for clearing
+                      if (inputValue === '') {
+                        setSelectedTileDetail({ ...selectedTileDetail, order: null });
+                        const values = formValue;
+                        values.order = null;
+                        setFormValue(values);
+                      } else {
+                        const newOrder = parseInt(inputValue);
+                        if (!isNaN(newOrder) && newOrder > 0) {
+                          // Only update the form value, don't recalculate other tiles yet
+                          // Recalculation will happen in handleSave
+                          setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
+                          const values = formValue;
+                          values.order = newOrder;
+                          setFormValue(values);
+                          console.log(
+                            '[ORDER DEBUG] onChange - newOrder:',
+                            newOrder,
+                            'selectedTileDetail:',
+                            selectedTileDetail
+                          );
+                        }
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}
+                  />
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    This determines the order when navigating between boxes in the text editor
+                  </p>
                 </div>
               </li>
               <li>

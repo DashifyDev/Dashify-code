@@ -3,10 +3,12 @@ import { globalContext } from '@/context/globalContext';
 import useAdmin from '@/hooks/isAdmin';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import { dashboardKeys } from '@/hooks/useDashboard';
+import useIsMobile from '@/hooks/useIsMobile';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import AddSharpIcon from '@mui/icons-material/AddSharp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MenuIcon from '@mui/icons-material/Menu';
+import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
 import {
   AppBar,
   Avatar,
@@ -69,6 +71,8 @@ function Header() {
   const isAdmin = useAdmin();
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const [boardMenuAnchor, setBoardMenuAnchor] = useState(null);
 
   const currentActiveBoard = id || activeBoard;
 
@@ -81,24 +85,38 @@ function Header() {
   const [copiedUrl, setCopiedUrl] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   useEffect(() => {
-    const divElement = divRef.current.ref.current;
-    if (divElement) {
-      if (divElement.scrollWidth > divElement.clientWidth) {
-        setIsOverflowing(true);
-      } else {
-        setIsOverflowing(false);
+    // Only check overflow on desktop (where ReactSortable is rendered)
+    if (isMobile) {
+      setIsOverflowing(false);
+      return;
+    }
+
+    // Check if refs are available
+    if (divRef.current && divRef.current.ref && divRef.current.ref.current) {
+      const divElement = divRef.current.ref.current;
+      if (divElement) {
+        if (divElement.scrollWidth > divElement.clientWidth) {
+          setIsOverflowing(true);
+        } else {
+          setIsOverflowing(false);
+        }
       }
     }
-  }, [boards]);
+  }, [boards, isMobile]);
 
   const handleScroll = direction => {
-    const divElement = divRef.current.ref.current;
+    // Only handle scroll on desktop (where ReactSortable is rendered)
+    if (isMobile) return;
 
-    if (divElement) {
-      if (direction === 'left') {
-        divElement.scrollLeft -= 100;
-      } else if (direction === 'right') {
-        divElement.scrollLeft += 100;
+    // Check if refs are available
+    if (divRef.current && divRef.current.ref && divRef.current.ref.current) {
+      const divElement = divRef.current.ref.current;
+      if (divElement) {
+        if (direction === 'left') {
+          divElement.scrollLeft -= 100;
+        } else if (direction === 'right') {
+          divElement.scrollLeft += 100;
+        }
       }
     }
   };
@@ -622,151 +640,328 @@ function Header() {
             justifyContent='space-between'
             className='header_container'
           >
-            <Grid item className='left_content'>
+            <Grid item className={isMobile ? 'left_content_mobile' : 'left_content'}>
               <div className='add_tiles' onClick={addTiles}>
                 <AddSharpIcon />
               </div>
-              <div className='vertical'></div>
-              <div className='board_nav'>
-                <ReactSortable
-                  ref={divRef}
-                  filter='.dashboard_btn'
-                  dragClass='sortableDrag'
-                  list={boards}
-                  setList={list => setBoardPosition(list)}
-                  animation='200'
-                  easing='ease-out'
-                  className='dashboard_drag'
-                  key={(boards || []).map(b => String(b._id)).join(',')}
-                >
-                  {boards.map((board, index) => {
-                    return (
-                      <List key={board._id} sx={{ p: 0, m: '0 4px' }}>
-                        <ListItem
-                          button
-                          onClick={() => selectBoard(board._id)}
-                          onMouseEnter={() => setShowIcon(board._id)}
-                          onMouseLeave={() => setShowIcon(null)}
-                          onTouchStart={e => {
-                            if (isDblTouchTap(e)) {
-                              selectBoard(board._id);
+              {isMobile ? (
+                <>
+                  <div className='vertical'></div>
+                  <div className='mobile_center_section'>
+                    <Image className='logo_mobile' src={logo} alt='Boardzy logo' priority />
+                    <Button
+                      variant='text'
+                      onClick={e => setBoardMenuAnchor(e.currentTarget)}
+                      sx={{
+                        minWidth: '140px',
+                        maxWidth: '220px',
+                        textTransform: 'none',
+                        backgroundColor: '#e5ecef',
+                        color: '#538a95',
+                        fontSize: '14px',
+                        padding: '6px 12px',
+                        border: 'none',
+                        '&:hover': {
+                          backgroundColor: '#d5dce0'
+                        }
+                      }}
+                    >
+                      {boards.find(b => b._id === currentActiveBoard)?.name || 'Select Board'}
+                      <KeyboardArrowDownIcon sx={{ ml: 1, fontSize: '18px', color: '#538a95' }} />
+                    </Button>
+                  </div>
+                  <Menu
+                    anchorEl={boardMenuAnchor}
+                    open={Boolean(boardMenuAnchor)}
+                    onClose={() => setBoardMenuAnchor(null)}
+                    PaperProps={{
+                      style: {
+                        maxHeight: '400px',
+                        width: '280px',
+                        backgroundColor: '#ffffff'
+                      }
+                    }}
+                  >
+                    {boards.map((board, index) => (
+                      <MenuItem
+                        key={board._id}
+                        selected={board._id === currentActiveBoard}
+                        onClick={() => {
+                          selectBoard(board._id);
+                          setBoardMenuAnchor(null);
+                        }}
+                        sx={{
+                          color: '#538a95',
+                          '&.Mui-selected': {
+                            backgroundColor: 'rgba(83, 138, 149, 0.15)',
+                            fontWeight: 'bold',
+                            color: '#538a95',
+                            '&:hover': {
+                              backgroundColor: 'rgba(83, 138, 149, 0.2)'
                             }
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(83, 138, 149, 0.1)'
+                          }
+                        }}
+                      >
+                        <ListItemText
+                          primary={board.name}
+                          primaryTypographyProps={{
+                            color: '#538a95'
                           }}
-                          selected={board._id === currentActiveBoard}
-                          sx={{
-                            borderRadius: '4px',
-                            padding: '8px 12px',
-                            '&.Mui-selected': {
-                              backgroundColor: 'rgba(69, 129, 142, 0.1)',
-                              '&:hover': {
-                                backgroundColor: 'rgba(69, 129, 142, 0.15)'
-                              },
-                              '& .MuiListItemText-primary': {
-                                fontWeight: 'bold',
-                                color: '#45818e'
-                              }
-                            },
-                            '&:not(.Mui-selected):hover': {
-                              backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                            }
+                        />
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation();
+                            setOptions(e.currentTarget);
+                            setSelectedDashboard(board._id);
+                            setSelectedDashIndex(index);
                           }}
+                          sx={{ ml: 1, color: '#538a95' }}
                         >
-                          <ListItemText primary={board.name} />
-
-                          {showIcon === board._id && (
-                            <span
-                              className='cross'
-                              onClick={e => {
-                                e.stopPropagation();
-                                options ? setOptions(null) : setOptions(e.currentTarget);
+                          <MoreHorizSharpIcon fontSize='small' />
+                        </IconButton>
+                      </MenuItem>
+                    ))}
+                    <MenuItem
+                      onClick={() => {
+                        setBoardMenuAnchor(null);
+                        setShowDashboardModel(true);
+                        setSelectedDashboard(null);
+                        setDashBoardName('');
+                      }}
+                      sx={{
+                        borderTop: '2px solid rgba(83, 138, 149, 0.3)',
+                        marginTop: '8px',
+                        paddingTop: '12px',
+                        paddingBottom: '12px',
+                        backgroundColor: 'rgba(83, 138, 149, 0.1)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(83, 138, 149, 0.2)'
+                        },
+                        fontWeight: '600',
+                        color: '#538a95'
+                      }}
+                    >
+                      <AddSharpIcon sx={{ mr: 1, fontSize: '20px', color: '#538a95' }} />
+                      <ListItemText
+                        primary='New Dashboard'
+                        primaryTypographyProps={{
+                          fontWeight: '600',
+                          color: '#538a95'
+                        }}
+                      />
+                    </MenuItem>
+                  </Menu>
+                  <Menu
+                    anchorEl={options}
+                    open={Boolean(options)}
+                    onClose={() => setOptions(null)}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right'
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right'
+                    }}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        setOptions(null);
+                        setOpenDashDeleteModel(true);
+                      }}
+                    >
+                      Delete
+                    </MenuItem>
+                    {dbUser && (
+                      <MenuItem
+                        onClick={() => {
+                          setOptions(null);
+                          setShareLinkModal(true);
+                          setCopiedUrl(window.location.href);
+                        }}
+                      >
+                        Share
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      onClick={() => {
+                        setOptions(null);
+                        const board = boards.find(b => b._id === selectedDashboard);
+                        if (board) {
+                          setDashBoardName(board.name);
+                          setShowDashboardModel(true);
+                        }
+                      }}
+                    >
+                      Rename
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setOptions(null);
+                        const board = boards.find(b => b._id === selectedDashboard);
+                        if (board) {
+                          duplicateBoard(board);
+                        }
+                      }}
+                    >
+                      Duplicate
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <>
+                  <div className='vertical'></div>
+                  <div className='board_nav'>
+                    <ReactSortable
+                      ref={divRef}
+                      filter='.dashboard_btn'
+                      dragClass='sortableDrag'
+                      list={boards}
+                      setList={list => setBoardPosition(list)}
+                      animation='200'
+                      easing='ease-out'
+                      className='dashboard_drag'
+                      key={(boards || []).map(b => String(b._id)).join(',')}
+                    >
+                      {boards.map((board, index) => {
+                        return (
+                          <List key={board._id} sx={{ p: 0, m: '0 4px' }}>
+                            <ListItem
+                              button
+                              onClick={() => selectBoard(board._id)}
+                              onMouseEnter={() => setShowIcon(board._id)}
+                              onMouseLeave={() => setShowIcon(null)}
+                              onTouchStart={e => {
+                                if (isDblTouchTap(e)) {
+                                  selectBoard(board._id);
+                                }
+                              }}
+                              selected={board._id === currentActiveBoard}
+                              sx={{
+                                borderRadius: '4px',
+                                padding: '8px 12px',
+                                '&.Mui-selected': {
+                                  backgroundColor: 'rgba(69, 129, 142, 0.1)',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(69, 129, 142, 0.15)'
+                                  },
+                                  '& .MuiListItemText-primary': {
+                                    fontWeight: 'bold',
+                                    color: '#45818e'
+                                  }
+                                },
+                                '&:not(.Mui-selected):hover': {
+                                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                }
                               }}
                             >
-                              <KeyboardArrowDownIcon fontSize='small' />
-                              <Menu
-                                anchorEl={options}
-                                open={Boolean(options)}
-                                onClose={() => setOptions(null)}
-                                anchorOrigin={{
-                                  vertical: 'bottom',
-                                  horizontal: 'right'
-                                }}
-                                transformOrigin={{
-                                  vertical: 'top',
-                                  horizontal: 'right'
-                                }}
-                              >
-                                <MenuItem
-                                  onClick={() => {
-                                    setOptions(null);
-                                    setOpenDashDeleteModel(true);
-                                    setSelectedDashboard(board._id);
-                                    setSelectedDashIndex(index);
+                              <ListItemText primary={board.name} />
+
+                              {showIcon === board._id && (
+                                <span
+                                  className='cross'
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    options ? setOptions(null) : setOptions(e.currentTarget);
                                   }}
                                 >
-                                  Delete
-                                </MenuItem>
-                                {dbUser && (
-                                  <MenuItem
-                                    onClick={() => {
-                                      setOptions(null);
-                                      setShareLinkModal(true);
-                                      setCopiedUrl(window.location.href);
+                                  <KeyboardArrowDownIcon fontSize='small' />
+                                  <Menu
+                                    anchorEl={options}
+                                    open={Boolean(options)}
+                                    onClose={() => setOptions(null)}
+                                    anchorOrigin={{
+                                      vertical: 'bottom',
+                                      horizontal: 'right'
+                                    }}
+                                    transformOrigin={{
+                                      vertical: 'top',
+                                      horizontal: 'right'
                                     }}
                                   >
-                                    Share
-                                  </MenuItem>
-                                )}
-                                <MenuItem
-                                  onClick={() => {
-                                    setOptions(null);
-                                    setSelectedDashboard(board._id);
-                                    setDashBoardName(board.name);
-                                    setShowDashboardModel(true);
-                                  }}
-                                >
-                                  Rename
-                                </MenuItem>
-                                <MenuItem
-                                  onClick={() => {
-                                    setOptions(null);
-                                    duplicateBoard(board);
-                                  }}
-                                >
-                                  Duplicate
-                                </MenuItem>
-                              </Menu>
-                            </span>
-                          )}
-                        </ListItem>
-                      </List>
-                    );
-                  })}
-                </ReactSortable>
-                {isOverflowing && (
-                  <div className='scroll-bar'>
-                    <div className='vertical'></div>
-                    <div className='scroll-buttons'>
-                      <Image src={leftArrow} onClick={() => handleScroll('left')} />
-                      <Image src={rightArrow} onClick={() => handleScroll('right')} />
-                    </div>
-                    <div className='vertical'></div>
+                                    <MenuItem
+                                      onClick={() => {
+                                        setOptions(null);
+                                        setOpenDashDeleteModel(true);
+                                        setSelectedDashboard(board._id);
+                                        setSelectedDashIndex(index);
+                                      }}
+                                    >
+                                      Delete
+                                    </MenuItem>
+                                    {dbUser && (
+                                      <MenuItem
+                                        onClick={() => {
+                                          setOptions(null);
+                                          setShareLinkModal(true);
+                                          setCopiedUrl(window.location.href);
+                                        }}
+                                      >
+                                        Share
+                                      </MenuItem>
+                                    )}
+                                    <MenuItem
+                                      onClick={() => {
+                                        setOptions(null);
+                                        setSelectedDashboard(board._id);
+                                        setDashBoardName(board.name);
+                                        setShowDashboardModel(true);
+                                      }}
+                                    >
+                                      Rename
+                                    </MenuItem>
+                                    <MenuItem
+                                      onClick={() => {
+                                        setOptions(null);
+                                        duplicateBoard(board);
+                                      }}
+                                    >
+                                      Duplicate
+                                    </MenuItem>
+                                  </Menu>
+                                </span>
+                              )}
+                            </ListItem>
+                          </List>
+                        );
+                      })}
+                    </ReactSortable>
+                    {isOverflowing && (
+                      <div className='scroll-bar'>
+                        <div className='vertical'></div>
+                        <div className='scroll-buttons'>
+                          <Image src={leftArrow} onClick={() => handleScroll('left')} />
+                          <Image src={rightArrow} onClick={() => handleScroll('right')} />
+                        </div>
+                        <div className='vertical'></div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <Button
-                className='dashboard_btn'
-                sx={{ p: '11px' }}
-                onClick={() => {
-                  setShowDashboardModel(true);
-                  setSelectedDashboard(null);
-                  setDashBoardName('');
-                }}
-              >
-                + New
-              </Button>
+                  <Button
+                    className='dashboard_btn'
+                    sx={{ p: '11px' }}
+                    onClick={() => {
+                      setShowDashboardModel(true);
+                      setSelectedDashboard(null);
+                      setDashBoardName('');
+                    }}
+                  >
+                    + New
+                  </Button>
+                </>
+              )}
             </Grid>
             <Grid item className='right_header'>
-              <Image className='logo' src={logo} alt='Boardzy logo' priority />
+              {!isMobile && <Image className='logo' src={logo} alt='Boardzy logo' priority />}
+              {user && isMobile && (
+                <Button onClick={e => handlePicClick(e)} sx={{ minWidth: 'auto', p: '4px', mr: 1 }}>
+                  <Avatar src={user.picture} sx={{ width: 32, height: 32 }}></Avatar>
+                </Button>
+              )}
               <IconButton
                 size='large'
                 edge='end'
@@ -774,14 +969,17 @@ function Header() {
                 aria-label='menu'
                 className='menu-button'
                 onClick={toggleDrawer}
+                sx={{ ml: isMobile ? 0 : 1 }}
               >
                 <MenuIcon sx={{ color: '#45818e' }} />
               </IconButton>
               {user ? (
                 <div>
-                  <Button onClick={e => handlePicClick(e)}>
-                    <Avatar src={user.picture}></Avatar>
-                  </Button>
+                  {!isMobile && (
+                    <Button onClick={e => handlePicClick(e)} sx={{ minWidth: 'auto', p: '8px' }}>
+                      <Avatar src={user.picture} sx={{ width: 40, height: 40 }}></Avatar>
+                    </Button>
+                  )}
                   <Menu
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
@@ -798,19 +996,29 @@ function Header() {
                 </div>
               ) : (
                 <div>
-                  <Link href='/api/auth/login' prefetch={false} className='sign_btn'>
-                    Sign up
-                  </Link>
-                  <Link href='/api/auth/login' prefetch={false} className='login_btn'>
-                    Login
-                  </Link>
+                  {!isMobile && (
+                    <>
+                      <Link href='/api/auth/login' prefetch={false} className='sign_btn'>
+                        Sign up
+                      </Link>
+                      <Link href='/api/auth/login' prefetch={false} className='login_btn'>
+                        Login
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </Grid>
           </Grid>
         </Toolbar>
       </AppBar>
-      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={dbUser} />
+      <SideDrawer
+        open={isDrawerOpen}
+        close={toggleDrawer}
+        user={dbUser}
+        isMobile={isMobile}
+        authUser={user}
+      />
 
       {}
       <Dialog open={openDashDeleteModel} className='model'>
