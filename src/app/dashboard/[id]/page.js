@@ -11,7 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 const GridTiles = dynamic(() => import('@/components/GridTiles'), {
@@ -57,12 +57,25 @@ function OptimizedDashboardPage() {
   const [headerWidth, setHeaderWidth] = useState(0);
   const [addedFlag, setAddedFlag] = useState(false);
 
+  // Track if we have local changes to avoid overwriting them
+  const hasLocalChangesRef = useRef(false);
+  const isInitialLoadRef = useRef(true);
+  
   useEffect(() => {
     if (dashboardData) {
-      const tiles = dashboardData.tiles || [];
+      // Only update from dashboardData if we don't have local changes
+      // This prevents overwriting user's drag/drop changes
+      // Skip on initial load if we already have tiles (from previous render)
+      if (hasLocalChangesRef.current && !isInitialLoadRef.current) {
+        // Skip update if we have local changes - they will be synced via batch update
+        return;
+      }
+      
+      // Ensure tiles is always an array
+      const dashboardTiles = Array.isArray(dashboardData.tiles) ? dashboardData.tiles : [];
       // Ensure all tiles have mobile profile and order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-      const updatedTiles = tiles.map((tile, index) => {
+      const updatedTiles = dashboardTiles.map((tile, index) => {
         // If tile doesn't have mobile profile, create defaults
         if (tile.mobileWidth === undefined || tile.mobileWidth === null) {
           return {
@@ -86,6 +99,8 @@ function OptimizedDashboardPage() {
       setTiles(updatedTiles);
       setPods(dashboardData.pods || []);
       setActiveBoard(id);
+      isInitialLoadRef.current = false; // Mark initial load as complete
+      hasLocalChangesRef.current = false; // Reset flag after initial load
     }
   }, [dashboardData, id]);
 
@@ -231,9 +246,11 @@ function OptimizedDashboardPage() {
   }, [dashboardData?.name]);
 
   const maxWidth = useMemo(() => {
-    if (tiles.length === 0) return 0;
+    // Ensure tiles is always an array
+    const tilesArray = Array.isArray(tiles) ? tiles : [];
+    if (tilesArray.length === 0) return 0;
     return Math.max(
-      ...tiles.map(tile => {
+      ...tilesArray.map(tile => {
         const widthValue = parseInt(tile.width, 10) || 0;
         const xValue = tile.x || 0;
         return widthValue + xValue;
@@ -251,6 +268,8 @@ function OptimizedDashboardPage() {
 
   const handleTileUpdate = useCallback(
     updatedTiles => {
+      // Mark that we have local changes to prevent useEffect from overwriting
+      hasLocalChangesRef.current = true;
       setTiles(updatedTiles);
 
       queryClient.setQueryData(dashboardKeys.detail(id), oldData => {

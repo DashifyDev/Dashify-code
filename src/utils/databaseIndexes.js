@@ -80,8 +80,15 @@ export const getDashboardMinimal = async (id) => {
         editorHeading: 1,
         backgroundAction: 1,
         tileLink: 1,
+        order: 1,
+        mobileX: 1,
+        mobileY: 1,
+        mobileWidth: 1,
+        mobileHeight: 1,
       },
-    ).lean();
+    )
+      .sort({ order: 1, mobileY: 1 }) // Sort by order first, then by mobileY as fallback
+      .lean();
 
     const pods = await Pod.find(
       { _id: { $in: dashboard.pods } },
@@ -123,9 +130,28 @@ export const getDashboardMinimal = async (id) => {
       });
     }
 
+    // Ensure tiles are sorted by order (for mobile view)
+    // Tiles with order > 0 should be sorted by order, others by mobileY
+    const sortedTiles = [...tiles].sort((a, b) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      
+      // If both have order, sort by order
+      if (orderA > 0 && orderB > 0) {
+        return orderA - orderB;
+      }
+      // If only one has order, prioritize it
+      if (orderA > 0) return -1;
+      if (orderB > 0) return 1;
+      // If neither has order, sort by mobileY
+      const yA = a.mobileY ?? 0;
+      const yB = b.mobileY ?? 0;
+      return yA - yB;
+    });
+
     return {
       ...dashboard,
-      tiles,
+      tiles: sortedTiles,
       pods,
     };
   } catch (error) {

@@ -66,6 +66,10 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const queryClient = useQueryClient();
   const hiddenFileInput = useRef(null);
   const containerRef = useRef(null);
+  const batchUpdateTimeoutRef = useRef(null);
+  const pendingBatchUpdatesRef = useRef([]);
+  const initialDragStateRef = useRef(null); // Store initial state when drag starts
+  const isInitialMountRef = useRef(true); // Track if component just mounted
 
   // Sort tiles by order (mobileY position) for display
   const sortedTiles = useMemo(() => {
@@ -128,9 +132,104 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   );
 
-  // Handle vertical drag and drop reordering
-  const handleSortEnd = useCallback(
+  // Batch update function with debounce
+  const performBatchUpdate = useCallback(
+    updates => {
+      if (!dbUser || updates.length === 0) return;
+
+      // Clear any pending timeout
+      if (batchUpdateTimeoutRef.current) {
+        clearTimeout(batchUpdateTimeoutRef.current);
+      }
+
+      // Add updates to pending queue
+      pendingBatchUpdatesRef.current = [...pendingBatchUpdatesRef.current, ...updates];
+
+      // Debounce: wait 300ms before sending batch request
+      batchUpdateTimeoutRef.current = setTimeout(() => {
+        const updatesToSend = [...pendingBatchUpdatesRef.current];
+        pendingBatchUpdatesRef.current = [];
+
+        // Prepare batch update payload
+        const batchPayload = updatesToSend.map(update => ({
+          tileId: update.tileId,
+          data: update.data
+        }));
+
+        // Send single batch request
+        axios
+          .post('/api/tile/batch-update', { updates: batchPayload })
+          .then(res => {
+            console.log('[BATCH UPDATE] Successfully updated', res.data?.updated || 0, 'tiles');
+
+            // Update cache in the next tick to avoid blocking UI
+            // This keeps data in sync without causing white screen
+            Promise.resolve().then(() => {
+              if (res.data && res.data.results && Array.isArray(res.data.results)) {
+                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                  if (!oldData) return oldData;
+
+                  // Ensure tiles is always an array
+                  const currentTiles = Array.isArray(oldData.tiles) ? oldData.tiles : [];
+
+                  // Create a map of updated tiles
+                  const updatedTilesMap = new Map();
+                  res.data.results.forEach(result => {
+                    if (result && result.data && result.tileId) {
+                      updatedTilesMap.set(String(result.tileId), result.data);
+                    }
+                  });
+
+                  // Update tiles array - merge with existing to preserve order
+                  const updatedTiles = currentTiles.map(t => {
+                    if (!t || typeof t !== 'object') return t;
+                    const tileId = String(t._id || t.id || '');
+                    const updated = updatedTilesMap.get(tileId);
+                    // Merge updated data with existing tile to preserve all properties
+                    return updated ? { ...t, ...updated } : t;
+                  });
+
+                  return {
+                    ...oldData,
+                    tiles: Array.isArray(updatedTiles) ? updatedTiles : []
+                  };
+                });
+              }
+            });
+          })
+          .catch(err => {
+            console.error('[BATCH UPDATE] Error in batch update:', err);
+          });
+      }, 300); // 300ms debounce
+    },
+    [dbUser, activeBoard, queryClient]
+  );
+
+  // Handle list update (only for local state, no API calls)
+  const handleListUpdate = useCallback(
     newList => {
+      console.log(
+        '[LIST UPDATE] handleListUpdate called, isInitialMount:',
+        isInitialMountRef.current,
+        'hasInitialDragState:',
+        !!initialDragStateRef.current
+      );
+
+      // Skip if this is initial mount (ReactSortable may call setList on mount)
+      if (isInitialMountRef.current) {
+        isInitialMountRef.current = false;
+        console.log('[LIST UPDATE] Skipping initial mount');
+        return;
+      }
+
+      // Only update if we're actually dragging (check if initialDragStateRef is set)
+      if (!initialDragStateRef.current) {
+        console.log('[LIST UPDATE] No initial drag state, skipping update');
+        return;
+      }
+
+      console.log('[LIST UPDATE] Updating tiles, newList length:', newList.length);
+
       // Calculate new mobileY positions based on order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
       const updatedTiles = newList.map((tile, index) => {
@@ -151,43 +250,118 @@ const MobileGridTiles = memo(function MobileGridTiles({
         };
       });
 
+      console.log('[LIST UPDATE] Setting tileCordinates with', updatedTiles.length, 'tiles');
       setTileCordinates(updatedTiles);
-
-      // Update order and mobile positions in database
-      if (dbUser) {
-        updatedTiles.forEach((tile, index) => {
-          const updateData = {
-            mobileX: tile.mobileX,
-            mobileY: tile.mobileY,
-            mobileWidth: tile.mobileWidth,
-            order: tile.order
-          };
-
-          axios
-            .patch(`/api/tile/${tile._id}`, updateData)
-            .then(res => {
-              if (res.data) {
-                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-                  if (!oldData) return oldData;
-                  return {
-                    ...oldData,
-                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(t =>
-                      t._id === tile._id ? res.data : t
-                    )
-                  };
-                });
-              }
-            })
-            .catch(err => {
-              console.error('Error updating tile order:', err);
-            });
-        });
-      } else {
-        updateTilesInLocalstorage(updatedTiles);
-      }
     },
-    [dbUser, activeBoard, queryClient, setTileCordinates, updateTilesInLocalstorage]
+    [setTileCordinates]
   );
+
+  // Handle drag end - send batch update only if order actually changed
+  const handleDragEnd = useCallback(() => {
+    console.log('[DRAG END] handleDragEnd called');
+    setIsDragging(false);
+
+    // Check if order actually changed by comparing with initial state
+    if (!initialDragStateRef.current) {
+      console.log('[DRAG END] No initial drag state, exiting');
+      setEditingTileId(null);
+      return;
+    }
+
+    // Use functional update to get the latest tileCordinates state
+    setTileCordinates(currentTiles => {
+      // Sort them by order to get current state
+      const sortedTiles = [...currentTiles].sort((a, b) => {
+        const orderA = a.order ?? 0;
+        const orderB = b.order ?? 0;
+        if (orderA !== orderB) return orderA - orderB;
+        const yA = a.mobileY ?? 0;
+        const yB = b.mobileY ?? 0;
+        return yA - yB;
+      });
+
+      const initialOrder = initialDragStateRef.current.map(t => String(t._id));
+      const currentOrder = sortedTiles.map(t => String(t._id));
+
+      console.log('[DRAG END] Initial order:', initialOrder);
+      console.log('[DRAG END] Current order:', currentOrder);
+
+      // Check if order changed
+      const orderChanged =
+        initialOrder.length !== currentOrder.length ||
+        initialOrder.some((id, index) => id !== currentOrder[index]);
+
+      console.log('[DRAG END] Order changed:', orderChanged);
+
+      if (!orderChanged) {
+        // Order didn't change, no need to save
+        console.log('[DRAG END] Order did not change, skipping save');
+        initialDragStateRef.current = null;
+        setEditingTileId(null);
+        return currentTiles; // Return unchanged
+      }
+
+      // Order changed - prepare batch update
+      if (dbUser) {
+        console.log('[DRAG END] Order changed, preparing batch update');
+        const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+
+        // Recalculate positions for all tiles based on current sorted order
+        const updatedTiles = sortedTiles.map((tile, index) => {
+          let newY = 0;
+          for (let i = 0; i < index; i++) {
+            const prevTile = sortedTiles[i];
+            const prevHeight = parseInt(prevTile.mobileHeight || prevTile.height || '150', 10);
+            newY += prevHeight + 16;
+          }
+
+          return {
+            ...tile,
+            mobileX: 0,
+            mobileY: newY,
+            mobileWidth: `${windowWidth - 48}px`,
+            order: index + 1
+          };
+        });
+
+        // Prepare batch updates
+        const batchUpdates = updatedTiles
+          .filter(tile => !String(tile._id).startsWith('temp_')) // Skip temporary tiles
+          .map(tile => ({
+            tileId: tile._id,
+            data: {
+              mobileX: tile.mobileX,
+              mobileY: tile.mobileY,
+              mobileWidth: tile.mobileWidth,
+              order: tile.order
+            }
+          }));
+
+        console.log('[DRAG END] Batch updates prepared:', batchUpdates.length, 'tiles');
+        if (batchUpdates.length > 0) {
+          performBatchUpdate(batchUpdates);
+        } else {
+          console.log('[DRAG END] No batch updates to send');
+        }
+
+        // Clear initial state
+        initialDragStateRef.current = null;
+        setEditingTileId(null);
+
+        return updatedTiles;
+      } else {
+        // Guest user - update localStorage
+        console.log('[DRAG END] Guest user, updating localStorage');
+        updateTilesInLocalstorage(sortedTiles);
+
+        // Clear initial state
+        initialDragStateRef.current = null;
+        setEditingTileId(null);
+
+        return currentTiles;
+      }
+    });
+  }, [dbUser, setTileCordinates, updateTilesInLocalstorage, performBatchUpdate]);
 
   // Handle vertical resize (height only on mobile)
   const handleHeightResize = useCallback(
@@ -296,7 +470,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
       setTileCordinates(updatedTiles);
 
       if (dbUser) {
-        // Update only the resized tile in database
         // Skip API call if it's a temporary ID (will be saved when tile is created)
         if (String(tileId).startsWith('temp_')) {
           // For temporary tiles, just update local state
@@ -310,31 +483,53 @@ const MobileGridTiles = memo(function MobileGridTiles({
             };
           });
         } else {
-          // Real tile ID - update in database
+          // Real tile ID - prepare batch update for all affected tiles
           const resizedTile = updatedTiles.find(t => String(t._id) === String(tileId));
           if (!resizedTile) return;
 
-          axios
-            .patch(`/api/tile/${tileId}`, {
+          // Find all tiles that need to be updated (resized tile + tiles after it with changed Y positions)
+          const originalTiles = tileCordinates;
+          const batchUpdates = [];
+
+          // Add resized tile
+          batchUpdates.push({
+            tileId: resizedTile._id,
+            data: {
               mobileHeight: resizedTile.mobileHeight,
               mobileY: resizedTile.mobileY
-            })
-            .then(res => {
-              if (res.data) {
-                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-                  if (!oldData) return oldData;
-                  return {
-                    ...oldData,
-                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(t =>
-                      String(t._id) === String(tileId) ? res.data : t
-                    )
-                  };
+            }
+          });
+
+          // Add all tiles after resized one that have changed Y positions
+          for (let i = sortedIndex + 1; i < sortedTiles.length; i++) {
+            const tile = sortedTiles[i];
+            const updatedTile = updatedTiles.find(t => String(t._id) === String(tile._id));
+            const originalTile = originalTiles.find(t => String(t._id) === String(tile._id));
+
+            if (updatedTile && originalTile) {
+              // Check if Y position or width changed
+              if (
+                updatedTile.mobileY !== originalTile.mobileY ||
+                updatedTile.mobileWidth !== originalTile.mobileWidth
+              ) {
+                batchUpdates.push({
+                  tileId: updatedTile._id,
+                  data: {
+                    mobileY: updatedTile.mobileY,
+                    mobileWidth: updatedTile.mobileWidth
+                  }
                 });
               }
-            })
-            .catch(err => {
-              console.error('Error updating tile height:', err);
-            });
+            }
+          }
+
+          // Use batch update if there are multiple tiles to update, otherwise use single update
+          if (batchUpdates.length > 1) {
+            performBatchUpdate(batchUpdates);
+          } else if (batchUpdates.length === 1) {
+            // Single update - use batch update anyway for consistency
+            performBatchUpdate(batchUpdates);
+          }
         }
       } else {
         // Guest user - update localStorage
@@ -348,7 +543,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
       activeBoard,
       queryClient,
       setTileCordinates,
-      updateTilesInLocalstorage
+      updateTilesInLocalstorage,
+      performBatchUpdate
     ]
   );
 
@@ -1008,6 +1204,27 @@ const MobileGridTiles = memo(function MobileGridTiles({
     hasMoved.current = false;
   };
 
+  // Cleanup batch update timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (batchUpdateTimeoutRef.current) {
+        clearTimeout(batchUpdateTimeoutRef.current);
+      }
+      // Send any pending updates before unmount
+      if (pendingBatchUpdatesRef.current.length > 0 && dbUser) {
+        const updatesToSend = [...pendingBatchUpdatesRef.current];
+        pendingBatchUpdatesRef.current = [];
+        const batchPayload = updatesToSend.map(update => ({
+          tileId: update.tileId,
+          data: update.data
+        }));
+        axios.post('/api/tile/batch-update', { updates: batchPayload }).catch(err => {
+          console.error('Error sending final batch update:', err);
+        });
+      }
+    };
+  }, [dbUser]);
+
   // Exit edit mode when clicking outside the editing tile
   useEffect(() => {
     const handleClickOutside = e => {
@@ -1084,17 +1301,19 @@ const MobileGridTiles = memo(function MobileGridTiles({
       >
         <ReactSortable
           list={sortedTiles}
-          setList={handleSortEnd}
+          setList={handleListUpdate}
           animation={200}
           disabled={!editingTileId} // Disable drag by default, enable only in edit mode
           filter='.drag-handle, .resize-handle'
           preventOnFilter={false}
           onStart={evt => {
+            console.log('[DRAG START] onStart called');
             // Only allow drag if tile is in edit mode
             const draggedTile = evt.item;
             const tileId = draggedTile.getAttribute('data-tile-id');
 
             if (tileId !== editingTileId) {
+              console.log('[DRAG START] Tile not in edit mode, preventing drag');
               return false; // Prevent drag if not in edit mode
             }
 
@@ -1103,14 +1322,21 @@ const MobileGridTiles = memo(function MobileGridTiles({
             const clickedSettings = evt.originalEvent?.target?.closest('.drag-handle');
 
             if (clickedResize || clickedSettings) {
+              console.log('[DRAG START] Clicked on resize/settings, preventing drag');
               return false; // Prevent drag
             }
+
+            // Store initial state before drag starts
+            initialDragStateRef.current = [...tileCordinates];
+            console.log(
+              '[DRAG START] Initial state stored:',
+              initialDragStateRef.current.map(t => t._id)
+            );
             setIsDragging(true);
           }}
           onEnd={() => {
-            setIsDragging(false);
-            // Exit edit mode after drag ends
-            setEditingTileId(null);
+            console.log('[DRAG END] onEnd callback called');
+            handleDragEnd();
           }}
           style={{ display: 'flex', flexDirection: 'column' }}
         >
