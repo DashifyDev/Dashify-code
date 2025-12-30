@@ -13,9 +13,10 @@ let isConnecting = false;
  * Features:
  * - Prevents multiple connection attempts
  * - Handles hot reload in dev mode
- * - Configures conservative pool limits (maxPoolSize: 5 for M0 cluster)
+ * - Configures aggressive pool limits (maxPoolSize: 2 for M0 cluster)
  * - Reuses existing connection if already connected
  * - Lazy initialization - connects only when needed
+ * - Auto-closes idle connections after 20 seconds
  */
 const connectMongo = async () => {
   // If already connected, return immediately
@@ -44,10 +45,13 @@ const connectMongo = async () => {
   isConnecting = true;
   cachedConnection = mongoose
     .connect(process.env.MONGO_URI, {
-      maxPoolSize: 5, // Conservative limit for MongoDB Atlas M0
+      maxPoolSize: 2, // Aggressive limit for MongoDB Atlas M0 (reduced from 5)
       minPoolSize: 0, // Allow connections to drop to zero after inactivity
+      maxIdleTimeMS: 20000, // Close idle connections after 20 seconds
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000 // Close sockets after 45s of inactivity
+      socketTimeoutMS: 20000, // Close sockets after 20s of inactivity (reduced from 45s)
+      connectTimeoutMS: 10000, // Connection timeout
+      heartbeatFrequencyMS: 10000 // Check connection health every 10 seconds
     })
     .then(conn => {
       isConnecting = false;

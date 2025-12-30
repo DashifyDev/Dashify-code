@@ -1158,19 +1158,34 @@ const GridTiles = memo(function GridTiles({
                 <input
                   type='number'
                   min='1'
-                  value={selectedTileDetail.order || 0}
-                  onChange={(e) => {
-                    const orderValue = parseInt(e.target.value) || 0;
-                    setSelectedTileDetail({ ...selectedTileDetail, order: orderValue });
-                    const values = formValue;
-                    values.order = orderValue;
-                    setFormValue(values);
+                  value={
+                    selectedTileDetail.order !== undefined && selectedTileDetail.order !== null
+                      ? selectedTileDetail.order
+                      : ''
+                  }
+                  onChange={e => {
+                    const inputValue = e.target.value;
+                    // Allow empty value for clearing
+                    if (inputValue === '') {
+                      setSelectedTileDetail({ ...selectedTileDetail, order: null });
+                      const values = formValue;
+                      values.order = null;
+                      setFormValue(values);
+                    } else {
+                      const newOrder = parseInt(inputValue);
+                      if (!isNaN(newOrder) && newOrder > 0) {
+                        setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
+                        const values = formValue;
+                        values.order = newOrder;
+                        setFormValue(values);
+                      }
+                    }
                   }}
                   style={{
                     width: '100%',
                     padding: '8px',
                     border: '1px solid #ddd',
-                    borderRadius: '4px',
+                    borderRadius: '4px'
                   }}
                 />
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
