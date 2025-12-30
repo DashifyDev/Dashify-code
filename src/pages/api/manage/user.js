@@ -1,11 +1,9 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import User from "@/models/user";
 import Dashboard from "@/models/dashboard";
 
 export default async function addUser(req, res) {
   try {
-    await connectMongo();
-    console.log("database Connected Successfully");
     switch (req.method) {
       case "POST":
         const {

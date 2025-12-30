@@ -1,12 +1,11 @@
 import Dashboard from "@/models/dashboard";
 import User from "@/models/user";
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Pod from "@/models/pod";
 
 const addGuestData = async (req, res) => {
   try {
-    connectMongo();
     const id = req.body.userId;
     const localData = req.body.localData;
     let oldUser = await Dashboard.find({ userId: id });

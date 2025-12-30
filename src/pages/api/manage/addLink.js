@@ -1,10 +1,9 @@
 import Dashboard from "@/models/dashboard";
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 
 const assignDatatoNewUser = async (req, res) => {
   try {
-    connectMongo();
     const id = req.query.id;
     const data = req.body;
     let tiles = data.tiles;

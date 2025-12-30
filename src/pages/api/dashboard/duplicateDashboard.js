@@ -1,9 +1,8 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Dashboard from "@/models/dashboard";
 import Tile from "@/models/tile";
 
 const duplicateDashBoard = async (req, res) => {
-  await connectMongo();
   try {
     switch (req.method) {
       case "POST":

@@ -1,10 +1,8 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import User from "@/models/user";
 
 const getUser = async (req, res) => {
   try {
-    await connectMongo();
-    console.log("database Connected Successfully");
 
     const { email, name, picture, sub } = req.body;
 

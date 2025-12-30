@@ -1,9 +1,8 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 
 const batchUpdate = async (req, res) => {
   try {
-    await connectMongo();
 
     if (req.method !== "POST") {
       return res.status(405).json({ message: "Method not allowed" });

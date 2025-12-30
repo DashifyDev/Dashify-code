@@ -1,11 +1,10 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Dashboard from "@/models/dashboard";
 import Tile from "@/models/tile";
 import User from "@/models/user";
 
 const defaultDashboard = async (req, res) => {
   try {
-    await connectMongo();
     switch (req.method) {
       case "GET":
         const adminUser = await User.findOne({ email: "contact@boardzy.app" });

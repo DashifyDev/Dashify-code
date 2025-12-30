@@ -1,4 +1,4 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Dashboard from "@/models/dashboard";
 import User from "@/models/user";
 import mongoose from "mongoose";
@@ -7,8 +7,6 @@ import { getSession } from "@auth0/nextjs-auth0";
 
 const addDashBoard = async (req, res) => {
   try {
-    await connectMongo();
-    console.log("database Connected Successfully", req.method);
     switch (req.method) {
       case "POST":
         let data = req.body;

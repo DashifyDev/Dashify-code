@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 
 export const createDatabaseIndexes = async () => {
   try {
+    // Ensure connection is established before creating indexes
     await connectMongo();
 
     console.log("Creating database indexes for performance optimization...");
@@ -38,7 +39,10 @@ export const createDatabaseIndexes = async () => {
 
 export const getDashboardMinimal = async (id) => {
   try {
-    await connectMongo();
+    // Connection is auto-initialized on module import, but ensure it's ready
+    if (mongoose.connection.readyState !== 1) {
+      await connectMongo();
+    }
 
     // Validate ObjectId to avoid CastError when non-ObjectId (e.g. UUID) is passed
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -162,7 +166,10 @@ export const getDashboardMinimal = async (id) => {
 
 export const getUserDashboards = async (userId, sessionId, isAdmin = false) => {
   try {
-    await connectMongo();
+    // Connection is auto-initialized on module import, but ensure it's ready
+    if (mongoose.connection.readyState !== 1) {
+      await connectMongo();
+    }
 
     // For Auth0 users, use sessionId instead of userId to avoid ObjectId casting issues
     const query = sessionId ? { sessionId } : { userId };

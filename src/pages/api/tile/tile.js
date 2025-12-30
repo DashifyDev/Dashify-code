@@ -1,10 +1,9 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
 
 const tile = async (req, res) => {
   try {
-    await connectMongo();
     switch (req.method) {
       case "POST":
         const boardId = req.body.dashboardId;

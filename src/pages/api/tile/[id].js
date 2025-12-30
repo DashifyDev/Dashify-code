@@ -1,6 +1,6 @@
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import IncomingForm from "formidable-serverless";
 import imageUpload from "@/utils/imageUpload";
 
@@ -12,7 +12,6 @@ export const config = {
 
 const tileData = async (req, res) => {
   try {
-    await connectMongo();
     const { id } = req.query;
 
     switch (req.method) {

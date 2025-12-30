@@ -1,10 +1,9 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Pod from "@/models/pod";
 
 const addTileToPod = async (req, res) => {
   try {
-    await connectMongo();
     const { tileId, podId } = req.body;
     let isAdd = req.body.isAdd;
     if (isAdd) {

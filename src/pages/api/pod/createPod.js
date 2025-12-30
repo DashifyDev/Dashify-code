@@ -1,4 +1,4 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Pod from "@/models/pod";
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
@@ -6,7 +6,6 @@ import mongoose from "mongoose";
 
 const createPod = async (req, res) => {
   try {
-    await connectMongo();
     switch (req.method) {
       case "POST":
         const boardId = req.body.dashboardId;

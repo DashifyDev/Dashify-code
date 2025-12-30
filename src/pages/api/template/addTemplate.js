@@ -1,5 +1,5 @@
 import Template from "@/models/template";
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import imageUpload from "@/utils/imageUpload";
 import IncomingForm from "formidable-serverless";
 
@@ -11,7 +11,6 @@ export const config = {
 
 const addTemplate = async (req, res) => {
   try {
-    await connectMongo();
 
     switch (req.method) {
       case "POST":

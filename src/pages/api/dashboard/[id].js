@@ -1,13 +1,12 @@
 import Dashboard from "@/models/dashboard";
 import Tile from "@/models/tile";
 import Pod from "@/models/pod";
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import mongoose from "mongoose";
 import { getDashboardMinimal } from "@/utils/databaseIndexes";
 
 const getDashboardData = async (req, res) => {
   try {
-    await connectMongo();
     const { id } = req.query;
     switch (req.method) {
       case "GET":

@@ -1,4 +1,4 @@
-import connectMongo from "@/utils/db";
+import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
 import IncomingForm from "formidable-serverless";
@@ -12,7 +12,6 @@ export const config = {
 
 const updateTile = async (req, res) => {
   try {
-    await connectMongo();
 
     const form = new IncomingForm();
     let updatedData;
