@@ -25,10 +25,9 @@ export default function IsMobilePrompt() {
   }, []);
   return (
     <Dialog open={showPopup}>
-      <DialogTitle>Warning</DialogTitle>
+      <DialogTitle>Important </DialogTitle>
       <DialogContent>
-        The Boardzy web app is not currently optimized for mobile. Please visit
-        on a desktop device.
+      We are actively working to optimize Boardzy for mobile devices. For the full experience please visit on a desktop device.
       </DialogContent>
       <DialogActions>
         <Button onClick={() => setShowPopUp(false)}>Close</Button>
