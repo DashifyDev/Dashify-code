@@ -63,16 +63,21 @@ function OptimizedDashboardPage() {
   
   useEffect(() => {
     if (dashboardData) {
-      // Only update from dashboardData if we don't have local changes
-      // This prevents overwriting user's drag/drop changes
-      // Skip on initial load if we already have tiles (from previous render)
-      if (hasLocalChangesRef.current && !isInitialLoadRef.current) {
+      // Ensure tiles is always an array
+      const dashboardTiles = Array.isArray(dashboardData.tiles) ? dashboardData.tiles : [];
+      
+      // Check if dashboardData has more tiles than current state
+      // This indicates a new tile was added (e.g., from Header.js)
+      const hasNewTiles = dashboardTiles.length > tiles.length;
+      const hasTempTiles = dashboardTiles.some(t => t._id && t._id.startsWith('temp_'));
+      
+      // Only skip update if we have local changes AND it's not a new tile addition
+      // This allows updates when new tiles are added from Header.js
+      if (hasLocalChangesRef.current && !isInitialLoadRef.current && !hasNewTiles && !hasTempTiles) {
         // Skip update if we have local changes - they will be synced via batch update
         return;
       }
       
-      // Ensure tiles is always an array
-      const dashboardTiles = Array.isArray(dashboardData.tiles) ? dashboardData.tiles : [];
       // Ensure all tiles have mobile profile and order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
       const updatedTiles = dashboardTiles.map((tile, index) => {
@@ -102,7 +107,7 @@ function OptimizedDashboardPage() {
       isInitialLoadRef.current = false; // Mark initial load as complete
       hasLocalChangesRef.current = false; // Reset flag after initial load
     }
-  }, [dashboardData, id]);
+  }, [dashboardData, id, tiles.length]);
 
   useEffect(() => {
     if (

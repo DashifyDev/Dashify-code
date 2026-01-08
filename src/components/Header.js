@@ -201,9 +201,15 @@ function Header() {
     const START_Y = 25;
     const ROW_HEIGHT = TILE_HEIGHT + TILE_SPACING; // Height of one row including spacing
 
+    // Get current tiles from React Query cache to ensure we have the latest data
+    // This is important because tiles might have been deleted and context not updated yet
+    const detailKey = dashboardKeys.detail(currentActiveBoard);
+    const cachedDashboardData = queryClient.getQueryData(detailKey);
+    const currentTiles = cachedDashboardData?.tiles || tiles || [];
+
     // Count only tiles that are user-created (not the default welcome tile)
     // Filter out tiles with width > 200px (default welcome tile is 600px)
-    const userCreatedTiles = tiles.filter(tile => {
+    const userCreatedTiles = currentTiles.filter(tile => {
       const tileWidth = parseInt(tile.width || '0', 10);
       return tileWidth <= 200; // Only count small tiles, not the default welcome tile
     });
@@ -212,20 +218,21 @@ function Header() {
     const rowIndex = Math.floor(tileIndex / TILES_PER_ROW); // Which row (0-based)
     const colIndex = tileIndex % TILES_PER_ROW; // Position in row (0-6)
 
-    // Calculate position from top-left corner
+    // Calculate position from top-left corner - always start from top
     const newX = START_X + colIndex * (TILE_WIDTH + TILE_SPACING);
     const newY = START_Y + rowIndex * ROW_HEIGHT;
 
     // Calculate order based on existing tiles count
-    const maxOrder = tiles.length > 0 ? Math.max(...tiles.map(t => t.order || 0), 0) : 0;
+    const maxOrder =
+      currentTiles.length > 0 ? Math.max(...currentTiles.map(t => t.order || 0), 0) : 0;
     const newOrder = maxOrder + 1;
 
     // Calculate mobile profile defaults
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     // Increased side padding: 24px on each side (48px total)
     const mobileWidth = `${windowWidth - 48}px`;
-    // Don't set mobileHeight by default - let it use min-height until user resizes
-    const mobileY = tiles.length * 166; // Approximate position based on existing tiles
+    // Calculate mobileY based on userCreatedTiles to ensure proper stacking from top
+    const mobileY = userCreatedTiles.length * 166; // Position based on user-created tiles count
 
     const newtile = {
       dashboardId: currentActiveBoard,
@@ -245,12 +252,10 @@ function Header() {
       // mobileHeight not set - will use min-height by default
     };
 
-    const detailKey = dashboardKeys.detail(currentActiveBoard);
-
     if (dbUser) {
       // Optimistic update
       const tempTile = { ...newtile, _id: `temp_${Date.now()}` };
-      setTiles([...tiles, tempTile]);
+      setTiles(prevTiles => [...prevTiles, tempTile]);
 
       // Update React Query cache optimistically
       queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
@@ -315,39 +320,38 @@ function Header() {
       const tempTile = { ...newtile, _id: `temp_${Date.now()}_${Math.random()}` };
       items[boardIndex].tiles.push(tempTile);
 
+      // Update localStorage first to ensure useDashboard hook sees the latest data
       localStorage.setItem('Dasify', JSON.stringify(items));
       setBoards(items);
-      setTiles(items[boardIndex].tiles);
 
-      // Update React Query cache optimistically for guest users
-      queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          tiles: [...(oldData.tiles || []), tempTile]
-        };
+      // Use functional update to ensure we get the latest state
+      setTiles(prevTiles => {
+        // Always return the updated tiles from the current board
+        return items[boardIndex].tiles;
       });
 
-      // Update React Query cache so pages using useDashboard see the change immediately
-      try {
-        queryClient.setQueryData(detailKey, oldData => {
-          // If there is existing cache, replace tiles; otherwise set minimal shape from local storage
-          if (oldData) {
-            return {
-              ...oldData,
-              tiles: items[boardIndex].tiles
-            };
-          }
-          return {
-            _id: items[boardIndex]._id,
-            name: items[boardIndex].name || '',
-            tiles: items[boardIndex].tiles,
-            pods: items[boardIndex].pods || []
-          };
+      // Update React Query cache optimistically for guest users - ensure it's complete
+      const updatedDashboardData = {
+        _id: items[boardIndex]._id,
+        name: items[boardIndex].name || '',
+        tiles: items[boardIndex].tiles,
+        pods: items[boardIndex].pods || []
+      };
+
+      // Update both query keys to ensure all components see the update
+      // Since useDashboard checks localStorage first, it will return the updated data
+      queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), updatedDashboardData);
+      queryClient.setQueryData(detailKey, updatedDashboardData);
+
+      // Force refetch from localStorage to ensure page.js picks up the changes
+      // For guest users, useDashboard reads from localStorage, so this won't call the API
+      // but will trigger a re-read of localStorage and update dashboardData
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: dashboardKeys.detail(currentActiveBoard),
+          refetchType: 'active'
         });
-      } catch (e) {
-        console.warn('Failed to update query cache for local board', e);
-      }
+      }, 0);
     }
   };
 

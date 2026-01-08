@@ -963,28 +963,75 @@ const MobileGridTiles = memo(function MobileGridTiles({
     if (tileIndex < 0) return;
 
     let tileId = items[tileIndex]._id;
+    // Get the order of the tile being deleted
+    const deletedOrder = items[tileIndex].order;
     setShowModel(false);
-    if (dbUser) {
-      axios.delete(`/api/tile/${tileId}`).then(res => {
-        if (res) {
-          items.splice(tileIndex, 1);
-          setTileCordinates(items);
 
-          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).filter(
-                tile => tile._id !== tileId
-              )
-            };
-          });
+    if (dbUser) {
+      // Create a new array instead of mutating the existing one
+      let updatedItems = items.filter((_, i) => i !== tileIndex);
+
+      // Recalculate orders for tiles that come after the deleted one
+      updatedItems = updatedItems.map(tile => {
+        if (tile.order && tile.order > deletedOrder) {
+          return { ...tile, order: tile.order - 1 };
         }
+        return tile;
       });
+
+      // Use setTileCordinates which will call handleTileUpdate and update React Query cache
+      // This ensures single source of truth
+      setTileCordinates(updatedItems);
+
+      // Find tiles that need order updates
+      const tilesToUpdate = updatedItems.filter(tile => tile.order && tile.order > deletedOrder);
+
+      axios
+        .delete(`/api/tile/${tileId}`)
+        .then(() => {
+          // Update orders for tiles that come after the deleted one
+          if (tilesToUpdate.length > 0) {
+            const orderUpdates = tilesToUpdate.map(tile => ({
+              tileId: tile._id,
+              data: { order: tile.order }
+            }));
+
+            axios
+              .post('/api/tile/batch-update', { updates: orderUpdates })
+              .then(() => {
+                // Orders updated successfully
+              })
+              .catch(err => {
+                console.error('Error updating tile orders:', err);
+              });
+          }
+          // React Query cache already updated by handleTileUpdate via setTileCordinates
+        })
+        .catch(error => {
+          console.error('Error deleting tile:', error);
+          // Revert optimistic update on error
+          setTileCordinates(items);
+          queryClient.invalidateQueries({ queryKey: dashboardKeys.detail(activeBoard) });
+        });
     } else {
-      items.splice(tileIndex, 1);
-      setTileCordinates(items);
-      updateTilesInLocalstorage(items);
+      // Create a new array instead of mutating the existing one
+      let updatedItems = items.filter((_, i) => i !== tileIndex);
+
+      // Recalculate orders for tiles that come after the deleted one
+      updatedItems = updatedItems.map(tile => {
+        if (tile.order && tile.order > deletedOrder) {
+          return { ...tile, order: tile.order - 1 };
+        }
+        return tile;
+      });
+
+      // Use setTileCordinates which will call handleTileUpdate and update React Query cache
+      // This ensures single source of truth - same as for authenticated users
+      setTileCordinates(updatedItems);
+      updateTilesInLocalstorage(updatedItems);
+
+      // React Query cache already updated by handleTileUpdate via setTileCordinates
+      // No need to update it again here
     }
   };
 
@@ -1010,23 +1057,93 @@ const MobileGridTiles = memo(function MobileGridTiles({
     const content = sortedTiles[index];
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
 
+    // Use the same positioning logic as addTiles
+    // Count only tiles that are user-created (not the default welcome tile)
+    // Filter out tiles with width > 200px (default welcome tile is 600px)
+    const userCreatedTiles = tileCordinates.filter(tile => {
+      const tileWidth = parseInt(tile.width || '0', 10);
+      return tileWidth <= 200; // Only count small tiles, not the default welcome tile
+    });
+
+    // Calculate mobileY based on userCreatedTiles to ensure proper stacking from top
+    const mobileY = userCreatedTiles.length * 166; // Position based on user-created tiles count
+    const mobileWidth = `${windowWidth - 48}px`;
+
+    // Get the order of the original tile
+    const originalOrder = content.order || 0;
+    // New tile always gets order = originalOrder + 1
+    // All tiles with order > originalOrder will be shifted by +1
+    const newOrder = originalOrder + 1;
+
     const newTile = {
       ...content,
       mobileX: 0,
-      mobileY: sortedTiles.length * 166, // Approximate position
-      mobileWidth: `${windowWidth - 48}px`,
+      mobileY: mobileY,
+      mobileWidth: mobileWidth,
       // Only copy mobileHeight if it was manually set (not default)
       // If content had mobileHeight set, keep it; otherwise don't set it (use min-height)
       ...(content.mobileHeight ? { mobileHeight: content.mobileHeight } : {}),
-      order: sortedTiles.length + 1
+      order: newOrder
     };
+
+    // Remove _id so a new one will be created
+    delete newTile._id;
 
     setShowModel(false);
     if (dbUser) {
-      newTile.dashboardId = activeBoard;
-      cloneMutation.mutate(newTile);
+      // Update orders locally first (optimistic update)
+      // This ensures that if we clone multiple times, we see updated orders
+      const updatedTiles = tileCordinates.map(tile => {
+        if (tile.order && tile.order > originalOrder) {
+          return { ...tile, order: tile.order + 1 };
+        }
+        return tile;
+      });
+
+      // Update local state immediately
+      setTileCordinates(updatedTiles);
+
+      // Update orders on server for all tiles that come after the original
+      const tilesToUpdate = tileCordinates
+        .filter(tile => tile.order && tile.order > originalOrder)
+        .map(tile => ({
+          tileId: tile._id,
+          data: { order: tile.order + 1 }
+        }));
+
+      // Update orders on server, then add the new tile
+      if (tilesToUpdate.length > 0) {
+        axios
+          .post('/api/tile/batch-update', { updates: tilesToUpdate })
+          .then(() => {
+            // After orders are updated, add the new tile
+            newTile.dashboardId = activeBoard;
+            cloneMutation.mutate(newTile);
+          })
+          .catch(err => {
+            console.error('Error updating tile orders:', err);
+            // Revert local state on error
+            setTileCordinates(tileCordinates);
+            // Still try to add the tile
+            newTile.dashboardId = activeBoard;
+            cloneMutation.mutate(newTile);
+          });
+      } else {
+        // No tiles to update, just add the new tile
+        newTile.dashboardId = activeBoard;
+        cloneMutation.mutate(newTile);
+      }
     } else {
-      let items = [...tileCordinates, newTile];
+      // For guest users, update orders locally
+      let items = tileCordinates.map(tile => {
+        if (tile.order && tile.order > originalOrder) {
+          return { ...tile, order: tile.order + 1 };
+        }
+        return tile;
+      });
+
+      // Add the new tile
+      items = [...items, newTile];
       setTileCordinates(items);
       updateTilesInLocalstorage(items);
     }
