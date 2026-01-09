@@ -5,29 +5,6 @@ import isDblTouchTap from '@/hooks/isDblTouchTap';
 import { dashboardKeys } from '@/hooks/useDashboard';
 import useIsMobile from '@/hooks/useIsMobile';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import AddSharpIcon from '@mui/icons-material/AddSharp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import MenuIcon from '@mui/icons-material/Menu';
-import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
-import {
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Toolbar
-} from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import Image from 'next/image';
@@ -36,11 +13,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import { v4 as uuidv4 } from 'uuid';
-import leftArrow from '../assets/leftArrow1.svg';
 import logo from '../assets/logo.png';
-import rightArrow from '../assets/rightArrow.svg';
-import '../styles/header.css';
 import SideDrawer from './SideDrawer';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -377,8 +353,8 @@ function Header() {
         const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
         const defTile = {
           dashboardId: newBoard._id,
-          width: `${600}px`,
-          height: `${200}px`,
+          width: `${300}px`,
+          height: `${250}px`,
           x: 25,
           y: 25,
           titleX: 1,
@@ -386,7 +362,7 @@ function Header() {
           action: 'textEditor',
           displayTitle: true,
           backgroundAction: 'color',
-          tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
+          tileText: `<p style="line-height: 2; font-size: 1.3rem;">Hey there! I'm the first box on your board.<br><br>Move me around, or go to my settings to give me a personality!</p><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
           order: 1,
           mobileX: 0,
           mobileY: 0,
@@ -623,399 +599,695 @@ function Header() {
     }
   };
 
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollContainerRef = useRef(null);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollContainerRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+        setCanScrollLeft(scrollLeft > 0);
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+      }
+    };
+
+    checkScroll();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScroll);
+      return () => container.removeEventListener('scroll', checkScroll);
+    }
+  }, [boards, isMobile]);
+
+  const scrollBoards = direction => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 200;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <Box>
-      <AppBar
-        position='relative'
-        color='transparent'
-        sx={{
-          zIndex: theme => {
-            return theme.zIndex.drawer + 1;
-          },
-          backgroundColor: '#FFFFFF',
-          width: headerwidth
-        }}
-      >
-        <CssBaseline />
-        <Toolbar>
-          <Grid
-            container
-            display='flex'
-            justifyContent='space-between'
-            className='header_container'
+    <header
+      className='sticky top-0 z-50 w-full max-w-full border-b border-gray-200/60 bg-white/95 backdrop-blur-sm shadow-sm py-2'
+      style={{ width: headerwidth, maxWidth: '100%' }}
+    >
+      <div className='w-full px-2 sm:px-4 lg:px-6 max-w-full'>
+        <div className='flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4 min-w-0 max-w-full'>
+          {/* Left Section */}
+          <div
+            className={`flex items-center min-w-0 max-w-full ${
+              isMobile ? 'flex-1 justify-between' : 'gap-4 flex-1'
+            }`}
           >
-            <Grid item className={isMobile ? 'left_content_mobile' : 'left_content'}>
-              <div className='add_tiles' onClick={addTiles}>
-                <AddSharpIcon />
-              </div>
-              {isMobile ? (
-                <>
-                  <div className='vertical'></div>
-                  <div className='mobile_center_section'>
-                    <Image className='logo_mobile' src={logo} alt='Boardzy logo' priority />
-                    <Button
-                      variant='text'
-                      onClick={e => setBoardMenuAnchor(e.currentTarget)}
-                      sx={{
-                        minWidth: '140px',
-                        maxWidth: '220px',
-                        textTransform: 'none',
-                        backgroundColor: '#e5ecef',
-                        color: '#538a95',
-                        fontSize: '14px',
-                        padding: '6px 12px',
-                        border: 'none',
-                        '&:hover': {
-                          backgroundColor: '#d5dce0'
-                        }
-                      }}
-                    >
+            {/* Add Tiles Button */}
+            <button
+              onClick={addTiles}
+              className='flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#63899e] text-white hover:bg-[#4a6d7e] transition-all duration-200 shadow-sm hover:shadow-md border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2'
+              aria-label='Add tile'
+            >
+              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2.5}
+                  d='M12 4v16m8-8H4'
+                />
+              </svg>
+            </button>
+            {/* Divider */}
+            <div className='hidden sm:block w-px h-6 bg-gray-300 mx-2 sm:mx-4' />
+
+            {isMobile ? (
+              <>
+                {/* Mobile: Logo and Board Selector */}
+                <div className='flex flex-col items-center flex-1 justify-center gap-1 min-w-0 max-w-full'>
+                  <Image
+                    src={logo}
+                    alt='Boardzy logo'
+                    priority
+                    className='h-5 w-auto flex-shrink-0'
+                  />
+                  <button
+                    onClick={e => setBoardMenuAnchor(e.currentTarget)}
+                    className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-[#538a95] text-sm font-medium transition-colors min-w-[140px] max-w-[220px] border-0 outline-none flex-shrink-0'
+                  >
+                    <span className='truncate min-w-0'>
                       {boards.find(b => b._id === currentActiveBoard)?.name || 'Select Board'}
-                      <KeyboardArrowDownIcon sx={{ ml: 1, fontSize: '18px', color: '#538a95' }} />
-                    </Button>
-                  </div>
-                  <Menu
-                    anchorEl={boardMenuAnchor}
-                    open={Boolean(boardMenuAnchor)}
-                    onClose={() => setBoardMenuAnchor(null)}
-                    PaperProps={{
-                      style: {
-                        maxHeight: '400px',
-                        width: '280px',
-                        backgroundColor: '#ffffff'
-                      }
-                    }}
-                  >
-                    {boards.map((board, index) => (
-                      <MenuItem
-                        key={board._id}
-                        selected={board._id === currentActiveBoard}
-                        onClick={() => {
-                          selectBoard(board._id);
-                          setBoardMenuAnchor(null);
-                        }}
-                        sx={{
-                          color: '#538a95',
-                          '&.Mui-selected': {
-                            backgroundColor: 'rgba(83, 138, 149, 0.15)',
-                            fontWeight: 'bold',
-                            color: '#538a95',
-                            '&:hover': {
-                              backgroundColor: 'rgba(83, 138, 149, 0.2)'
-                            }
-                          },
-                          '&:hover': {
-                            backgroundColor: 'rgba(83, 138, 149, 0.1)'
-                          }
-                        }}
-                      >
-                        <ListItemText
-                          primary={board.name}
-                          primaryTypographyProps={{
-                            color: '#538a95'
-                          }}
-                        />
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation();
-                            setOptions(e.currentTarget);
-                            setSelectedDashboard(board._id);
-                            setSelectedDashIndex(index);
-                          }}
-                          sx={{ ml: 1, color: '#538a95' }}
-                        >
-                          <MoreHorizSharpIcon fontSize='small' />
-                        </IconButton>
-                      </MenuItem>
-                    ))}
-                    <MenuItem
-                      onClick={() => {
-                        setBoardMenuAnchor(null);
-                        setShowDashboardModel(true);
-                        setSelectedDashboard(null);
-                        setDashBoardName('');
-                      }}
-                      sx={{
-                        borderTop: '2px solid rgba(83, 138, 149, 0.3)',
-                        marginTop: '8px',
-                        paddingTop: '12px',
-                        paddingBottom: '12px',
-                        backgroundColor: 'rgba(83, 138, 149, 0.1)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(83, 138, 149, 0.2)'
-                        },
-                        fontWeight: '600',
-                        color: '#538a95'
-                      }}
+                    </span>
+                    <svg
+                      className='w-4 h-4 flex-shrink-0'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
                     >
-                      <AddSharpIcon sx={{ mr: 1, fontSize: '20px', color: '#538a95' }} />
-                      <ListItemText
-                        primary='New Dashboard'
-                        primaryTypographyProps={{
-                          fontWeight: '600',
-                          color: '#538a95'
-                        }}
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M19 9l-7 7-7-7'
                       />
-                    </MenuItem>
-                  </Menu>
-                  <Menu
-                    anchorEl={options}
-                    open={Boolean(options)}
-                    onClose={() => setOptions(null)}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right'
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right'
-                    }}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        setOptions(null);
-                        setOpenDashDeleteModel(true);
+                    </svg>
+                  </button>
+                </div>
+                {/* Mobile Board Menu */}
+                {boardMenuAnchor && (
+                  <>
+                    <div
+                      className='fixed inset-0 z-40 bg-black/20 backdrop-blur-sm h-screen '
+                      onClick={() => setBoardMenuAnchor(null)}
+                    />
+                    <div
+                      className='fixed z-50 w-[280px] max-h-[60vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden flex flex-col'
+                      style={{
+                        top: boardMenuAnchor.getBoundingClientRect().bottom + 4,
+                        left: boardMenuAnchor.getBoundingClientRect().left
                       }}
                     >
-                      Delete
-                    </MenuItem>
-                    {dbUser && (
-                      <MenuItem
-                        onClick={() => {
-                          setOptions(null);
-                          setShareLinkModal(true);
-                          setCopiedUrl(window.location.href);
-                        }}
+                      <div className='overflow-y-auto overflow-x-hidden flex-1 min-h-0'>
+                        {boards.map((board, index) => (
+                          <div
+                            key={board._id}
+                            className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${
+                              board._id === currentActiveBoard
+                                ? 'bg-[#63899e]/15 font-semibold text-[#538a95]'
+                                : 'text-[#538a95] hover:bg-[#63899e]/10'
+                            }`}
+                            onClick={() => {
+                              selectBoard(board._id);
+                              setBoardMenuAnchor(null);
+                            }}
+                          >
+                            <span className='truncate flex-1'>{board.name}</span>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (options === e.currentTarget) {
+                                  setOptions(null);
+                                } else {
+                                  setOptions(e.currentTarget);
+                                  setSelectedDashboard(board._id);
+                                  setSelectedDashIndex(index);
+                                }
+                              }}
+                              className='ml-2 p-1 rounded hover:bg-[#63899e]/20 text-[#538a95] border-0 outline-none'
+                            >
+                              <svg
+                                className='w-4 h-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z'
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                        <div className='border-t border-[#63899e]/30 mt-2 pt-2'>
+                          <button
+                            onClick={() => {
+                              setBoardMenuAnchor(null);
+                              setShowDashboardModel(true);
+                              setSelectedDashboard(null);
+                              setDashBoardName('');
+                            }}
+                            className='w-full flex items-center gap-2 px-4 py-3 bg-[#63899e]/10 hover:bg-[#63899e]/20 text-[#538a95] font-semibold transition-colors border-0 outline-none'
+                          >
+                            <svg
+                              className='w-5 h-5'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M12 4v16m8-8H4'
+                              />
+                            </svg>
+                            New Dashboard
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Mobile Options Menu */}
+                {options && (
+                  <>
+                    <div className='fixed inset-0 z-40' onClick={() => setOptions(null)} />
+                    <div
+                      className='fixed z-50 mt-1 w-48 bg-white rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm'
+                      style={{
+                        top: options.getBoundingClientRect().bottom + 4,
+                        left: options.getBoundingClientRect().right - 192
+                      }}
+                    >
+                      <div>
+                        {dbUser && (
+                          <a
+                            href='#'
+                            onClick={e => {
+                              e.preventDefault();
+                              setOptions(null);
+                              setShareLinkModal(true);
+                              setCopiedUrl(window.location.href);
+                            }}
+                            className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                          >
+                            <svg
+                              className='w-4 h-4 text-gray-600'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8.684 13.342C8.885 12.938 9 12.482 9 12c0-.482-.115-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z'
+                              />
+                            </svg>
+                            <span>Share</span>
+                          </a>
+                        )}
+                        <a
+                          href='#'
+                          onClick={e => {
+                            e.preventDefault();
+                            setOptions(null);
+                            const board = boards.find(b => b._id === selectedDashboard);
+                            if (board) {
+                              setDashBoardName(board.name);
+                              setShowDashboardModel(true);
+                            }
+                          }}
+                          className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                        >
+                          <svg
+                            className='w-4 h-4 text-gray-600'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                            />
+                          </svg>
+                          <span>Rename</span>
+                        </a>
+                        <a
+                          href='#'
+                          onClick={e => {
+                            e.preventDefault();
+                            setOptions(null);
+                            const board = boards.find(b => b._id === selectedDashboard);
+                            if (board) {
+                              duplicateBoard(board);
+                            }
+                          }}
+                          className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                        >
+                          <svg
+                            className='w-4 h-4 text-gray-600'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
+                            />
+                          </svg>
+                          <span>Duplicate</span>
+                        </a>
+                      </div>
+                      <div className='border-b border-gray-100'></div>
+                      <div>
+                        <a
+                          href='#'
+                          onClick={e => {
+                            e.preventDefault();
+                            setOptions(null);
+                            setOpenDashDeleteModel(true);
+                          }}
+                          className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-b border-gray-100 no-underline'
+                        >
+                          <svg
+                            className='w-4 h-4 text-red-600'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                            />
+                          </svg>
+                          <span>Delete</span>
+                        </a>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Desktop: Boards Navigation with Horizontal Scroll */}
+                <div className='flex items-center gap-2 flex-1 min-w-0 max-w-full overflow-visible'>
+                  {/* Scroll Left Button */}
+                  {canScrollLeft && (
+                    <button
+                      onClick={() => scrollBoards('left')}
+                      className='flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e]'
+                      aria-label='Scroll left'
+                    >
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
                       >
-                        Share
-                      </MenuItem>
-                    )}
-                    <MenuItem
-                      onClick={() => {
-                        setOptions(null);
-                        const board = boards.find(b => b._id === selectedDashboard);
-                        if (board) {
-                          setDashBoardName(board.name);
-                          setShowDashboardModel(true);
-                        }
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M15 19l-7-7 7-7'
+                        />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Boards Scroll Container */}
+                  <div className='flex-1 min-w-0 relative max-w-full overflow-visible'>
+                    <div
+                      ref={scrollContainerRef}
+                      className='flex gap-1 overflow-x-auto overflow-y-visible scrollbar-hide scroll-smooth max-w-full py-2'
+                      style={{
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        overflowY: 'visible'
                       }}
                     >
-                      Rename
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        setOptions(null);
-                        const board = boards.find(b => b._id === selectedDashboard);
-                        if (board) {
-                          duplicateBoard(board);
-                        }
-                      }}
-                    >
-                      Duplicate
-                    </MenuItem>
-                  </Menu>
-                </>
-              ) : (
-                <>
-                  <div className='vertical'></div>
-                  <div className='board_nav'>
-                    <ReactSortable
-                      ref={divRef}
-                      filter='.dashboard_btn'
-                      dragClass='sortableDrag'
-                      list={boards}
-                      setList={list => setBoardPosition(list)}
-                      animation='200'
-                      easing='ease-out'
-                      className='dashboard_drag'
-                      key={(boards || []).map(b => String(b._id)).join(',')}
-                    >
-                      {boards.map((board, index) => {
-                        return (
-                          <List key={board._id} sx={{ p: 0, m: '0 4px' }}>
-                            <ListItem
-                              button
+                      <ReactSortable
+                        ref={divRef}
+                        filter='.dashboard_btn'
+                        dragClass='sortableDrag'
+                        list={boards}
+                        setList={list => setBoardPosition(list)}
+                        animation={200}
+                        easing='ease-out'
+                        className='flex gap-1 items-center'
+                        key={(boards || []).map(b => String(b._id)).join(',')}
+                      >
+                        {boards.map((board, index) => (
+                          <div
+                            key={board._id}
+                            className='relative group flex items-center'
+                            onMouseEnter={() => setShowIcon(board._id)}
+                            onMouseLeave={() => setShowIcon(null)}
+                          >
+                            <button
                               onClick={() => selectBoard(board._id)}
-                              onMouseEnter={() => setShowIcon(board._id)}
-                              onMouseLeave={() => setShowIcon(null)}
                               onTouchStart={e => {
                                 if (isDblTouchTap(e)) {
                                   selectBoard(board._id);
                                 }
                               }}
-                              selected={board._id === currentActiveBoard}
-                              sx={{
-                                borderRadius: '4px',
-                                padding: '8px 12px',
-                                '&.Mui-selected': {
-                                  backgroundColor: 'rgba(69, 129, 142, 0.1)',
-                                  '&:hover': {
-                                    backgroundColor: 'rgba(69, 129, 142, 0.15)'
-                                  },
-                                  '& .MuiListItemText-primary': {
-                                    fontWeight: 'bold',
-                                    color: '#45818e'
-                                  }
-                                },
-                                '&:not(.Mui-selected):hover': {
-                                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                }
-                              }}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-1 ${
+                                board._id === currentActiveBoard
+                                  ? 'bg-[#63899e]/10 text-[#45818e] font-semibold'
+                                  : 'text-gray-700 hover:bg-gray-100'
+                              }`}
                             >
-                              <ListItemText primary={board.name} />
+                              {board.name}
+                            </button>
 
-                              {showIcon === board._id && (
-                                <span
-                                  className='cross'
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    options ? setOptions(null) : setOptions(e.currentTarget);
-                                  }}
+                            {showIcon === board._id && (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  options ? setOptions(null) : setOptions(e.currentTarget);
+                                  setSelectedDashboard(board._id);
+                                  setSelectedDashIndex(index);
+                                }}
+                                className='absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-50 text-gray-600 hover:text-[#63899e] transition-colors outline-none'
+                              >
+                                <svg
+                                  className='w-3 h-3'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
                                 >
-                                  <KeyboardArrowDownIcon fontSize='small' />
-                                  <Menu
-                                    anchorEl={options}
-                                    open={Boolean(options)}
-                                    onClose={() => setOptions(null)}
-                                    anchorOrigin={{
-                                      vertical: 'bottom',
-                                      horizontal: 'right'
-                                    }}
-                                    transformOrigin={{
-                                      vertical: 'top',
-                                      horizontal: 'right'
-                                    }}
-                                  >
-                                    <MenuItem
-                                      onClick={() => {
-                                        setOptions(null);
-                                        setOpenDashDeleteModel(true);
-                                        setSelectedDashboard(board._id);
-                                        setSelectedDashIndex(index);
-                                      }}
-                                    >
-                                      Delete
-                                    </MenuItem>
-                                    {dbUser && (
-                                      <MenuItem
-                                        onClick={() => {
-                                          setOptions(null);
-                                          setShareLinkModal(true);
-                                          setCopiedUrl(window.location.href);
-                                        }}
-                                      >
-                                        Share
-                                      </MenuItem>
-                                    )}
-                                    <MenuItem
-                                      onClick={() => {
-                                        setOptions(null);
-                                        setSelectedDashboard(board._id);
-                                        setDashBoardName(board.name);
-                                        setShowDashboardModel(true);
-                                      }}
-                                    >
-                                      Rename
-                                    </MenuItem>
-                                    <MenuItem
-                                      onClick={() => {
-                                        setOptions(null);
-                                        duplicateBoard(board);
-                                      }}
-                                    >
-                                      Duplicate
-                                    </MenuItem>
-                                  </Menu>
-                                </span>
-                              )}
-                            </ListItem>
-                          </List>
-                        );
-                      })}
-                    </ReactSortable>
-                    {isOverflowing && (
-                      <div className='scroll-bar'>
-                        <div className='vertical'></div>
-                        <div className='scroll-buttons'>
-                          <Image src={leftArrow} onClick={() => handleScroll('left')} />
-                          <Image src={rightArrow} onClick={() => handleScroll('right')} />
-                        </div>
-                        <div className='vertical'></div>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    className='dashboard_btn'
-                    sx={{ p: '11px' }}
-                    onClick={() => {
-                      setShowDashboardModel(true);
-                      setSelectedDashboard(null);
-                      setDashBoardName('');
-                    }}
-                  >
-                    + New
-                  </Button>
-                </>
-              )}
-            </Grid>
-            <Grid item className='right_header'>
-              {!isMobile && <Image className='logo' src={logo} alt='Boardzy logo' priority />}
-              {user && isMobile && (
-                <Button onClick={e => handlePicClick(e)} sx={{ minWidth: 'auto', p: '4px', mr: 1 }}>
-                  <Avatar src={user.picture} sx={{ width: 32, height: 32 }}></Avatar>
-                </Button>
-              )}
-              <IconButton
-                size='large'
-                edge='end'
-                color='inherit'
-                aria-label='menu'
-                className='menu-button'
-                onClick={toggleDrawer}
-                sx={{ ml: isMobile ? 0 : 1 }}
-              >
-                <MenuIcon sx={{ color: '#45818e' }} />
-              </IconButton>
-              {user ? (
-                <div>
-                  {!isMobile && (
-                    <Button onClick={e => handlePicClick(e)} sx={{ minWidth: 'auto', p: '8px' }}>
-                      <Avatar src={user.picture} sx={{ width: 40, height: 40 }}></Avatar>
-                    </Button>
-                  )}
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={() => {
-                      setAnchorEl(null);
-                    }}
-                  >
-                    <div className='email'>{user.email}</div>
-                    <div className='horizonLine'></div>
-                    <div className='logout'>
-                      <Link href='/api/auth/logout'>Log out</Link>
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M19 9l-7 7-7-7'
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </ReactSortable>
                     </div>
-                  </Menu>
-                </div>
-              ) : (
-                <div>
-                  {!isMobile && (
+                  </div>
+
+                  {/* Scroll Right Button */}
+                  {canScrollRight && (
+                    <button
+                      onClick={() => scrollBoards('right')}
+                      className='flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e]'
+                      aria-label='Scroll right'
+                    >
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M9 5l7 7-7 7'
+                        />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Desktop Options Menu */}
+                  {options && (
                     <>
-                      <Link href='/api/auth/login' prefetch={false} className='sign_btn'>
-                        Sign up
-                      </Link>
-                      <Link href='/api/auth/login' prefetch={false} className='login_btn'>
-                        Login
-                      </Link>
+                      <div className='fixed inset-0 z-40' onClick={() => setOptions(null)} />
+                      <div
+                        className='fixed z-50 mt-1 w-48 bg-white rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm'
+                        style={{
+                          top: options.getBoundingClientRect().bottom + 4,
+                          left: options.getBoundingClientRect().right - 192
+                        }}
+                      >
+                        <div>
+                          <a
+                            href='#'
+                            onClick={e => {
+                              e.preventDefault();
+                              setOptions(null);
+                              setShareLinkModal(true);
+                              setCopiedUrl(window.location.href);
+                            }}
+                            className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                          >
+                            <svg
+                              className='w-4 h-4 text-gray-600'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8.684 13.342C8.885 12.938 9 12.482 9 12c0-.482-.115-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z'
+                              />
+                            </svg>
+                            <span>Share</span>
+                          </a>
+                          <a
+                            href='#'
+                            onClick={e => {
+                              e.preventDefault();
+                              setOptions(null);
+                              setSelectedDashboard(selectedDashboard);
+                              const board = boards.find(b => b._id === selectedDashboard);
+                              if (board) {
+                                setDashBoardName(board.name);
+                                setShowDashboardModel(true);
+                              }
+                            }}
+                            className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                          >
+                            <svg
+                              className='w-4 h-4 text-gray-600'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                              />
+                            </svg>
+                            <span>Rename</span>
+                          </a>
+                          <a
+                            href='#'
+                            onClick={e => {
+                              e.preventDefault();
+                              setOptions(null);
+                              const board = boards.find(b => b._id === selectedDashboard);
+                              if (board) {
+                                duplicateBoard(board);
+                              }
+                            }}
+                            className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                          >
+                            <svg
+                              className='w-4 h-4 text-gray-600'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
+                              />
+                            </svg>
+                            <span>Duplicate</span>
+                          </a>
+                        </div>
+                        <div className='border-b border-gray-100'></div>
+                        <div>
+                          <a
+                            href='#'
+                            onClick={e => {
+                              e.preventDefault();
+                              setOptions(null);
+                              setOpenDashDeleteModel(true);
+                            }}
+                            className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-b border-gray-100 no-underline'
+                          >
+                            <svg
+                              className='w-4 h-4 text-red-600'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                              />
+                            </svg>
+                            <span>Delete</span>
+                          </a>
+                        </div>
+                      </div>
                     </>
                   )}
                 </div>
-              )}
-            </Grid>
-          </Grid>
-        </Toolbar>
-      </AppBar>
+
+                {/* New Dashboard Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    setShowDashboardModel(true);
+                    setSelectedDashboard(null);
+                    setDashBoardName('');
+                  }}
+                  className='flex-shrink-0 whitespace-nowrap'
+                >
+                  + New
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Right Section */}
+          <div className='flex items-center gap-2 sm:gap-3 flex-shrink-0'>
+            {/* Logo (Desktop only) */}
+            {!isMobile && (
+              <Image src={logo} alt='Boardzy logo' priority className='h-8 w-auto flex-shrink-0' />
+            )}
+
+            {/* Menu Button */}
+            <button
+              onClick={toggleDrawer}
+              className='inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg text-[#45818e] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2 transition-all duration-200 border-0 outline-none'
+              aria-label='Open menu'
+            >
+              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2.5}
+                  d='M4 6h16M4 12h16M4 18h16'
+                />
+              </svg>
+            </button>
+
+            {/* User Menu or Auth Buttons */}
+            {dbUser ? (
+              <div className='relative'>
+                <button
+                  onClick={handlePicClick}
+                  className='flex items-center focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2 rounded-full border-0 outline-none transition-all duration-200 hover:ring-2 hover:ring-[#63899e]/30'
+                >
+                  <img
+                    src={dbUser.picture}
+                    alt={dbUser.email}
+                    className='h-8 w-8 sm:h-10 sm:w-10 rounded-full border-2 border-gray-200 hover:border-[#63899e] transition-all duration-200 shadow-sm hover:shadow-md'
+                  />
+                </button>
+
+                {/* Dropdown Menu */}
+                {anchorEl && (
+                  <>
+                    <div className='fixed inset-0 z-40' onClick={() => setAnchorEl(null)} />
+                    <div className='absolute right-0 mt-2 w-64 rounded-xl shadow-xl bg-white/95 backdrop-blur-sm border border-gray-200/60 z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200'>
+                      {/* User Info Section */}
+                      <div className='px-4 py-4 bg-gradient-to-r from-[#63899e]/5 to-[#4a6d7e]/5 border-b border-gray-200/60'>
+                        <div className='flex items-center gap-3'>
+                          <img
+                            src={dbUser.picture}
+                            alt={dbUser.email}
+                            className='h-10 w-10 rounded-full border-2 border-[#63899e]/20'
+                          />
+                          <div className='flex-1 min-w-0'>
+                            <p className='text-sm font-semibold text-gray-900 truncate'>
+                              {dbUser.name || 'User'}
+                            </p>
+                            <p className='text-xs text-gray-500 truncate mt-0.5'>{dbUser.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className='h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent' />
+
+                      {/* Menu Items */}
+                      <div>
+                        <a
+                          href='/api/auth/logout'
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-50/50 transition-all duration-200 group'
+                        >
+                          <svg
+                            className='h-4 w-4 text-gray-400 group-hover:text-red-500 transition-colors'
+                            fill='none'
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth='2'
+                            viewBox='0 0 24 24'
+                            stroke='currentColor'
+                          >
+                            <path d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1' />
+                          </svg>
+                          <span className='group-hover:text-red-600 font-medium transition-colors'>
+                            Log out
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              !isMobile && (
+                <div className='flex items-center gap-2'>
+                  <Link
+                    href='/api/auth/login'
+                    prefetch={false}
+                    className='px-4 py-2 text-sm font-semibold text-[#63899e] hover:text-[#4a6d7e] transition-colors'
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href='/api/auth/login'
+                    prefetch={false}
+                    className='px-4 py-2 text-sm font-semibold bg-[#63899e] text-white rounded-lg hover:bg-[#4a6d7e] transition-colors shadow-sm hover:shadow-md'
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
       <SideDrawer
         open={isDrawerOpen}
         close={toggleDrawer}
@@ -1024,117 +1296,151 @@ function Header() {
         authUser={user}
       />
 
-      {}
-      <Dialog open={openDashDeleteModel} className='model'>
-        <DialogTitle sx={{ width: '270px' }}>Are you sure you want to delete?</DialogTitle>
-        <DialogActions>
-          <Button
-            className='button_cancel'
-            sx={{ color: '#63899e' }}
+      {/* Delete Dashboard Modal */}
+      {openDashDeleteModel && (
+        <>
+          <div
+            className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/50 backdrop-blur-sm z-[10000] transition-opacity duration-300'
             onClick={() => {
-              setOpenDashDeleteModel(false), setSelectedDashIndex(null);
+              setOpenDashDeleteModel(false);
+              setSelectedDashIndex(null);
             }}
-          >
-            Cancel
-          </Button>
-          <Button
-            className='button_filled'
-            sx={{
-              background: '#63899e',
-              color: '#fff',
-              '&:hover': {
-                backgroundColor: '#63899e'
-              }
-            }}
-            onClick={() => {
-              deleteDashboard(selectedDashboard, selectedDashIndex);
-            }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {}
-      <Dialog open={showDeshboardModel}>
-        <DialogTitle>{selectedDashboard ? 'Update Dashboard' : 'Add Dashboard'}</DialogTitle>
-        <DialogContent sx={{ width: '300px' }}>
-          <input
-            type='text'
-            value={dashBoardName}
-            placeholder='Enter Dashboard Name'
-            onChange={changeDashboardName}
-            style={{ height: '40px', width: '100%' }}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            className='button_cancel'
-            sx={{ color: '#63899e' }}
-            onClick={() => setShowDashboardModel(false)}
-          >
-            Cancel
-          </Button>
-          {selectedDashboard ? (
-            <Button
-              className='button_filled'
-              sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': {
-                  backgroundColor: '#63899e'
-                }
-              }}
-              onClick={() => {
-                updatedDashBoard();
-              }}
+          <div className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen z-[10001] flex items-center justify-center p-4 pointer-events-none'>
+            <div
+              className='bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform transition-all duration-300'
+              onClick={e => e.stopPropagation()}
             >
-              Save
-            </Button>
-          ) : (
-            <Button
-              className='button_filled'
-              sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': {
-                  backgroundColor: '#63899e'
-                }
-              }}
-              onClick={() => {
-                addBoard();
-              }}
-            >
-              Save
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-
-      {}
-      <Dialog open={shareLinkModal}>
-        <DialogContent>
-          <div className='copiedUrl-content'>
-            <p>{copiedUrl}</p>
+              <div className='px-6 py-4 border-b border-gray-200'>
+                <h2 className='text-lg font-semibold text-gray-900'>Delete Dashboard</h2>
+              </div>
+              <div className='px-6 py-4'>
+                <p className='text-sm text-gray-600'>
+                  Are you sure you want to delete this dashboard?
+                </p>
+              </div>
+              <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setOpenDashDeleteModel(false);
+                    setSelectedDashIndex(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant='default'
+                  onClick={() => {
+                    deleteDashboard(selectedDashboard, selectedDashIndex);
+                  }}
+                  className='bg-red-600 hover:bg-red-700 text-white'
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-        <DialogActions>
-          {isCopied ? (
-            <Button disabled>Copied</Button>
-          ) : (
-            <Button onClick={() => handleCopy()}>Copy</Button>
-          )}
-          <Button
+        </>
+      )}
+
+      {/* Add/Update Dashboard Modal */}
+      {showDeshboardModel && (
+        <>
+          <div
+            className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/50 backdrop-blur-sm z-[10000] transition-opacity duration-300'
+            onClick={() => setShowDashboardModel(false)}
+          />
+          <div className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen z-[10001] flex items-center justify-center p-4 pointer-events-none'>
+            <div
+              className='bg-white rounded-xl shadow-2xl w-full max-w-md pointer-events-auto transform transition-all duration-300'
+              onClick={e => e.stopPropagation()}
+            >
+              <div className='px-6 py-4 border-b border-gray-200'>
+                <h2 className='text-lg font-semibold text-gray-900'>
+                  {selectedDashboard ? 'Update Dashboard' : 'Add Dashboard'}
+                </h2>
+              </div>
+              <div className='px-6 py-4'>
+                <Input
+                  type='text'
+                  value={dashBoardName}
+                  placeholder='Enter Dashboard Name'
+                  onChange={changeDashboardName}
+                  className='w-full'
+                  autoFocus
+                />
+              </div>
+              <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
+                <Button variant='outline' onClick={() => setShowDashboardModel(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant='default'
+                  onClick={() => {
+                    selectedDashboard ? updatedDashBoard() : addBoard();
+                  }}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Share Link Modal */}
+      {shareLinkModal && (
+        <>
+          <div
+            className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/50 backdrop-blur-sm z-[10000] transition-opacity duration-300'
             onClick={() => {
               setShareLinkModal(false);
               setIsCopied(false);
             }}
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          />
+          <div className='fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen z-[10001] flex items-center justify-center p-4 pointer-events-none'>
+            <div
+              className='bg-white rounded-xl shadow-2xl w-full max-w-md pointer-events-auto transform transition-all duration-300'
+              onClick={e => e.stopPropagation()}
+            >
+              <div className='px-6 py-4 border-b border-gray-200'>
+                <h2 className='text-lg font-semibold text-gray-900'>Share Dashboard</h2>
+              </div>
+              <div className='px-6 py-4'>
+                <input
+                  type='text'
+                  value={copiedUrl}
+                  readOnly
+                  className='w-full px-3 py-2 text-xs text-gray-700 bg-gray-50 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#63899e]/20 select-all'
+                  onClick={e => e.target.select()}
+                />
+              </div>
+              <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setShareLinkModal(false);
+                    setIsCopied(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                {isCopied ? (
+                  <Button variant='default' disabled>
+                    Copied
+                  </Button>
+                ) : (
+                  <Button variant='default' onClick={() => handleCopy()}>
+                    Copy
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </header>
   );
 }
 

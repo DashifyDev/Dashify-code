@@ -35,6 +35,59 @@ function OptimizedDashboardPage() {
 
   const { data: dashboardData, isLoading, error, isFetching } = useDashboardData(id);
 
+  // Redirect to nearest active board if current dashboard is deleted/not found
+  useEffect(() => {
+    if (error && isBoardsLoaded && boards && boards.length > 0) {
+      // Check if error is 404 (dashboard not found) or similar
+      const isNotFoundError =
+        error?.response?.status === 404 ||
+        error?.status === 404 ||
+        error?.message?.toLowerCase().includes('not found') ||
+        error?.message?.toLowerCase().includes('404');
+
+      if (isNotFoundError) {
+        // Find the nearest active board
+        const currentIndex = boards.findIndex(b => String(b._id) === String(id));
+        let targetBoard;
+
+        if (currentIndex > 0) {
+          // If not first, go to previous board
+          targetBoard = boards[currentIndex - 1];
+        } else if (boards.length > 0) {
+          // If first or not found, go to first available board
+          targetBoard = boards[0];
+        }
+
+        if (targetBoard) {
+          router.push(`/dashboard/${targetBoard._id}`);
+        } else {
+          // If no boards available, redirect to dashboard list
+          router.push('/dashboard');
+        }
+      }
+    }
+  }, [error, isBoardsLoaded, boards, id, router]);
+
+  // Redirect if dashboard data is not available (deleted dashboard)
+  useEffect(() => {
+    if (!dashboardData && !isLoading && !error && isBoardsLoaded && boards && boards.length > 0) {
+      const currentIndex = boards.findIndex(b => String(b._id) === String(id));
+      let targetBoard;
+
+      if (currentIndex > 0) {
+        targetBoard = boards[currentIndex - 1];
+      } else if (boards.length > 0) {
+        targetBoard = boards[0];
+      }
+
+      if (targetBoard) {
+        router.push(`/dashboard/${targetBoard._id}`);
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [dashboardData, isLoading, error, isBoardsLoaded, boards, id, router]);
+
   // Preload next boards
   useEffect(() => {
     if (dashboardData && dashboardData.relatedBoards) {
@@ -60,24 +113,29 @@ function OptimizedDashboardPage() {
   // Track if we have local changes to avoid overwriting them
   const hasLocalChangesRef = useRef(false);
   const isInitialLoadRef = useRef(true);
-  
+
   useEffect(() => {
     if (dashboardData) {
       // Ensure tiles is always an array
       const dashboardTiles = Array.isArray(dashboardData.tiles) ? dashboardData.tiles : [];
-      
+
       // Check if dashboardData has more tiles than current state
       // This indicates a new tile was added (e.g., from Header.js)
       const hasNewTiles = dashboardTiles.length > tiles.length;
       const hasTempTiles = dashboardTiles.some(t => t._id && t._id.startsWith('temp_'));
-      
+
       // Only skip update if we have local changes AND it's not a new tile addition
       // This allows updates when new tiles are added from Header.js
-      if (hasLocalChangesRef.current && !isInitialLoadRef.current && !hasNewTiles && !hasTempTiles) {
+      if (
+        hasLocalChangesRef.current &&
+        !isInitialLoadRef.current &&
+        !hasNewTiles &&
+        !hasTempTiles
+      ) {
         // Skip update if we have local changes - they will be synced via batch update
         return;
       }
-      
+
       // Ensure all tiles have mobile profile and order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
       const updatedTiles = dashboardTiles.map((tile, index) => {
@@ -345,6 +403,52 @@ function OptimizedDashboardPage() {
   }
 
   if (error) {
+    // Check if error is 404 and we have boards to redirect to
+    const isNotFoundError =
+      error?.response?.status === 404 ||
+      error?.status === 404 ||
+      error?.message?.toLowerCase().includes('not found') ||
+      error?.message?.toLowerCase().includes('404');
+
+    // If it's a 404 and we have boards loaded, show loading while redirecting
+    if (isNotFoundError && isBoardsLoaded && boards && boards.length > 0) {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            flexDirection: 'column',
+            gap: '16px'
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid #f3f3f3',
+              borderTop: '4px solid #63899e',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}
+          />
+          <div style={{ color: '#666' }}>Redirecting to available board...</div>
+          <style jsx>{`
+            @keyframes spin {
+              0% {
+                transform: rotate(0deg);
+              }
+              100% {
+                transform: rotate(360deg);
+              }
+            }
+          `}</style>
+        </div>
+      );
+    }
+
+    // Show error for other cases
     return (
       <div
         style={{
@@ -375,7 +479,8 @@ function OptimizedDashboardPage() {
     );
   }
 
-  if (!dashboardData) {
+  if (!dashboardData && !isLoading && !error && isBoardsLoaded) {
+    // Show loading while redirecting (handled by useEffect above)
     return (
       <div
         style={{
@@ -387,7 +492,27 @@ function OptimizedDashboardPage() {
           gap: '16px'
         }}
       >
-        <div style={{ color: '#666', fontSize: '18px' }}>Dashboard not found</div>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #63899e',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}
+        />
+        <div style={{ color: '#666' }}>Redirecting to available board...</div>
+        <style jsx>{`
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
     );
   }

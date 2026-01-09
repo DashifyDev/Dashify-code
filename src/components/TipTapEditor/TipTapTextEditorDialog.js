@@ -1,18 +1,9 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import TipTapMainEditor from "./TipTapMainEditor";
-import CloseSharpIcon from "@mui/icons-material/CloseSharp";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from "@mui/material";
-import Image from "next/image";
-import leftArrow from "@/assets/leftArrow1.svg";
-import rightArrow from "@/assets/rightArrow.svg";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react';
+import TipTapMainEditor from './TipTapMainEditor';
 
 const TipTapTextEditorDialog = ({
   open,
@@ -21,21 +12,20 @@ const TipTapTextEditorDialog = ({
   onSave,
   label,
   tileDetails = [],
-  selectedTileIndex = 0,
+  selectedTileIndex = 0
 }) => {
-  const [editorContent, setEditorContent] = useState(content || "");
-  const [textBoxHeading, setTextBoxHeading] = useState("");
+  const [editorContent, setEditorContent] = useState(content || '');
+  const [textBoxHeading, setTextBoxHeading] = useState('');
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
 
   useEffect(() => {
     const nextHeading =
-      tileDetails[selectedTileIndex] &&
-      tileDetails[selectedTileIndex].editorHeading
+      tileDetails[selectedTileIndex] && tileDetails[selectedTileIndex].editorHeading
         ? tileDetails[selectedTileIndex].editorHeading
-        : "Title";
+        : 'Title';
     setTextBoxHeading(nextHeading);
     setIndexValue(selectedTileIndex);
-    setEditorContent(content || "");
+    setEditorContent(content || '');
   }, [selectedTileIndex, content, tileDetails]);
 
   const handleClose = () => {
@@ -48,14 +38,15 @@ const TipTapTextEditorDialog = ({
 
   const canGoPrev = indexValue > 0;
   const canGoNext = indexValue < tileDetails.length - 1;
+  const hasMultipleTiles = tileDetails.length > 1;
 
   const goPrev = () => {
     if (!canGoPrev) return;
     const nextIndex = indexValue - 1;
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
-    setTextBoxHeading(td.editorHeading || "Title");
-    setEditorContent(td.tileContent || "");
+    setTextBoxHeading(td.editorHeading || 'Title');
+    setEditorContent(td.tileContent || '');
   };
 
   const goNext = () => {
@@ -63,67 +54,142 @@ const TipTapTextEditorDialog = ({
     const nextIndex = indexValue + 1;
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
-    setTextBoxHeading(td.editorHeading || "Title");
-    setEditorContent(td.tileContent || "");
+    setTextBoxHeading(td.editorHeading || 'Title');
+    setEditorContent(td.tileContent || '');
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} maxWidth={"md"}>
-      <DialogTitle>
-        <div>
-          <input
-            type="text"
-            value={textBoxHeading}
-            onChange={(e) => setTextBoxHeading(e.target.value)}
-            style={{ padding: "5px" }}
-          />
-        </div>
-      </DialogTitle>
-      <span
-        className="absolute top-4 right-7 cursor-pointer"
+    <>
+      {/* Backdrop */}
+      <div
+        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
         onClick={handleClose}
-      >
-        <CloseSharpIcon />
-      </span>
-      <DialogContent
-        sx={{
-          height: "550px",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.8rem",
-        }}
-      >
-        {canGoPrev && (
-          <div>
-            <Image
-              src={leftArrow}
-              style={{ width: "32px", height: "32px", cursor: "pointer" }}
-              onClick={goPrev}
-              alt="left-arrow"
-            />
+      />
+
+      {/* Modal - Desktop: centered, Mobile: bottom sheet */}
+      <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+        <div
+          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
+            <div className='flex-1 min-w-0 mr-4'>
+              <Input
+                type='text'
+                value={textBoxHeading}
+                onChange={e => setTextBoxHeading(e.target.value)}
+                placeholder='Enter title...'
+                className='text-lg font-semibold border border-gray-300 bg-white rounded-lg focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:border-[#63899e] px-4 h-11 transition-all duration-200'
+              />
+            </div>
+            <button
+              onClick={handleClose}
+              className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
+              aria-label='Close dialog'
+            >
+              <svg
+                className='h-5 w-5'
+                fill='none'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2.5'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path d='M6 18L18 6M6 6l12 12' />
+              </svg>
+            </button>
           </div>
-        )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <TipTapMainEditor
-            initialContent={editorContent}
-            onContentChange={(html) => setEditorContent(html)}
-          />
+
+          {/* Navigation Indicator */}
+          {hasMultipleTiles && (
+            <div className='flex items-center justify-center gap-2 px-4 py-3 border-b border-gray-200 mt-6'>
+              <button
+                onClick={goPrev}
+                disabled={!canGoPrev}
+                className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                  canGoPrev
+                    ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
+                    : 'text-gray-300 cursor-not-allowed'
+                }`}
+                aria-label='Previous tile'
+              >
+                <svg
+                  className='h-5 w-5'
+                  fill='none'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2.5'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                >
+                  <path d='M15 19l-7-7 7-7' />
+                </svg>
+              </button>
+              <div className='flex items-center gap-1 px-3'>
+                <span className='text-sm text-gray-600 font-medium'>
+                  {indexValue + 1} / {tileDetails.length}
+                </span>
+              </div>
+              <button
+                onClick={goNext}
+                disabled={!canGoNext}
+                className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                  canGoNext
+                    ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
+                    : 'text-gray-300 cursor-not-allowed'
+                }`}
+                aria-label='Next tile'
+              >
+                <svg
+                  className='h-5 w-5'
+                  fill='none'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2.5'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                >
+                  <path d='M9 5l7 7-7 7' />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Editor Content */}
+          <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+            {/* Editor */}
+            <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
+              <TipTapMainEditor
+                initialContent={editorContent}
+                onContentChange={html => setEditorContent(html)}
+              />
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className='flex items-center gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0 sm:justify-end'>
+            <Button
+              variant='outline'
+              onClick={handleClose}
+              className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='default'
+              onClick={handleSave}
+              className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+            >
+              Save
+            </Button>
+          </div>
         </div>
-        {canGoNext && (
-          <div>
-            <Image
-              src={rightArrow}
-              style={{ width: "32px", height: "32px", cursor: "pointer" }}
-              onClick={goNext}
-              alt="right-arrow"
-            />
-          </div>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleSave}>Save</Button>
-      </DialogActions>
-    </Dialog>
+      </div>
+    </>
   );
 };
 

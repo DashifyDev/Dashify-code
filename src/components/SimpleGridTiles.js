@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React, { useMemo, useCallback, memo, useState } from "react";
-import { Rnd } from "react-rnd";
-import MoreHorizSharpIcon from "@mui/icons-material/MoreHorizSharp";
-import LazyTipTapEditor from "./LazyTipTapEditor";
-import OptimizedImage from "./OptimizedImage";
-import { useUpdateTile } from "@/hooks/useTile";
-import isDblTouchTap from "@/hooks/isDblTouchTap";
+import isDblTouchTap from '@/hooks/isDblTouchTap';
+import { useUpdateTile } from '@/hooks/useTile';
+import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import { memo, useCallback, useState } from 'react';
+import { Rnd } from 'react-rnd';
+import LazyTipTapEditor from './LazyTipTapEditor';
+import OptimizedImage from './OptimizedImage';
 
 const SimpleGridTiles = memo(
   ({
@@ -18,7 +18,7 @@ const SimpleGridTiles = memo(
     headerWidth,
     setHeaderWidth,
     dbUser,
-    updateTilesInLocalstorage,
+    updateTilesInLocalstorage
   }) => {
     const [showOption, setShowOption] = useState(null);
     const [selectedTile, setSelectedTile] = useState(null);
@@ -37,7 +37,7 @@ const SimpleGridTiles = memo(
         if (dbUser) {
           updateTileMutation.mutate({
             tileId: tile._id,
-            data: { x, y },
+            data: { x, y }
           });
         } else {
           const updatedTiles = [...tiles];
@@ -46,13 +46,7 @@ const SimpleGridTiles = memo(
           updateTilesInLocalstorage(updatedTiles);
         }
       },
-      [
-        tiles,
-        dbUser,
-        updateTileMutation,
-        onTileUpdate,
-        updateTilesInLocalstorage,
-      ],
+      [tiles, dbUser, updateTileMutation, onTileUpdate, updateTilesInLocalstorage]
     );
 
     const handleResizeStop = useCallback(
@@ -62,13 +56,13 @@ const SimpleGridTiles = memo(
         const updatedTile = {
           ...tiles[index],
           width: ref.style.width,
-          height: ref.style.height,
+          height: ref.style.height
         };
 
         if (dbUser) {
           updateTileMutation.mutate({
             tileId: tiles[index]._id,
-            data: { width: ref.style.width, height: ref.style.height },
+            data: { width: ref.style.width, height: ref.style.height }
           });
         } else {
           const updatedTiles = [...tiles];
@@ -77,13 +71,7 @@ const SimpleGridTiles = memo(
           updateTilesInLocalstorage(updatedTiles);
         }
       },
-      [
-        tiles,
-        dbUser,
-        updateTileMutation,
-        onTileUpdate,
-        updateTilesInLocalstorage,
-      ],
+      [tiles, dbUser, updateTileMutation, onTileUpdate, updateTilesInLocalstorage]
     );
 
     const handleContentChange = useCallback(
@@ -91,102 +79,84 @@ const SimpleGridTiles = memo(
         if (dbUser) {
           updateTileMutation.mutate({
             tileId,
-            data: { tileText: newContent },
+            data: { tileText: newContent }
           });
         } else {
-          const updatedTiles = tiles.map((tile) =>
-            tile._id === tileId ? { ...tile, tileText: newContent } : tile,
+          const updatedTiles = tiles.map(tile =>
+            tile._id === tileId ? { ...tile, tileText: newContent } : tile
           );
           onTileUpdate(updatedTiles);
           updateTilesInLocalstorage(updatedTiles);
         }
       },
-      [
-        tiles,
-        dbUser,
-        updateTileMutation,
-        onTileUpdate,
-        updateTilesInLocalstorage,
-      ],
+      [tiles, dbUser, updateTileMutation, onTileUpdate, updateTilesInLocalstorage]
     );
 
     const onDoubleTap = useCallback(
       (e, action, editorHtml, tile, index) => {
-        if ((e.type === "touchstart" || e.detail == 2) && action === "link") {
+        if ((e.type === 'touchstart' || e.detail == 2) && action === 'link') {
           if (tile.tileLink) {
-            window.open(tile.tileLink, "_blank");
+            window.open(tile.tileLink, '_blank');
           }
-        } else if (
-          (e.type === "touchstart" || e.detail == 2) &&
-          action === "textEditor"
-        ) {
+        } else if ((e.type === 'touchstart' || e.detail == 2) && action === 'textEditor') {
           onTileClick(tile, index);
         }
       },
-      [onTileClick],
+      [onTileClick]
     );
 
-    const style = useCallback((tile) => {
+    const style = useCallback(tile => {
       const isImageBackground =
-        tile.tileBackground &&
-        /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(tile.tileBackground);
+        tile.tileBackground && /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(tile.tileBackground);
 
       return {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "solid 1px #ddd",
-        background:
-          tile.tileBackground && !isImageBackground
-            ? tile.tileBackground
-            : "#deedf0ff",
-        color: "black",
-        overflowWrap: "anywhere",
-        borderRadius: "10px",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: 'solid 1px #ddd',
+        background: tile.tileBackground && !isImageBackground ? tile.tileBackground : '#deedf0ff',
+        color: 'black',
+        overflowWrap: 'anywhere',
+        borderRadius: '10px'
       };
     }, []);
 
-    const isBackgroundImage = useCallback((url) => {
+    const isBackgroundImage = useCallback(url => {
       if (!url) return false;
-      const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
-      return imageExtensions.some((ext) => url.toLowerCase().endsWith(ext));
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      return imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
     }, []);
 
-    const TitlePositionStyle = useCallback((tile) => {
+    const TitlePositionStyle = useCallback(tile => {
       return {
-        top: tile.titleY == 1 ? 0 : "auto",
-        bottom: tile.titleY == 3 ? 0 : "auto",
-        left: tile.titleX == 1 ? 0 : "auto",
-        right: tile.titleX == 3 ? 0 : "auto",
-        textAlign:
-          tile.titleX == 3 ? "right" : tile.titleX == 2 ? "center" : "left",
+        top: tile.titleY == 1 ? 0 : 'auto',
+        bottom: tile.titleY == 3 ? 0 : 'auto',
+        left: tile.titleX == 1 ? 0 : 'auto',
+        right: tile.titleX == 3 ? 0 : 'auto',
+        textAlign: tile.titleX == 3 ? 'right' : tile.titleX == 2 ? 'center' : 'left'
       };
     }, []);
 
-    const changedTitlehandle = useCallback((tile) => {
+    const changedTitlehandle = useCallback(tile => {
       let tileText = tile.tileText;
       let content = tileText;
       if (tileText) {
-        if (tileText === "<div><br></div>") {
-          content = "";
+        if (tileText === '<div><br></div>') {
+          content = '';
         }
       }
       const titleVal =
-        content && tile.displayTitle
-          ? tileText
-          : !content && tile.displayTitle
-            ? " New Tile"
-            : "";
+        content && tile.displayTitle ? tileText : !content && tile.displayTitle ? 'New Box' : '';
       return titleVal;
     }, []);
 
     return (
-      <div className="simple-grid-container">
+      <div className='simple-grid-container'>
         {tiles.map((tile, index) => (
           <Rnd
             key={tile._id}
             onMouseLeave={() => setShowOption(null)}
-            className="tile"
+            className='tile'
             style={style(tile)}
             size={{ width: tile.width, height: tile.height }}
             position={{ x: tile.x, y: tile.y }}
@@ -194,14 +164,12 @@ const SimpleGridTiles = memo(
             onResizeStop={(e, direction, ref, delta, position) =>
               handleResizeStop(e, direction, ref, delta, position, index)
             }
-            onDoubleClick={(e) =>
-              onDoubleTap(e, tile.action, tile.tileContent, tile, index)
-            }
+            onDoubleClick={e => onDoubleTap(e, tile.action, tile.tileContent, tile, index)}
             minWidth={50}
             minHeight={50}
             id={tile._id}
             dragGrid={[5, 5]}
-            onTouchStart={(e) => {
+            onTouchStart={e => {
               if (isDblTouchTap(e)) {
                 onDoubleTap(e, tile.action, tile.tileContent, tile, index);
               } else {
@@ -218,33 +186,31 @@ const SimpleGridTiles = memo(
             {}
             <LazyTipTapEditor
               content={changedTitlehandle(tile)}
-              onContentChange={(newContent) =>
-                handleContentChange(tile._id, newContent)
-              }
+              onContentChange={newContent => handleContentChange(tile._id, newContent)}
               style={TitlePositionStyle(tile)}
-              className="text_overlay"
-              readOnly={tile.action !== "textEditor"}
+              className='text_overlay'
+              readOnly={tile.action !== 'textEditor'}
             />
 
             {isBackgroundImage(tile.tileBackground) && (
               <OptimizedImage
                 src={tile.tileBackground}
-                alt="Tile background"
-                width="100%"
-                height="100%"
+                alt='Tile background'
+                width='100%'
+                height='100%'
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  borderRadius: "10px",
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '10px'
                 }}
                 priority={index < 6}
               />
             )}
 
             <div
-              className="showOptions absolute top-0 right-2 cursor-pointer"
-              onClick={(e) => {
+              className='showOptions absolute top-0 right-2 cursor-pointer'
+              onClick={e => {
                 e.stopPropagation();
                 setSelectedTile(index);
                 onTileClick(tile, index);
@@ -255,8 +221,8 @@ const SimpleGridTiles = memo(
 
             {showOption === `tile_${index}` && (
               <div
-                className="absolute top-0 right-2 cursor-pointer"
-                onTouchStart={(e) => {
+                className='absolute top-0 right-2 cursor-pointer'
+                onTouchStart={e => {
                   e.stopPropagation();
                   setSelectedTile(index);
                   onTileClick(tile, index);
@@ -269,9 +235,9 @@ const SimpleGridTiles = memo(
         ))}
       </div>
     );
-  },
+  }
 );
 
-SimpleGridTiles.displayName = "SimpleGridTiles";
+SimpleGridTiles.displayName = 'SimpleGridTiles';
 
 export default SimpleGridTiles;

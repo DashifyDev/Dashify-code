@@ -5,20 +5,14 @@ import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } f
 import { Rnd } from 'react-rnd';
 import '../styles/styles.css';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { globalContext } from '@/context/globalContext';
 import isDblTouchTap from '@/hooks/isDblTouchTap';
 import { dashboardKeys } from '@/hooks/useDashboard';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import Image from 'next/image';
@@ -54,6 +48,7 @@ const GridTiles = memo(function GridTiles({
   const [colorImage, setColorImage] = useState('color');
   const [textLink, setTextLink] = useState('text');
   const [imageFileName, setImageFileName] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formValue, setFormValue] = useState({});
   const [pods, setPods] = useState([]);
   const [openTextEditor, setOpenTextEdior] = useState(false);
@@ -488,10 +483,17 @@ const GridTiles = memo(function GridTiles({
 
   const handleImageChange = e => {
     const selectedImage = e.target.files[0];
-    setImageFileName(selectedImage.name);
-    const values = formValue;
-    values.tileBackground = selectedImage;
-    setFormValue(values);
+    if (selectedImage) {
+      setImageFileName(selectedImage.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(selectedImage);
+      const values = formValue;
+      values.tileBackground = selectedImage;
+      setFormValue(values);
+    }
   };
 
   const handleImageInput = event => {
@@ -500,7 +502,12 @@ const GridTiles = memo(function GridTiles({
 
   const handleColorChange = color => {
     const values = formValue;
-    values.tileBackground = color.hex;
+    // Use rgba if alpha is less than 1, otherwise use hex
+    if (color.rgb && color.rgb.a !== undefined && color.rgb.a < 1) {
+      values.tileBackground = `rgba(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}, ${color.rgb.a})`;
+    } else {
+      values.tileBackground = color.hex;
+    }
     setFormValue(values);
   };
 
@@ -537,7 +544,7 @@ const GridTiles = memo(function GridTiles({
     }
 
     const titleVal =
-      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' New Tile' : '';
+      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' New Box' : '';
     return titleVal;
   };
 
@@ -1066,16 +1073,20 @@ const GridTiles = memo(function GridTiles({
       if (isBackgroundImage(tile.tileBackground)) {
         if (tile.tileBackground.startsWith('data:image/')) {
           setImageFileName('uploaded-image.png');
+          setImagePreview(tile.tileBackground);
         } else {
           const segments = tile.tileBackground.split('/');
           const imageName = segments[segments.length - 1];
           setImageFileName(imageName);
+          setImagePreview(tile.tileBackground);
         }
       } else {
         setColorBackground(tile.tileBackground);
+        setImagePreview(null);
       }
     } else {
       setColorBackground('#deedf0ff');
+      setImagePreview(null);
     }
   };
 
@@ -1170,257 +1181,487 @@ const GridTiles = memo(function GridTiles({
       </div>
 
       {/* Tiles Property Model */}
-      <Dialog open={showModel} id={`model_${selectedTile}`}>
-        <div className='all_options'>
-          <ul>
-            <li>
-              <h3 className='menu_header'>Box Background</h3>
-              <div className='radio_menu'>
-                <div className='radiosets'>
-                  <FormControl>
-                    <RadioGroup
-                      aria-labelledby='demo-radio-buttons-group-label'
-                      defaultValue={selectedTileDetail.backgroundAction}
-                      name='radio-buttonsColor'
-                      onChange={handleColorImage}
-                    >
-                      <FormControlLabel value='color' control={<Radio />} label='Select Color' />
-                      <FormControlLabel value='image' control={<Radio />} label='Upload Image' />
-                    </RadioGroup>
-                  </FormControl>
-                </div>
-                {selectedTileDetail.backgroundAction === 'color' && (
-                  <ColorPicker
-                    handleColorChange={handleColorChange}
-                    colorBackground={colorBackground}
-                  />
-                )}
-                {selectedTileDetail.backgroundAction === 'image' && (
-                  <div className='image_value'>
-                    <Image
-                      src={imageUpload}
-                      alt='image'
-                      width={60}
-                      height={60}
-                      onClick={handleImageInput}
+      {showModel && (
+        <>
+          {/* Backdrop */}
+          <div
+            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
+            onClick={() => {
+              setShowModel(false);
+              setSelectedPod(null);
+              setColorBackground(null);
+              setFormValue({});
+              setSelectedTile(null);
+              setImageFileName(null);
+            }}
+          />
+
+          {/* Modal */}
+          <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+            <div
+              className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className='flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
+                <h2 className='text-lg font-bold text-[#63899e]'>Tile Properties</h2>
+                <button
+                  onClick={() => {
+                    setShowModel(false);
+                    setSelectedPod(null);
+                    setColorBackground(null);
+                    setFormValue({});
+                    setSelectedTile(null);
+                    setImageFileName(null);
+                  }}
+                  className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
+                  aria-label='Close dialog'
+                >
+                  <svg
+                    className='h-5 w-5'
+                    fill='none'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2.5'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content - Scrollable */}
+              <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0'>
+                {/* Box Background */}
+                <div className='space-y-3'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                    Box Background
+                  </h3>
+                  <div className='space-y-4'>
+                    <div className='flex flex-col sm:flex-row gap-3'>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
+                          selectedTileDetail.backgroundAction === 'color'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='backgroundAction'
+                          value='color'
+                          checked={selectedTileDetail.backgroundAction === 'color'}
+                          onChange={handleColorImage}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.backgroundAction === 'color'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          Select Color
+                        </span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
+                          selectedTileDetail.backgroundAction === 'image'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='backgroundAction'
+                          value='image'
+                          checked={selectedTileDetail.backgroundAction === 'image'}
+                          onChange={handleColorImage}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.backgroundAction === 'image'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          Upload Image
+                        </span>
+                      </label>
+                    </div>
+                    {selectedTileDetail.backgroundAction === 'color' && (
+                      <div className='pl-2'>
+                        <ColorPicker
+                          handleColorChange={handleColorChange}
+                          colorBackground={colorBackground}
+                        />
+                      </div>
+                    )}
+                    {selectedTileDetail.backgroundAction === 'image' && (
+                      <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
+                        <div
+                          className='relative w-20 h-20 rounded-lg border-2 border-gray-300 hover:border-[#63899e] transition-colors cursor-pointer overflow-hidden bg-gray-100 flex items-center justify-center'
+                          onClick={handleImageInput}
+                        >
+                          {imagePreview ||
+                          (selectedTileDetail.tileBackground &&
+                            typeof selectedTileDetail.tileBackground === 'string' &&
+                            selectedTileDetail.tileBackground.startsWith('http')) ? (
+                            <img
+                              src={
+                                imagePreview ||
+                                (selectedTileDetail.tileBackground &&
+                                typeof selectedTileDetail.tileBackground === 'string'
+                                  ? selectedTileDetail.tileBackground
+                                  : imageUpload)
+                              }
+                              alt='Preview'
+                              className='w-full h-full object-cover'
+                            />
+                          ) : (
+                            <Image
+                              src={imageUpload}
+                              alt='Upload image'
+                              width={40}
+                              height={40}
+                              className='opacity-50'
+                            />
+                          )}
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-xs text-gray-500 mb-1'>Selected file:</p>
+                          <p className='text-sm font-medium text-gray-700 truncate'>
+                            {imageFileName ||
+                              (selectedTileDetail.tileBackground &&
+                              typeof selectedTileDetail.tileBackground === 'string'
+                                ? 'Image loaded'
+                                : 'No file selected')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      type='file'
+                      accept='image/*'
+                      ref={hiddenFileInput}
+                      className='hidden'
+                      onChange={handleImageChange}
                     />
-                    <div className='file_Name'>
-                      <span>{imageFileName}</span>
+                  </div>
+                </div>
+
+                {/* Box Action */}
+                <div className='space-y-3'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                    Box Action
+                  </h3>
+                  <div className='space-y-3'>
+                    <div className='flex flex-row flex-wrap gap-2'>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                          selectedTileDetail.action === 'link'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='action'
+                          value='link'
+                          checked={selectedTileDetail.action === 'link'}
+                          onChange={changeAction}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.action === 'link'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          Opens Link
+                        </span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                          selectedTileDetail.action === 'textEditor'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='action'
+                          value='textEditor'
+                          checked={selectedTileDetail.action === 'textEditor'}
+                          onChange={changeAction}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.action === 'textEditor'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          Opens Text Editor
+                        </span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                          selectedTileDetail.action === 'noAction'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='action'
+                          value='noAction'
+                          checked={selectedTileDetail.action === 'noAction'}
+                          onChange={changeAction}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.action === 'noAction'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          No Action
+                        </span>
+                      </label>
+                    </div>
+                    {selectedTileDetail.action === 'link' && (
+                      <Input
+                        type='text'
+                        value={selectedTileDetail.tileLink || ''}
+                        onChange={enterLink}
+                        placeholder='Add URL here'
+                        className='w-full'
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Box Text */}
+                <div className='space-y-3'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                    Box Text
+                  </h3>
+                  <div className='flex flex-col sm:flex-row gap-4'>
+                    {/* Left: Edit Text Content button */}
+                    <div className='flex-1'>
+                      <button
+                        onClick={() => setEditorOpen(true)}
+                        className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
+                      >
+                        <Image
+                          src={text}
+                          alt='TEXT'
+                          width={40}
+                          height={40}
+                          className='group-hover:scale-110 transition-transform'
+                        />
+                        <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
+                          Edit Text Content
+                        </span>
+                      </button>
+                    </div>
+                    {/* Right: Checkbox and dropdowns */}
+                    <div className='flex flex-col gap-3 flex-1'>
+                      <label className='flex items-center gap-2 cursor-pointer group'>
+                        <input
+                          type='checkbox'
+                          checked={selectedTileDetail.displayTitle}
+                          onChange={displayTitle}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
+                        />
+                        <span className='text-sm font-medium text-gray-700'>Display Text</span>
+                      </label>
+                      <div className='flex gap-2'>
+                        <select
+                          value={selectedTileDetail.titleX}
+                          onChange={handleChangePositionX}
+                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                        >
+                          <option value={1}>Left</option>
+                          <option value={2}>Center</option>
+                          <option value={3}>Right</option>
+                        </select>
+                        <select
+                          value={selectedTileDetail.titleY}
+                          onChange={handleChangePositionY}
+                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                        >
+                          <option value={1}>Top</option>
+                          <option value={2}>Center</option>
+                          <option value={3}>Bottom</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                )}
-                <input
-                  type='file'
-                  accept='image/*'
-                  ref={hiddenFileInput}
-                  style={{ display: 'none' }}
-                  onChange={handleImageChange}
-                />
+                </div>
+
+                {/* Box Order */}
+                <div className='space-y-3'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                    Box Order
+                  </h3>
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>
+                      Order (used for text editor navigation):
+                    </label>
+                    <Input
+                      type='number'
+                      min='1'
+                      value={
+                        selectedTileDetail.order !== undefined && selectedTileDetail.order !== null
+                          ? selectedTileDetail.order
+                          : ''
+                      }
+                      onChange={e => {
+                        const inputValue = e.target.value;
+                        if (inputValue === '') {
+                          setSelectedTileDetail({ ...selectedTileDetail, order: null });
+                          const values = formValue;
+                          values.order = null;
+                          setFormValue(values);
+                        } else {
+                          const newOrder = parseInt(inputValue);
+                          if (!isNaN(newOrder) && newOrder > 0) {
+                            setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
+                            const values = formValue;
+                            values.order = newOrder;
+                            setFormValue(values);
+                          }
+                        }
+                      }}
+                      placeholder='Enter order number'
+                      className='w-full'
+                    />
+                    <p className='text-xs text-gray-500'>
+                      This determines the order when navigating between boxes in the text editor
+                    </p>
+                  </div>
+                </div>
               </div>
-            </li>
-            <li>
-              <h3 className='menu_header'>Box Action</h3>
-              <div className='radio_control'>
-                <div className='radiosets'>
-                  <FormControl>
-                    <RadioGroup
-                      aria-labelledby='demo-radio-buttons-group-label'
-                      defaultValue={selectedTileDetail.action}
-                      name='radio-buttonsLink'
-                      onChange={changeAction}
-                    >
-                      <FormControlLabel value='link' control={<Radio />} label='Opens Link' />
-                      <FormControlLabel
-                        value='textEditor'
-                        control={<Radio />}
-                        label='Opens Text Editor'
-                      />
-                      <FormControlLabel value='noAction' control={<Radio />} label='No Action' />
-                    </RadioGroup>
-                  </FormControl>
-                  <input
-                    type='text'
-                    className='url_text'
-                    value={selectedTileDetail.tileLink}
-                    onChange={enterLink}
-                    placeholder='Add URL here'
-                    disabled={selectedTileDetail.action !== 'link'}
+
+              {/* Footer */}
+              <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
+                <div className='flex gap-4'>
+                  <button
+                    onClick={() => tileClone(selectedTile)}
+                    className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                  >
+                    <DifferenceOutlinedIcon className='text-[#63899e]' />
+                    <span>Duplicate</span>
+                  </button>
+                  <button
+                    onClick={() => deleteTile(selectedTile)}
+                    className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                  >
+                    <DeleteOutlineIcon />
+                    <span>Delete</span>
+                  </button>
+                </div>
+                <div className='flex items-center gap-3 sm:justify-end'>
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      setShowModel(false);
+                      setSelectedPod(null);
+                      setColorBackground(null);
+                      setFormValue({});
+                      setSelectedTile(null);
+                      setImageFileName(null);
+                    }}
+                    className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant='default'
+                    onClick={index => handleSave(`tiles_${selectedTile}`)}
+                    className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Editor Modal */}
+      {editorOpen && (
+        <>
+          <div
+            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
+            onClick={() => setEditorOpen(false)}
+          />
+          <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+            <div
+              className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
+                <h2 className='text-xl font-bold text-[#63899e]'>Edit Text</h2>
+                <button
+                  onClick={() => setEditorOpen(false)}
+                  className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
+                  aria-label='Close dialog'
+                >
+                  <svg
+                    className='h-5 w-5'
+                    fill='none'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2.5'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                  >
+                    <path d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Editor Content */}
+              <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+                <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
+                  <TipTapMainEditor
+                    initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
+                    onContentChange={html => enterText(html)}
                   />
                 </div>
               </div>
-            </li>
-            <li>
-              <h3 className='menu_header'>Box Text</h3>
-              <div className='title_editor'>
-                <div className='display_title'>
-                  <div className='display_title_check'>
-                    <input
-                      type='checkbox'
-                      checked={selectedTileDetail.displayTitle}
-                      onChange={displayTitle}
-                    />
-                    <label>Display Text</label>
-                  </div>
-                  <div className='position'>
-                    <select value={selectedTileDetail.titleX} onChange={handleChangePositionX}>
-                      <option value={1}>Left</option>
-                      <option value={2}>Center</option>
-                      <option value={3}>Right</option>
-                    </select>
-                    <select value={selectedTileDetail.titleY} onChange={handleChangePositionY}>
-                      <option value={1}>Top</option>
-                      <option value={2}>Center</option>
-                      <option value={3}>Bottom</option>
-                    </select>
-                  </div>
-                </div>
-                <Image
-                  src={text}
-                  alt='TEXT'
-                  onClick={() => setEditorOpen(true)}
-                  className='text-editor-image'
-                />
-              </div>
-            </li>
-            <li>
-              <h3 className='menu_header'>Box Order</h3>
-              <div style={{ padding: '10px 0' }}>
-                <label style={{ display: 'block', marginBottom: '8px' }}>
-                  Order (used for text editor navigation):
-                </label>
-                <input
-                  type='number'
-                  min='1'
-                  value={
-                    selectedTileDetail.order !== undefined && selectedTileDetail.order !== null
-                      ? selectedTileDetail.order
-                      : ''
-                  }
-                  onChange={e => {
-                    const inputValue = e.target.value;
-                    // Allow empty value for clearing
-                    if (inputValue === '') {
-                      setSelectedTileDetail({ ...selectedTileDetail, order: null });
-                      const values = formValue;
-                      values.order = null;
-                      setFormValue(values);
-                    } else {
-                      const newOrder = parseInt(inputValue);
-                      if (!isNaN(newOrder) && newOrder > 0) {
-                        setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
-                        const values = formValue;
-                        values.order = newOrder;
-                        setFormValue(values);
-                      }
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px'
-                  }}
-                />
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  This determines the order when navigating between boxes in the text editor
-                </p>
-              </div>
-            </li>
-          </ul>
-          <div className='line_break'></div>
-          <div className='menu_action'>
-            <div>
-              <div className='delete_duplicate_action'>
-                <span onClick={() => tileClone(selectedTile)}>
-                  <DifferenceOutlinedIcon />
-                </span>
-                <span onClick={() => tileClone(selectedTile)}>Duplicate</span>
-              </div>
-              <div className='delete_duplicate_action'>
-                <span onClick={() => deleteTile(selectedTile)}>
-                  <DeleteOutlineIcon />
-                </span>
-                <span onClick={() => deleteTile(selectedTile)}>Delete</span>
-              </div>
-            </div>
-            <div
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                paddingRight: '25px'
-              }}
-            >
-              <Button
-                className='button_cancel'
-                sx={{ color: '#63899e', marginRight: '3px' }}
-                onClick={() => {
-                  setShowModel(false);
-                  setSelectedPod(null);
-                  setColorBackground(null);
-                  setFormValue({});
-                  setSelectedTile(null);
-                  setImageFileName(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className='button_filled'
-                sx={{
-                  background: '#63899e',
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
-                }}
-                onClick={index => handleSave(`tiles_${selectedTile}`)}
-              >
-                Save
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Dialog>
 
-      <Dialog maxWidth={'md'} open={editorOpen}>
-        <DialogContent
-          sx={{
-            height: '540px',
-            // overflow: "hidden",
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.8rem'
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <TipTapMainEditor
-              initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
-              onContentChange={html => enterText(html)}
-            />
+              {/* Footer */}
+              <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
+                <Button
+                  variant='outline'
+                  onClick={() => setEditorOpen(false)}
+                  className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+                >
+                  Close
+                </Button>
+                <Button
+                  variant='default'
+                  onClick={saveEditorText}
+                  className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-        <DialogActions>
-          <div
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              paddingRight: '25px'
-            }}
-          >
-            <Button onClick={() => setEditorOpen(false)} sx={{ color: '#63899e' }}>
-              Close
-            </Button>
-            <Button
-              onClick={saveEditorText}
-              sx={{
-                background: '#63899e',
-                color: '#fff',
-                '&:hover': { backgroundColor: '#63899e', opacity: 0.8 }
-              }}
-            >
-              Save
-            </Button>
-          </div>
-        </DialogActions>
-      </Dialog>
+        </>
+      )}
 
       {/* <TextEditor */}
       <TipTapTextEditorDialog
