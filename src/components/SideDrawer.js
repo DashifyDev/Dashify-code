@@ -181,7 +181,7 @@ function SideDrawer({ open, close, user, isMobile, authUser }) {
 
         {/* Auth Buttons for Mobile - Fixed at bottom */}
         {isMobile && !authUser && (
-          <div className='flex-shrink-0 border-t border-white/10'>
+          <div className='flex-shrink-0 border-t border-white/10 mt-auto'>
             <div className='h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-4 my-4' />
             <div className='px-4 pb-6 space-y-3'>
               <Link
@@ -192,7 +192,7 @@ function SideDrawer({ open, close, user, isMobile, authUser }) {
               >
                 <Button
                   variant='default'
-                  className='w-full bg-white text-[#63899e] hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold border-0'
+                  className='w-full !bg-white !text-[#63899e] hover:!bg-white/90 shadow-lg hover:shadow-xl transition-all duration-200 font-semibold !border-0'
                 >
                   Sign up
                 </Button>
@@ -200,7 +200,7 @@ function SideDrawer({ open, close, user, isMobile, authUser }) {
               <Link href='/api/auth/login' prefetch={false} onClick={close} className='block'>
                 <Button
                   variant='outline'
-                  className='w-full border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all duration-200 font-semibold'
+                  className='w-full border-2 border-white/30 !text-white hover:bg-white/10 hover:border-white/50 transition-all duration-200 font-semibold'
                 >
                   Login
                 </Button>
