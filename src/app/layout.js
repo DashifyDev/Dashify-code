@@ -6,7 +6,6 @@ import AppContextProvider from "@/context/appContext";
 import { OptimizedContextProvider } from "@/context/optimizedContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Script from "next/script";
-import IsMobilePrompt from "@/components/IsMobilePrompt";
 import QueryProvider from "@/components/QueryProvider";
 import { Nunito_Sans } from "next/font/google";
 import { Roboto } from "next/font/google";
@@ -135,7 +134,7 @@ export default function RootLayout({ children }) {
                 className={`${nunitoSans.className} ${roboto.className}`}
               >
                 <ErrorBoundary>
-                  <IsMobilePrompt />
+                  {/* <IsMobilePrompt /> */}
                   <noscript>
                     <iframe
                       src="https://www.googletagmanager.com/ns.html?id=GTM-5QKCCXNS"
