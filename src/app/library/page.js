@@ -302,7 +302,7 @@ function Library() {
             </div>
           </div>
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
             {library.map((data, index) => {
               const boardId = data.boardLink.split('/').pop();
               const isLoading = loadingBoardId === boardId;
@@ -319,7 +319,9 @@ function Library() {
                       <LoadingSpinner size='medium' text='Loading board...' />
                     </div>
                   )}
-
+<CardTitle className='text-xl sm:text-2xl line-clamp-2 group-hover:text-[#4a6d7e] transition-colors px-4'>
+                      {data.boardName}
+                    </CardTitle>
                   {/* Image */}
                   <div className='relative w-full h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100'>
                     <div className='absolute inset-0 bg-gradient-to-t from-black/5 to-transparent z-10' />
@@ -334,9 +336,7 @@ function Library() {
 
                   {/* Content */}
                   <CardHeader className='pb-4'>
-                    <CardTitle className='text-xl sm:text-2xl line-clamp-2 group-hover:text-[#4a6d7e] transition-colors'>
-                      {data.boardName}
-                    </CardTitle>
+                    
                     <CardDescription className='text-sm sm:text-base line-clamp-3 mt-2 text-gray-600'>
                       {data.boardDescription}
                     </CardDescription>

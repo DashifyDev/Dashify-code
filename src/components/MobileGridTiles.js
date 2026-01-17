@@ -53,6 +53,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const [editorLabel, setEditorLabel] = useState();
   const [colorBackground, setColorBackground] = useState();
   const [editorOpen, setEditorOpen] = useState(false);
+  const [currentTileIndex, setCurrentTileIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after long press)
@@ -596,7 +597,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
 
     const titleVal =
-      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' New Box' : '';
+      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' <div style="font-size: 16px;">New Box</div>' : '';
     return titleVal;
   };
 
@@ -1395,6 +1396,13 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   }, [editingTileId]);
 
+  // Sync currentTileIndex with selectedTile when editor opens
+  useEffect(() => {
+    if (editorOpen && selectedTile !== null && selectedTile !== undefined) {
+      setCurrentTileIndex(selectedTile);
+    }
+  }, [editorOpen, selectedTile]);
+
   return (
     <>
       {/* Edit mode badge - shown at top of page under header */}
@@ -1830,7 +1838,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
               >
                 {/* Header */}
                 <div className='flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                  <h2 className='text-lg font-bold text-[#63899e]'>Tile Properties</h2>
+                  <h2 className='text-lg font-bold text-[#63899e]'>Box Settings</h2>
                   <button
                     onClick={() => {
                       setShowModel(false);
@@ -2116,16 +2124,21 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     </div>
                   </div>
 
-                  {/* Box Text */}
+                  {/* Text Display */}
                   <div className='space-y-3'>
                     <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                      Box Text
+                      Text Display
                     </h3>
                     <div className='flex flex-col sm:flex-row gap-4'>
                       {/* Left: Edit Text Content button */}
                       <div className='flex-1'>
                         <button
-                          onClick={() => setEditorOpen(true)}
+                          onClick={() => {
+                            if (selectedTile !== null && selectedTile !== undefined) {
+                              setCurrentTileIndex(selectedTile);
+                            }
+                            setEditorOpen(true);
+                          }}
                           className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
                         >
                           <Image
@@ -2149,7 +2162,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                             onChange={displayTitle}
                             className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
                           />
-                          <span className='text-sm font-medium text-gray-700'>Display Text</span>
+                          <span className='text-sm font-medium text-gray-700'>Show Text</span>
                         </label>
                         <div className='flex gap-2'>
                           <select
@@ -2223,48 +2236,128 @@ const MobileGridTiles = memo(function MobileGridTiles({
         )}
 
         {/* Editor Modal */}
-        {editorOpen && (
-          <>
-            <div
-              className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
-              onClick={() => setEditorOpen(false)}
-            />
-            <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
-              <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
-                onClick={e => e.stopPropagation()}
-              >
-                {/* Header */}
-                <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                  <h2 className='text-xl font-bold text-[#63899e]'>Edit Text</h2>
-                  <button
-                    onClick={() => setEditorOpen(false)}
-                    className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
-                    aria-label='Close dialog'
-                  >
-                    <svg
-                      className='h-5 w-5'
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2.5'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path d='M6 18L18 6M6 6l12 12' />
-                    </svg>
-                  </button>
-                </div>
+        {editorOpen && (() => {
+          const hasMultipleTiles = sortedTiles.length > 1;
+          const canGoPrev = currentTileIndex > 0;
+          const canGoNext = currentTileIndex < sortedTiles.length - 1;
 
-                {/* Editor Content */}
-                <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
-                  <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
-                    <TipTapMainEditor
-                      initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
-                      onContentChange={html => enterText(html)}
-                    />
+          const goPrev = () => {
+            if (!canGoPrev) return;
+            const prevIndex = currentTileIndex - 1;
+            setCurrentTileIndex(prevIndex);
+            setSelectedTile(prevIndex);
+            const prevTile = sortedTiles[prevIndex];
+            setSelectedTileDetail(prevTile);
+            setFormValue({ ...formValue, tileText: prevTile.tileText || '' });
+          };
+
+          const goNext = () => {
+            if (!canGoNext) return;
+            const nextIndex = currentTileIndex + 1;
+            setCurrentTileIndex(nextIndex);
+            setSelectedTile(nextIndex);
+            const nextTile = sortedTiles[nextIndex];
+            setSelectedTileDetail(nextTile);
+            setFormValue({ ...formValue, tileText: nextTile.tileText || '' });
+          };
+
+          return (
+            <>
+              <div
+                className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
+                onClick={() => setEditorOpen(false)}
+              />
+              <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+                <div
+                  className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
+                    <h2 className='text-xl font-bold text-[#63899e]'>Edit Text</h2>
+                    <button
+                      onClick={() => setEditorOpen(false)}
+                      className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
+                      aria-label='Close dialog'
+                    >
+                      <svg
+                        className='h-5 w-5'
+                        fill='none'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2.5'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path d='M6 18L18 6M6 6l12 12' />
+                      </svg>
+                    </button>
                   </div>
-                </div>
+
+                  {/* Editor Content */}
+                  <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+                    <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
+                      <TipTapMainEditor
+                        initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
+                        onContentChange={html => enterText(html)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Navigation Indicator */}
+                  {hasMultipleTiles && (
+                    <div className='flex items-center justify-center gap-2 px-4 py-3 border-t border-gray-200'>
+                      <button
+                        onClick={goPrev}
+                        disabled={!canGoPrev}
+                        className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                          canGoPrev
+                            ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
+                            : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                        aria-label='Previous tile'
+                      >
+                        <svg
+                          className='h-5 w-5'
+                          fill='none'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2.5'
+                          viewBox='0 0 24 24'
+                          stroke='currentColor'
+                        >
+                          <path d='M15 19l-7-7 7-7' />
+                        </svg>
+                      </button>
+                      <div className='flex items-center gap-1 px-3'>
+                        <span className='text-sm text-gray-600 font-medium'>
+                          {currentTileIndex + 1} / {sortedTiles.length}
+                        </span>
+                      </div>
+                      <button
+                        onClick={goNext}
+                        disabled={!canGoNext}
+                        className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                          canGoNext
+                            ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
+                            : 'text-gray-300 cursor-not-allowed'
+                        }`}
+                        aria-label='Next tile'
+                      >
+                        <svg
+                          className='h-5 w-5'
+                          fill='none'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2.5'
+                          viewBox='0 0 24 24'
+                          stroke='currentColor'
+                        >
+                          <path d='M9 5l7 7-7 7' />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
 
                 {/* Footer */}
                 <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
@@ -2286,7 +2379,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
               </div>
             </div>
           </>
-        )}
+          );
+        })()}
 
         <TipTapTextEditorDialog
           open={openTextEditor}

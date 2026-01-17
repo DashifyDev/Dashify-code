@@ -104,9 +104,21 @@ const TipTapTextEditorDialog = ({
             </button>
           </div>
 
-          {/* Navigation Indicator */}
-          {hasMultipleTiles && (
-            <div className='flex items-center justify-center gap-2 px-4 py-3 border-b border-gray-200 mt-6'>
+          
+
+          {/* Editor Content */}
+          <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+            {/* Editor */}
+            <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
+              <TipTapMainEditor
+                initialContent={editorContent}
+                onContentChange={html => setEditorContent(html)}
+              />
+            </div>
+          </div>
+{/* Navigation Indicator */} 
+{hasMultipleTiles && (
+            <div className='flex items-center justify-center gap-2 px-4 py-3 border-b border-gray-200 '>
               <button
                 onClick={goPrev}
                 disabled={!canGoPrev}
@@ -158,18 +170,6 @@ const TipTapTextEditorDialog = ({
               </button>
             </div>
           )}
-
-          {/* Editor Content */}
-          <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
-            {/* Editor */}
-            <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
-              <TipTapMainEditor
-                initialContent={editorContent}
-                onContentChange={html => setEditorContent(html)}
-              />
-            </div>
-          </div>
-
           {/* Footer Actions */}
           <div className='flex items-center gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0 sm:justify-end'>
             <Button

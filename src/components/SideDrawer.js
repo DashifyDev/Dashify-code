@@ -129,10 +129,10 @@ function SideDrawer({ open, close, user, isMobile, authUser }) {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-screen w-80 sm:w-96 bg-gradient-to-br from-[#63899e] via-[#5a7a8d] to-[#4a6d7e] shadow-2xl z-[9999] transform transition-transform duration-300 ease-in-out flex flex-col ${
+        className={`fixed top-0 right-0 h-[100dvh] w-80 sm:w-96 bg-gradient-to-br from-[#63899e] via-[#5a7a8d] to-[#4a6d7e] shadow-2xl z-[9999] transform transition-transform duration-300 ease-in-out flex flex-col ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ overflow: 'hidden' }}
+        style={{ overflow: 'hidden', maxHeight: '100dvh' }}
       >
         {/* Header */}
         <div className='flex items-center justify-between p-6 border-b border-white/20 bg-white/5 backdrop-blur-sm flex-shrink-0'>
@@ -183,7 +183,7 @@ function SideDrawer({ open, close, user, isMobile, authUser }) {
         {isMobile && !authUser && (
           <div className='flex-shrink-0 border-t border-white/10 mt-auto'>
             <div className='h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-4 my-4' />
-            <div className='px-4 pb-6 space-y-3'>
+            <div className='px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-3'>
               <Link
                 href='/api/auth/login?screen_hint=signup'
                 prefetch={false}

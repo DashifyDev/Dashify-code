@@ -1,7 +1,8 @@
 'use client';
 import SideDrawer from '@/components/SideDrawer';
-import { Button } from '@/components/ui/button';
 import { globalContext } from '@/context/globalContext';
+import useIsMobile from '@/hooks/useIsMobile';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useContext, useState } from 'react';
@@ -11,6 +12,8 @@ function LibraryHeader() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const { dbUser } = useContext(globalContext);
+  const isMobile = useIsMobile();
+  const { user } = useUser();
 
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
@@ -27,10 +30,9 @@ function LibraryHeader() {
         <div className='flex h-16 items-center justify-between'>
           {/* Left side - Heading */}
           <div className='flex items-center'>
-            <p className='text-sm sm:text-base font-medium text-gray-700 hidden sm:block'>
+            <p className='text-sm sm:text-base font-medium text-gray-700 hidden md:block'>
               Click on a board below to add to your Boardzy!
             </p>
-            <p className='text-xs font-medium text-gray-700 sm:hidden'>Select a board</p>
           </div>
 
           {/* Right side - Logo, Menu, Auth */}
@@ -124,29 +126,35 @@ function LibraryHeader() {
                 )}
               </div>
             ) : (
-              <div className='flex items-center gap-2'>
-                <a href='/api/auth/login?screen_hint=signup'>
-                  <Button variant='default' size='sm' className='hidden sm:inline-flex'>
-                    Sign up
-                  </Button>
-                </a>
-                <a href='/api/auth/login'>
-                  <Button variant='outline' size='sm' className='hidden sm:inline-flex'>
+              !isMobile && (
+                <div className='flex items-center gap-2'>
+                  <Link
+                    href='/api/auth/login'
+                    prefetch={false}
+                    className='px-4 py-2 text-sm font-semibold text-[#63899e] hover:text-[#4a6d7e] transition-colors'
+                  >
                     Login
-                  </Button>
-                </a>
-                {/* Mobile auth buttons */}
-                <a href='/api/auth/login?screen_hint=signup' className='sm:hidden'>
-                  <Button variant='default' size='sm'>
+                  </Link>
+                  <Link
+                    href='/api/auth/login?screen_hint=signup'
+                    prefetch={false}
+                    className='px-4 py-2 text-sm font-semibold bg-[#63899e] text-white rounded-lg hover:bg-[#4a6d7e] transition-colors shadow-sm hover:shadow-md'
+                  >
                     Sign up
-                  </Button>
-                </a>
-              </div>
+                  </Link>
+                </div>
+              )
             )}
           </div>
         </div>
       </div>
-      <SideDrawer open={isDrawerOpen} close={toggleDrawer} user={dbUser} />
+      <SideDrawer
+        open={isDrawerOpen}
+        close={toggleDrawer}
+        user={dbUser}
+        isMobile={isMobile}
+        authUser={user}
+      />
     </header>
   );
 }

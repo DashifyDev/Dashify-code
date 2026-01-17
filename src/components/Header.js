@@ -49,6 +49,7 @@ function Header() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [boardMenuAnchor, setBoardMenuAnchor] = useState(null);
+  const [addTilesMenuAnchor, setAddTilesMenuAnchor] = useState(null);
 
   const currentActiveBoard = id || activeBoard;
 
@@ -644,20 +645,89 @@ function Header() {
             }`}
           >
             {/* Add Tiles Button */}
-            <button
-              onClick={addTiles}
-              className='flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#63899e] text-white hover:bg-[#4a6d7e] transition-all duration-200 shadow-sm hover:shadow-md border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2'
-              aria-label='Add tile'
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2.5}
-                  d='M12 4v16m8-8H4'
-                />
-              </svg>
-            </button>
+            <div className='relative'>
+              <button
+                onClick={e => setAddTilesMenuAnchor(e.currentTarget)}
+                className='flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#63899e] text-white hover:bg-[#4a6d7e] transition-all duration-200 shadow-sm hover:shadow-md border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2'
+                aria-label='Add tile or board'
+              >
+                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2.5}
+                    d='M12 4v16m8-8H4'
+                  />
+                </svg>
+              </button>
+
+              {/* Add Tiles Dropdown Menu */}
+              {addTilesMenuAnchor && (
+                <>
+                  <div className='fixed inset-0 z-40' onClick={() => setAddTilesMenuAnchor(null)} />
+                  <div
+                    className='fixed z-50 mt-1 w-48 bg-white rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm'
+                    style={{
+                      top: addTilesMenuAnchor.getBoundingClientRect().bottom + 4,
+                      left: addTilesMenuAnchor.getBoundingClientRect().left
+                    }}
+                  >
+                    <div>
+                      <a
+                        href='#'
+                        onClick={e => {
+                          e.preventDefault();
+                          setAddTilesMenuAnchor(null);
+                          addTiles();
+                        }}
+                        className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors border-b border-gray-100 no-underline'
+                      >
+                        <svg
+                          className='w-4 h-4 text-gray-600'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M12 4v16m8-8H4'
+                          />
+                        </svg>
+                        <span>Add box</span>
+                      </a>
+                      <a
+                        href='#'
+                        onClick={e => {
+                          e.preventDefault();
+                          setAddTilesMenuAnchor(null);
+                          setShowDashboardModel(true);
+                          setSelectedDashboard(null);
+                          setDashBoardName('');
+                        }}
+                        className='w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-900 hover:bg-gray-50 transition-colors no-underline'
+                      >
+                        <svg
+                          className='w-4 h-4 text-gray-600'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M12 4v16m8-8H4'
+                          />
+                        </svg>
+                        <span>Add Board</span>
+                      </a>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             {/* Divider */}
             <div className='hidden sm:block w-px h-6 bg-gray-300 mx-2 sm:mx-4' />
 
@@ -939,7 +1009,7 @@ function Header() {
                   <div className='flex-1 min-w-0 relative max-w-full overflow-visible'>
                     <div
                       ref={scrollContainerRef}
-                      className='flex gap-1 overflow-x-auto overflow-y-visible scrollbar-hide scroll-smooth max-w-full py-2'
+                      className='flex gap-1 overflow-x-auto overflow-y-visible scrollbar-hide scroll-smooth max-w-full p-2'
                       style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
@@ -973,7 +1043,7 @@ function Header() {
                               }}
                               className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 border-0 outline-none focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-1 ${
                                 board._id === currentActiveBoard
-                                  ? 'bg-[#63899e]/10 text-[#45818e] font-semibold'
+                                  ? 'bg-[#a2c4c9] text-white font-semibold'
                                   : 'text-gray-700 hover:bg-gray-100'
                               }`}
                             >
@@ -1159,20 +1229,6 @@ function Header() {
                     </>
                   )}
                 </div>
-
-                {/* New Dashboard Button */}
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => {
-                    setShowDashboardModel(true);
-                    setSelectedDashboard(null);
-                    setDashBoardName('');
-                  }}
-                  className='flex-shrink-0 whitespace-nowrap'
-                >
-                  + New
-                </Button>
               </>
             )}
           </div>
