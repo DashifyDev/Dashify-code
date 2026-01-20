@@ -608,11 +608,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
     if (effectiveHeight) {
       // User has manually resized - use fixed height
       styleObj.height = effectiveHeight;
-      styleObj.overflow = 'auto'; // Allow scrolling if content exceeds fixed height
+      styleObj.overflow = 'hidden'; // Hide overflow to keep resize handles at edges
     } else {
       // Default - use min-height and let content determine actual height
       styleObj.minHeight = defaultMinHeight;
       styleObj.height = 'auto'; // Automatically adjust to content height
+      styleObj.overflow = 'visible'; // Allow content to expand naturally
     }
 
     return styleObj;
@@ -1533,7 +1534,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   userSelect: 'none', // Prevent text selection
                   WebkitUserSelect: 'none', // Safari
                   MozUserSelect: 'none', // Firefox
-                  msUserSelect: 'none' // IE/Edge
+                  msUserSelect: 'none', // IE/Edge
+                  // Ensure resize handles stay at edges - use hidden when editing or when height is fixed
+                  overflow: (isEditing || tile.mobileHeight) ? 'hidden' : 'visible'
                 }}
                 onTouchStart={e => {
                   // Don't handle if resizing or clicking on interactive elements
@@ -1618,7 +1621,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       borderTop: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderTopLeftRadius: '10px',
                       borderTopRightRadius: '10px',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow for depth
+                      // Ensure handle stays at top edge
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: 'border-box'
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1725,7 +1732,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       borderBottom: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderBottomLeftRadius: '10px',
                       borderBottomRightRadius: '10px',
-                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
+                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow for depth
+                      // Ensure handle stays at bottom edge
+                      margin: 0,
+                      padding: 0,
+                      boxSizing: 'border-box'
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
