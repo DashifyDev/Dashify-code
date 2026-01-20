@@ -549,12 +549,38 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     // Increased side padding: 24px on each side (48px total) instead of 16px (32px total)
-    const width = tile.mobileWidth || `${windowWidth - 48}px`;
+    // Margin is 24px on each side = 48px total, so width should be windowWidth - 48px
+    const maxWidth = windowWidth - 48;
+    
+    // Parse mobileWidth if it exists, otherwise use default
+    let widthValue = maxWidth;
+    if (tile.mobileWidth) {
+      const widthStr = String(tile.mobileWidth).replace('px', '');
+      const parsedWidth = parseInt(widthStr, 10);
+      if (!isNaN(parsedWidth)) {
+        // Ensure width doesn't exceed screen width minus margin
+        widthValue = Math.min(parsedWidth, maxWidth);
+      }
+    }
+    const width = `${widthValue}px`;
 
     // If user has manually set mobileHeight (exists and is not null/undefined), use fixed height
     // Otherwise, use min-height to allow content to expand naturally
     const hasCustomHeight = tile.mobileHeight != null && tile.mobileHeight !== '';
     const defaultMinHeight = '150px';
+
+    // If mobileHeight is set but too large (likely from desktop), limit it or use min-height
+    let effectiveHeight = null;
+    if (hasCustomHeight) {
+      // Parse height value (handle both "200px" strings and numbers)
+      const heightStr = String(tile.mobileHeight).replace('px', '');
+      const heightValue = parseInt(heightStr, 10);
+      // If height is reasonable (<= 200px) and valid, use it; otherwise use min-height for natural expansion
+      if (!isNaN(heightValue) && heightValue <= 200) {
+        effectiveHeight = tile.mobileHeight;
+      }
+      // If height > 200px or invalid, don't set fixed height - use min-height instead
+    }
 
     const styleObj = {
       display: 'flex',
@@ -575,11 +601,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       msUserSelect: 'none' // IE/Edge
     };
 
-    if (hasCustomHeight) {
-      // User has manually resized - use fixed height
-      styleObj.height = tile.mobileHeight;
+    if (effectiveHeight) {
+      // User has manually resized with reasonable height - use fixed height
+      styleObj.height = effectiveHeight;
     } else {
-      // Default - use min-height to allow content to expand
+      // Default - use min-height to allow content to expand naturally
       styleObj.minHeight = defaultMinHeight;
     }
 

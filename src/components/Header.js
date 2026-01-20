@@ -433,7 +433,7 @@ function Header() {
         order: 1,
         mobileX: 0,
         mobileY: 0,
-        mobileWidth: `${windowWidth - 32}px`,
+        mobileWidth: `${windowWidth - 48}px`, // Margin is 24px on each side = 48px total
         mobileHeight: '200px'
       };
 

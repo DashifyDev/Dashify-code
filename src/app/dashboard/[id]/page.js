@@ -139,17 +139,67 @@ function OptimizedDashboardPage() {
       // Ensure all tiles have mobile profile and order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
       const updatedTiles = dashboardTiles.map((tile, index) => {
+        // Helper function to parse height value
+        const parseHeight = heightStr => {
+          if (!heightStr) return null;
+          const parsed = parseInt(String(heightStr).replace('px', ''), 10);
+          return isNaN(parsed) ? null : parsed;
+        };
+
+        // Helper function to parse width value
+        const parseWidth = widthStr => {
+          if (!widthStr) return null;
+          const parsed = parseInt(String(widthStr).replace('px', ''), 10);
+          return isNaN(parsed) ? null : parsed;
+        };
+
+        // Margin is 24px on each side = 48px total, so max width should be windowWidth - 48px
+        const maxMobileWidth = windowWidth - 48;
+
         // If tile doesn't have mobile profile, create defaults
         if (tile.mobileWidth === undefined || tile.mobileWidth === null) {
+          // Parse desktop height to check if it's reasonable for mobile
+          const desktopHeight = parseHeight(tile.height);
+          // Only set mobileHeight if desktop height is reasonable (<= 200px)
+          // Otherwise, leave it undefined to use min-height for natural content expansion
+          const mobileHeight = desktopHeight && desktopHeight <= 200 ? tile.height : undefined;
+          
           return {
             ...tile,
             mobileX: 0,
             mobileY: index * 166, // Approximate position
-            mobileWidth: `${windowWidth - 32}px`,
-            mobileHeight: tile.height || '150px',
+            mobileWidth: `${maxMobileWidth}px`, // Ensure width fits within screen
+            ...(mobileHeight ? { mobileHeight } : {}), // Only set if reasonable
             order: tile.order || index + 1
           };
         }
+        
+        // If tile has mobileWidth but it's too large, fix it
+        if (tile.mobileWidth) {
+          const mobileWidthValue = parseWidth(tile.mobileWidth);
+          if (mobileWidthValue && mobileWidthValue > maxMobileWidth) {
+            // Fix mobileWidth to fit within screen
+            return {
+              ...tile,
+              mobileWidth: `${maxMobileWidth}px`,
+              order: tile.order || index + 1
+            };
+          }
+        }
+        
+        // If tile has mobileHeight but it's too large (likely from desktop), remove it
+        if (tile.mobileHeight) {
+          const mobileHeightValue = parseHeight(tile.mobileHeight);
+          if (mobileHeightValue && mobileHeightValue > 200) {
+            // Remove mobileHeight to allow natural content expansion
+            const { mobileHeight, ...tileWithoutHeight } = tile;
+            return {
+              ...tileWithoutHeight,
+              order: tile.order || index + 1
+            };
+          }
+        }
+        
         // Ensure order is set
         if (tile.order === undefined || tile.order === null) {
           return {
@@ -207,8 +257,9 @@ function OptimizedDashboardPage() {
           // Assign order based on index (1, 2, 3...)
           tileCopy.order = index + 1;
           // Set mobile profile defaults if not present
+          // Margin is 24px on each side = 48px total
           if (!tileCopy.mobileWidth) {
-            tileCopy.mobileWidth = `${windowWidth - 32}px`;
+            tileCopy.mobileWidth = `${windowWidth - 48}px`;
           }
           if (!tileCopy.mobileHeight) {
             tileCopy.mobileHeight = tileCopy.height || '150px';
@@ -252,8 +303,9 @@ function OptimizedDashboardPage() {
         // Assign order based on index
         tile.order = index + 1;
         // Set mobile profile defaults if not present
+        // Margin is 24px on each side = 48px total
         if (!tile.mobileWidth) {
-          tile.mobileWidth = `${windowWidth - 32}px`;
+          tile.mobileWidth = `${windowWidth - 48}px`;
         }
         if (!tile.mobileHeight) {
           tile.mobileHeight = tile.height || '150px';
@@ -559,3 +611,4 @@ function OptimizedDashboardPage() {
 }
 
 export default OptimizedDashboardPage;
+

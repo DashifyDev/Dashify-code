@@ -239,7 +239,7 @@ img.text-editor-image {
 }
 
 .text_overlay {
-  position: absolute;
+  /* position: absolute; */
   padding: 15px;
   box-sizing: border-box;
   overflow-wrap: anywhere;

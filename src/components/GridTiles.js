@@ -244,6 +244,18 @@ const GridTiles = memo(function GridTiles({
 
     let items = [...tileCordinates];
     let tileId = items[selectedTile]._id;
+    
+    // Store original tile data to check if text content changed
+    const originalTile = items[selectedTile];
+    const originalTileText = originalTile.tileText || '';
+    const originalTileContent = originalTile.tileContent || '';
+    const originalHeight = originalTile.height;
+    
+    // Check if text content changed (only resize if text changed)
+    const textChanged = 
+      (payload.tileText !== undefined && payload.tileText !== originalTileText) ||
+      (payload.tileContent !== undefined && payload.tileContent !== originalTileContent);
+    
     setFormValue({});
     setImageFileName(null);
     setColorBackground(null);
@@ -277,48 +289,53 @@ const GridTiles = memo(function GridTiles({
         const currentSelectedTile = selectedTile;
         setSelectedTile(null);
 
-        // Auto-resize tile after save for authenticated users
-        setTimeout(() => {
-          // Try different selectors for tiles
-          let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
-            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-            const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-          }
-
-          // Fallback: try to find by index
-          if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
-            textOverlay = allTextOverlays[currentSelectedTile];
-          }
-
-          if (textOverlay && currentSelectedTile !== null) {
-            const contentHeight = textOverlay.scrollHeight;
-            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
-            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-
-            if (desiredHeight > currentHeight + 5) {
-              const updatedItems = [...items];
-              updatedItems[currentSelectedTile] = {
-                ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
-              };
-              setTileCordinates(updatedItems);
-
-              // Update React Query cache
-              queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-                if (!oldData) return oldData;
-                return {
-                  ...oldData,
-                  tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
-                    tile._id === tileId ? updatedItems[currentSelectedTile] : tile
-                  )
-                };
-              });
+        // Auto-resize tile after save ONLY if text content changed
+        if (textChanged) {
+          setTimeout(() => {
+            // Try different selectors for tiles
+            let textOverlay = null;
+            if (tileId && !tileId.startsWith('temp_')) {
+              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+              const escapedTileId = CSS.escape(tileId);
+              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
             }
-          }
-        }, 100);
+
+            // Fallback: try to find by index
+            if (!textOverlay) {
+              const allTextOverlays = document.querySelectorAll('.text_overlay');
+              textOverlay = allTextOverlays[currentSelectedTile];
+            }
+
+            if (textOverlay && currentSelectedTile !== null) {
+              const contentHeight = textOverlay.scrollHeight;
+              // Use original height if it exists, otherwise use 150 as fallback
+              const currentHeight = originalHeight 
+                ? parseInt(originalHeight) 
+                : (parseInt(items[currentSelectedTile].height) || 150);
+              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+              if (desiredHeight > currentHeight + 5) {
+                const updatedItems = [...items];
+                updatedItems[currentSelectedTile] = {
+                  ...updatedItems[currentSelectedTile],
+                  height: `${desiredHeight}px`
+                };
+                setTileCordinates(updatedItems);
+
+                // Update React Query cache
+                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                      tile._id === tileId ? updatedItems[currentSelectedTile] : tile
+                    )
+                  };
+                });
+              }
+            }
+          }, 100);
+        }
       });
     } else {
       if (formValue.tileBackground instanceof File) {
@@ -352,40 +369,45 @@ const GridTiles = memo(function GridTiles({
         const currentSelectedTile = selectedTile;
         setSelectedTile(null);
 
-        // Auto-resize tile after save for guest users
-        setTimeout(() => {
-          const tileId = items[currentSelectedTile]._id;
+        // Auto-resize tile after save ONLY if text content changed
+        if (textChanged) {
+          setTimeout(() => {
+            const tileId = items[currentSelectedTile]._id;
 
-          // Try different selectors for guest tiles
-          let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
-            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-            const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-          }
-
-          // Fallback: try to find by index
-          if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
-            textOverlay = allTextOverlays[currentSelectedTile];
-          }
-
-          if (textOverlay && currentSelectedTile !== null) {
-            const contentHeight = textOverlay.scrollHeight;
-            const currentHeight = parseInt(items[currentSelectedTile].height) || 150;
-            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-
-            if (desiredHeight > currentHeight + 5) {
-              const updatedItems = [...items];
-              updatedItems[currentSelectedTile] = {
-                ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
-              };
-              setTileCordinates(updatedItems);
-              updateTilesInLocalstorage(updatedItems);
+            // Try different selectors for guest tiles
+            let textOverlay = null;
+            if (tileId && !tileId.startsWith('temp_')) {
+              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+              const escapedTileId = CSS.escape(tileId);
+              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
             }
-          }
-        }, 100);
+
+            // Fallback: try to find by index
+            if (!textOverlay) {
+              const allTextOverlays = document.querySelectorAll('.text_overlay');
+              textOverlay = allTextOverlays[currentSelectedTile];
+            }
+
+            if (textOverlay && currentSelectedTile !== null) {
+              const contentHeight = textOverlay.scrollHeight;
+              // Use original height if it exists, otherwise use 150 as fallback
+              const currentHeight = originalHeight 
+                ? parseInt(originalHeight) 
+                : (parseInt(items[currentSelectedTile].height) || 150);
+              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+              if (desiredHeight > currentHeight + 5) {
+                const updatedItems = [...items];
+                updatedItems[currentSelectedTile] = {
+                  ...updatedItems[currentSelectedTile],
+                  height: `${desiredHeight}px`
+                };
+                setTileCordinates(updatedItems);
+                updateTilesInLocalstorage(updatedItems);
+              }
+            }
+          }, 100);
+        }
       }
     }
   };
