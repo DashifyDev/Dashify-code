@@ -585,8 +585,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
     const styleObj = {
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexDirection: 'column', // Allow content to expand vertically
+      alignItems: 'stretch', // Stretch content to full width
+      justifyContent: 'flex-start', // Start from top
       border: 'solid 1px #ddd',
       background: tile.tileBackground && !isImageBackground ? tile.tileBackground : '#deedf0ff',
       color: 'black',
@@ -599,15 +600,19 @@ const MobileGridTiles = memo(function MobileGridTiles({
       userSelect: 'none', // Prevent text selection
       WebkitUserSelect: 'none', // Safari
       MozUserSelect: 'none', // Firefox
-      msUserSelect: 'none' // IE/Edge
+      msUserSelect: 'none', // IE/Edge
+      // Allow content to determine height automatically
+      overflow: 'visible' // Ensure content is not clipped
     };
 
     if (effectiveHeight) {
-      // User has manually resized with reasonable height - use fixed height
+      // User has manually resized - use fixed height
       styleObj.height = effectiveHeight;
+      styleObj.overflow = 'auto'; // Allow scrolling if content exceeds fixed height
     } else {
-      // Default - use min-height to allow content to expand naturally
+      // Default - use min-height and let content determine actual height
       styleObj.minHeight = defaultMinHeight;
+      styleObj.height = 'auto'; // Automatically adjust to content height
     }
 
     return styleObj;
@@ -1815,7 +1820,10 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       WebkitUserSelect: 'none',
                       MozUserSelect: 'none',
                       msUserSelect: 'none',
-                      pointerEvents: 'none' // Prevent text selection
+                      pointerEvents: 'none', // Prevent text selection
+                      padding: '12px', // Add padding for better text display
+                      width: '100%', // Ensure full width
+                      boxSizing: 'border-box' // Include padding in width calculation
                     }}
                     dangerouslySetInnerHTML={{
                       __html: changedTitlehandle(tile)
