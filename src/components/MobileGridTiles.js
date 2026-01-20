@@ -569,17 +569,18 @@ const MobileGridTiles = memo(function MobileGridTiles({
     const hasCustomHeight = tile.mobileHeight != null && tile.mobileHeight !== '';
     const defaultMinHeight = '150px';
 
-    // If mobileHeight is set but too large (likely from desktop), limit it or use min-height
+    // If mobileHeight is set, always use it (user manually resized via drag)
+    // The 200px limit only applies when automatically setting mobileHeight from desktop height
+    // If user manually resized, respect their choice regardless of size
     let effectiveHeight = null;
     if (hasCustomHeight) {
       // Parse height value (handle both "200px" strings and numbers)
       const heightStr = String(tile.mobileHeight).replace('px', '');
       const heightValue = parseInt(heightStr, 10);
-      // If height is reasonable (<= 200px) and valid, use it; otherwise use min-height for natural expansion
-      if (!isNaN(heightValue) && heightValue <= 200) {
+      // If height is valid, use it (no size limit for manually resized tiles)
+      if (!isNaN(heightValue) && heightValue > 0) {
         effectiveHeight = tile.mobileHeight;
       }
-      // If height > 200px or invalid, don't set fixed height - use min-height instead
     }
 
     const styleObj = {
