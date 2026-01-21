@@ -158,18 +158,18 @@ function OptimizedDashboardPage() {
 
         // If tile doesn't have mobile profile, create defaults
         if (tile.mobileWidth === undefined || tile.mobileWidth === null) {
-          // Parse desktop height to check if it's reasonable for mobile
+          // Parse desktop height
           const desktopHeight = parseHeight(tile.height);
-          // Only set mobileHeight if desktop height is reasonable (<= 200px)
-          // Otherwise, leave it undefined to use min-height for natural content expansion
-          const mobileHeight = desktopHeight && desktopHeight <= 200 ? tile.height : undefined;
+          // If desktop height > 200px, use it as mobileHeight
+          // If desktop height <= 200px, leave mobileHeight undefined to use min-height
+          const mobileHeight = desktopHeight && desktopHeight > 200 ? tile.height : undefined;
           
           return {
             ...tile,
             mobileX: 0,
             mobileY: index * 166, // Approximate position
             mobileWidth: `${maxMobileWidth}px`, // Ensure width fits within screen
-            ...(mobileHeight ? { mobileHeight } : {}), // Only set if reasonable
+            ...(mobileHeight ? { mobileHeight } : {}), // Set if desktop height > 200px
             order: tile.order || index + 1
           };
         }

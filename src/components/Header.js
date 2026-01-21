@@ -352,18 +352,26 @@ function Header() {
       axios.post('/api/dashboard/addDashboard', payload).then(res => {
         const newBoard = res.data;
         const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-        const defTile = {
+        
+        // Default tiles: Step 1 and Step 2
+        // Position from top-left corner, one below the other
+        const START_X = 25;
+        const START_Y = 25;
+        const TILE_SPACING = 10; // Space between tiles
+        
+        const defTile1 = {
           dashboardId: newBoard._id,
-          width: `${300}px`,
-          height: `${250}px`,
-          x: 25,
-          y: 25,
+          width: '540px',
+          height: '156px',
+          x: START_X,
+          y: START_Y,
           titleX: 1,
           titleY: 2,
           action: 'textEditor',
           displayTitle: true,
           backgroundAction: 'color',
-          tileText: `<p style="line-height: 2; font-size: 1.3rem;">Hey there! I'm the first box on your board.<br><br>Move me around, or go to my settings to give me a personality!</p><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
+          tileBackground: '#04b8c1',
+          tileText: '<p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;"><strong>New Board Training | Step 1</strong></span></p><p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;">🖐️ Drag me anywhere, even resize me</span></p>',
           order: 1,
           mobileX: 0,
           mobileY: 0,
@@ -371,37 +379,63 @@ function Header() {
           // mobileHeight not set - will use min-height by default
         };
 
-        // Add temporary ID for optimistic update
-        const tempDefTile = { ...defTile, _id: `temp_${Date.now()}_${Math.random()}` };
+        const defTile2 = {
+          dashboardId: newBoard._id,
+          width: '604px',
+          height: '161px',
+          x: START_X,
+          y: START_Y + 156 + TILE_SPACING, // Position below first tile
+          titleX: 1,
+          titleY: 2,
+          action: 'textEditor',
+          displayTitle: true,
+          backgroundAction: 'color',
+          tileBackground: '#2dbc83',
+          tileText: '<p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;"><strong>New Board Training | Step 2</strong></span></p><p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;">🎨 Click my menu (top-right corner) to change some things about me</span></p>',
+          order: 2,
+          mobileX: 0,
+          mobileY: 166, // Position below first tile on mobile
+          mobileWidth: `${windowWidth - 48}px`
+          // mobileHeight not set - will use min-height by default
+        };
+
+        // Add temporary IDs for optimistic update
+        const tempDefTile1 = { ...defTile1, _id: `temp_${Date.now()}_${Math.random()}` };
+        const tempDefTile2 = { ...defTile2, _id: `temp_${Date.now() + 1}_${Math.random()}` };
 
         // Optimistic update
-        setTiles([tempDefTile]);
-        newBoard.tiles = [tempDefTile];
+        setTiles([tempDefTile1, tempDefTile2]);
+        newBoard.tiles = [tempDefTile1, tempDefTile2];
         setBoards(prev => [newBoard, ...prev]);
 
         // Update React Query cache optimistically
         queryClient.setQueryData(dashboardKeys.detail(newBoard._id), {
           ...newBoard,
-          tiles: [tempDefTile]
+          tiles: [tempDefTile1, tempDefTile2]
         });
 
+        // Create both tiles using batch endpoint to avoid race condition
         axios
-          .post('/api/tile/tile', defTile)
+          .post('/api/tile/tiles', {
+            dashboardId: newBoard._id,
+            tiles: [defTile1, defTile2]
+          })
           .then(res => {
-            // Replace temporary block with real one
-            setTiles([res.data]);
-            newBoard.tiles = [res.data];
+            // Replace temporary blocks with real ones
+            const realTiles = res.data.tiles || [];
+            setTiles(realTiles);
+            newBoard.tiles = realTiles;
             setBoards(prev => prev.map(board => (board._id === newBoard._id ? newBoard : board)));
 
             // Update React Query cache with real data
             queryClient.setQueryData(dashboardKeys.detail(newBoard._id), {
               ...newBoard,
-              tiles: [res.data]
+              tiles: realTiles
             });
           })
           .catch(error => {
-            console.error('Error creating default tile:', error);
-            // Remove temporary block on error
+            console.error('Error creating default tiles:', error);
+            // Remove temporary blocks on error
             setTiles([]);
             setBoards(prev => prev.filter(board => board._id !== newBoard._id));
           });
@@ -418,44 +452,73 @@ function Header() {
     } else {
       const boardId = uuidv4();
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-      const defTile = {
+      
+      // Default tiles: Step 1 and Step 2
+      // Position from top-left corner, one below the other
+      const START_X = 25;
+      const START_Y = 25;
+      const TILE_SPACING = 10; // Space between tiles
+      
+      const defTile1 = {
         dashboardId: boardId,
-        width: `${600}px`,
-        height: `${200}px`,
-        x: 25,
-        y: 25,
+        width: '540px',
+        height: '156px',
+        x: START_X,
+        y: START_Y,
         titleX: 1,
         titleY: 2,
         action: 'textEditor',
         displayTitle: true,
         backgroundAction: 'color',
-        tileText: `<h4 style="line-height: 2;">Hey there! I'm the first box on your board.<br>Move me around, or go to my settings to give me a personality!<br>And if you wanrt more of me, click the + button in the boards menu.</h4><p isspaced="false" isbordered="false" isneon="false" class="" style="line-height: 2;"></p>`,
+        tileBackground: '#04b8c1',
+        tileText: '<p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;"><strong>New Board Training | Step 1</strong></span></p><p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;">🖐️ Drag me anywhere, even resize me</span></p>',
         order: 1,
         mobileX: 0,
         mobileY: 0,
-        mobileWidth: `${windowWidth - 48}px`, // Margin is 24px on each side = 48px total
-        mobileHeight: '200px'
+        mobileWidth: `${windowWidth - 48}px`
+        // mobileHeight not set - will use min-height by default
       };
 
-      // Add temporary ID for guest users
-      const tempDefTile = { ...defTile, _id: `temp_${Date.now()}_${Math.random()}` };
+      const defTile2 = {
+        dashboardId: boardId,
+        width: '604px',
+        height: '161px',
+        x: START_X,
+        y: START_Y + 156 + TILE_SPACING, // Position below first tile
+        titleX: 1,
+        titleY: 2,
+        action: 'textEditor',
+        displayTitle: true,
+        backgroundAction: 'color',
+        tileBackground: '#2dbc83',
+        tileText: '<p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;"><strong>New Board Training | Step 2</strong></span></p><p isspaced="false" isbordered="false" isneon="false" class=""><span style="font-family: Helvetica; color: rgb(255, 255, 255); font-size: 24px;">🎨 Click my menu (top-right corner) to change some things about me</span></p>',
+        order: 2,
+        mobileX: 0,
+        mobileY: 166, // Position below first tile on mobile
+        mobileWidth: `${windowWidth - 48}px`
+        // mobileHeight not set - will use min-height by default
+      };
+
+      // Add temporary IDs for guest users
+      const tempDefTile1 = { ...defTile1, _id: `temp_${Date.now()}_${Math.random()}` };
+      const tempDefTile2 = { ...defTile2, _id: `temp_${Date.now() + 1}_${Math.random()}` };
 
       payload = {
         _id: boardId,
         name: dashBoardName,
-        tiles: [tempDefTile]
+        tiles: [tempDefTile1, tempDefTile2]
       };
       let items = boards;
       items = [payload, ...items];
       localStorage.setItem('Dasify', JSON.stringify(items));
       setBoards(items);
-      setTiles([tempDefTile]);
+      setTiles([tempDefTile1, tempDefTile2]);
 
       // Update React Query cache for guest users
       try {
         queryClient.setQueryData(dashboardKeys.detail(boardId), {
           ...payload,
-          tiles: [tempDefTile]
+          tiles: [tempDefTile1, tempDefTile2]
         });
       } catch (e) {
         console.warn('Failed to update query cache for guest board', e);

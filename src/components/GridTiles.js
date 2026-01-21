@@ -291,50 +291,50 @@ const GridTiles = memo(function GridTiles({
 
         // Auto-resize tile after save ONLY if text content changed
         if (textChanged) {
-          setTimeout(() => {
-            // Try different selectors for tiles
-            let textOverlay = null;
-            if (tileId && !tileId.startsWith('temp_')) {
-              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-              const escapedTileId = CSS.escape(tileId);
-              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-            }
+        setTimeout(() => {
+          // Try different selectors for tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith('temp_')) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+          }
 
-            // Fallback: try to find by index
-            if (!textOverlay) {
-              const allTextOverlays = document.querySelectorAll('.text_overlay');
-              textOverlay = allTextOverlays[currentSelectedTile];
-            }
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
 
-            if (textOverlay && currentSelectedTile !== null) {
-              const contentHeight = textOverlay.scrollHeight;
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
               // Use original height if it exists, otherwise use 150 as fallback
               const currentHeight = originalHeight 
                 ? parseInt(originalHeight) 
                 : (parseInt(items[currentSelectedTile].height) || 150);
-              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
 
-              if (desiredHeight > currentHeight + 5) {
-                const updatedItems = [...items];
-                updatedItems[currentSelectedTile] = {
-                  ...updatedItems[currentSelectedTile],
-                  height: `${desiredHeight}px`
+            if (desiredHeight > currentHeight + 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${desiredHeight}px`
+              };
+              setTileCordinates(updatedItems);
+
+              // Update React Query cache
+              queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                if (!oldData) return oldData;
+                return {
+                  ...oldData,
+                  tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                    tile._id === tileId ? updatedItems[currentSelectedTile] : tile
+                  )
                 };
-                setTileCordinates(updatedItems);
-
-                // Update React Query cache
-                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-                  if (!oldData) return oldData;
-                  return {
-                    ...oldData,
-                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
-                      tile._id === tileId ? updatedItems[currentSelectedTile] : tile
-                    )
-                  };
-                });
-              }
+              });
             }
-          }, 100);
+          }
+        }, 100);
         }
       });
     } else {
@@ -371,42 +371,42 @@ const GridTiles = memo(function GridTiles({
 
         // Auto-resize tile after save ONLY if text content changed
         if (textChanged) {
-          setTimeout(() => {
-            const tileId = items[currentSelectedTile]._id;
+        setTimeout(() => {
+          const tileId = items[currentSelectedTile]._id;
 
-            // Try different selectors for guest tiles
-            let textOverlay = null;
-            if (tileId && !tileId.startsWith('temp_')) {
-              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-              const escapedTileId = CSS.escape(tileId);
-              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-            }
+          // Try different selectors for guest tiles
+          let textOverlay = null;
+          if (tileId && !tileId.startsWith('temp_')) {
+            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+            const escapedTileId = CSS.escape(tileId);
+            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
+          }
 
-            // Fallback: try to find by index
-            if (!textOverlay) {
-              const allTextOverlays = document.querySelectorAll('.text_overlay');
-              textOverlay = allTextOverlays[currentSelectedTile];
-            }
+          // Fallback: try to find by index
+          if (!textOverlay) {
+            const allTextOverlays = document.querySelectorAll('.text_overlay');
+            textOverlay = allTextOverlays[currentSelectedTile];
+          }
 
-            if (textOverlay && currentSelectedTile !== null) {
-              const contentHeight = textOverlay.scrollHeight;
+          if (textOverlay && currentSelectedTile !== null) {
+            const contentHeight = textOverlay.scrollHeight;
               // Use original height if it exists, otherwise use 150 as fallback
               const currentHeight = originalHeight 
                 ? parseInt(originalHeight) 
                 : (parseInt(items[currentSelectedTile].height) || 150);
-              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
 
-              if (desiredHeight > currentHeight + 5) {
-                const updatedItems = [...items];
-                updatedItems[currentSelectedTile] = {
-                  ...updatedItems[currentSelectedTile],
-                  height: `${desiredHeight}px`
-                };
-                setTileCordinates(updatedItems);
-                updateTilesInLocalstorage(updatedItems);
-              }
+            if (desiredHeight > currentHeight + 5) {
+              const updatedItems = [...items];
+              updatedItems[currentSelectedTile] = {
+                ...updatedItems[currentSelectedTile],
+                height: `${desiredHeight}px`
+              };
+              setTileCordinates(updatedItems);
+              updateTilesInLocalstorage(updatedItems);
             }
-          }, 100);
+          }
+        }, 100);
         }
       }
     }

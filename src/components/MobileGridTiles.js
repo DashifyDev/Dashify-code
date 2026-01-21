@@ -569,15 +569,15 @@ const MobileGridTiles = memo(function MobileGridTiles({
     const hasCustomHeight = tile.mobileHeight != null && tile.mobileHeight !== '';
     const defaultMinHeight = '150px';
 
-    // If mobileHeight is set, always use it (user manually resized via drag)
-    // The 200px limit only applies when automatically setting mobileHeight from desktop height
+    // If mobileHeight is set, always use it (user manually resized via drag OR desktop height > 200px)
+    // Desktop blocks with height > 200px automatically get mobileHeight set to desktop height
     // If user manually resized, respect their choice regardless of size
     let effectiveHeight = null;
     if (hasCustomHeight) {
       // Parse height value (handle both "200px" strings and numbers)
       const heightStr = String(tile.mobileHeight).replace('px', '');
       const heightValue = parseInt(heightStr, 10);
-      // If height is valid, use it (no size limit for manually resized tiles)
+      // If height is valid, use it (no size limit - supports both manual resize and large desktop heights)
       if (!isNaN(heightValue) && heightValue > 0) {
         effectiveHeight = tile.mobileHeight;
       }
@@ -585,9 +585,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
     const styleObj = {
       display: 'flex',
-      flexDirection: 'column', // Allow content to expand vertically
-      alignItems: 'stretch', // Stretch content to full width
-      justifyContent: 'flex-start', // Start from top
+      alignItems: 'center',
+      justifyContent: 'center',
       border: 'solid 1px #ddd',
       background: tile.tileBackground && !isImageBackground ? tile.tileBackground : '#deedf0ff',
       color: 'black',
@@ -600,20 +599,15 @@ const MobileGridTiles = memo(function MobileGridTiles({
       userSelect: 'none', // Prevent text selection
       WebkitUserSelect: 'none', // Safari
       MozUserSelect: 'none', // Firefox
-      msUserSelect: 'none', // IE/Edge
-      // Allow content to determine height automatically
-      overflow: 'visible' // Ensure content is not clipped
+      msUserSelect: 'none' // IE/Edge
     };
 
     if (effectiveHeight) {
-      // User has manually resized - use fixed height
+      // User has manually resized with reasonable height - use fixed height
       styleObj.height = effectiveHeight;
-      styleObj.overflow = 'hidden'; // Hide overflow to keep resize handles at edges
     } else {
-      // Default - use min-height and let content determine actual height
+      // Default - use min-height to allow content to expand naturally
       styleObj.minHeight = defaultMinHeight;
-      styleObj.height = 'auto'; // Automatically adjust to content height
-      styleObj.overflow = 'visible'; // Allow content to expand naturally
     }
 
     return styleObj;
@@ -1534,9 +1528,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   userSelect: 'none', // Prevent text selection
                   WebkitUserSelect: 'none', // Safari
                   MozUserSelect: 'none', // Firefox
-                  msUserSelect: 'none', // IE/Edge
-                  // Ensure resize handles stay at edges - use hidden when editing or when height is fixed
-                  overflow: (isEditing || tile.mobileHeight) ? 'hidden' : 'visible'
+                  msUserSelect: 'none' // IE/Edge
                 }}
                 onTouchStart={e => {
                   // Don't handle if resizing or clicking on interactive elements
@@ -1621,11 +1613,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       borderTop: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderTopLeftRadius: '10px',
                       borderTopRightRadius: '10px',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow for depth
-                      // Ensure handle stays at top edge
-                      margin: 0,
-                      padding: 0,
-                      boxSizing: 'border-box'
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1732,11 +1720,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       borderBottom: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
                       borderBottomLeftRadius: '10px',
                       borderBottomRightRadius: '10px',
-                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)', // Subtle shadow for depth
-                      // Ensure handle stays at bottom edge
-                      margin: 0,
-                      padding: 0,
-                      boxSizing: 'border-box'
+                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1831,10 +1815,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       WebkitUserSelect: 'none',
                       MozUserSelect: 'none',
                       msUserSelect: 'none',
-                      pointerEvents: 'none', // Prevent text selection
-                      padding: '12px', // Add padding for better text display
-                      width: '100%', // Ensure full width
-                      boxSizing: 'border-box' // Include padding in width calculation
+                      pointerEvents: 'none' // Prevent text selection
                     }}
                     dangerouslySetInnerHTML={{
                       __html: changedTitlehandle(tile)
