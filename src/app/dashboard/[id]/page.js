@@ -187,18 +187,9 @@ function OptimizedDashboardPage() {
           }
         }
         
-        // If tile has mobileHeight but it's too large (likely from desktop), remove it
-        if (tile.mobileHeight) {
-          const mobileHeightValue = parseHeight(tile.mobileHeight);
-          if (mobileHeightValue && mobileHeightValue > 200) {
-            // Remove mobileHeight to allow natural content expansion
-            const { mobileHeight, ...tileWithoutHeight } = tile;
-            return {
-              ...tileWithoutHeight,
-              order: tile.order || index + 1
-            };
-          }
-        }
+        // Keep mobileHeight if it exists - don't remove it even if > 200px
+        // If user manually set mobileHeight, respect their choice
+        // If mobileHeight was set from desktop height > 200px, keep it as well
         
         // Ensure order is set
         if (tile.order === undefined || tile.order === null) {

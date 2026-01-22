@@ -16,7 +16,7 @@ const defaultDashboard = async (req, res) => {
           userId: adminUser._id,
         })
           .populate("tiles")
-          .sort({ createdAt: -1 });
+          .sort({ position: 1 });
 
         let adminBoards = allAdminBoards.filter((board) => {
           const userIdMatch =

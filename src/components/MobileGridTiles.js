@@ -162,19 +162,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
             // This keeps data in sync without causing white screen
             Promise.resolve().then(() => {
               if (res.data && res.data.results && Array.isArray(res.data.results)) {
+                // Create a map of updated tiles
+                const updatedTilesMap = new Map();
+                res.data.results.forEach(result => {
+                  if (result && result.data && result.tileId) {
+                    updatedTilesMap.set(String(result.tileId), result.data);
+                  }
+                });
+
+                // Update React Query cache
                 queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
                   if (!oldData) return oldData;
 
                   // Ensure tiles is always an array
                   const currentTiles = Array.isArray(oldData.tiles) ? oldData.tiles : [];
-
-                  // Create a map of updated tiles
-                  const updatedTilesMap = new Map();
-                  res.data.results.forEach(result => {
-                    if (result && result.data && result.tileId) {
-                      updatedTilesMap.set(String(result.tileId), result.data);
-                    }
-                  });
 
                   // Update tiles array - merge with existing to preserve order
                   const updatedTiles = currentTiles.map(t => {
@@ -190,6 +191,19 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     tiles: Array.isArray(updatedTiles) ? updatedTiles : []
                   };
                 });
+
+                // Update local tileCordinates state to sync with server response
+                setTileCordinates(currentTiles => {
+                  if (!Array.isArray(currentTiles)) return currentTiles;
+                  
+                  return currentTiles.map(t => {
+                    if (!t || typeof t !== 'object') return t;
+                    const tileId = String(t._id || t.id || '');
+                    const updated = updatedTilesMap.get(tileId);
+                    // Merge updated data with existing tile to preserve all properties
+                    return updated ? { ...t, ...updated } : t;
+                  });
+                });
               }
             });
           })
@@ -198,7 +212,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
           });
       }, 300); // 300ms debounce
     },
-    [dbUser, activeBoard, queryClient]
+    [dbUser, activeBoard, queryClient, setTileCordinates]
   );
 
   // Handle list update (only for local state, no API calls)
@@ -328,7 +342,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
             data: {
               mobileX: tile.mobileX,
               mobileY: tile.mobileY,
-              mobileWidth: tile.mobileWidth,
+              // mobileWidth: tile.mobileWidth,
               order: tile.order
             }
           }));
@@ -505,14 +519,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
             if (updatedTile && originalTile) {
               // Check if Y position or width changed
               if (
-                updatedTile.mobileY !== originalTile.mobileY ||
-                updatedTile.mobileWidth !== originalTile.mobileWidth
+                updatedTile.mobileY !== originalTile.mobileY 
+                // updatedTile.mobileWidth !== originalTile.mobileWidth
               ) {
                 batchUpdates.push({
                   tileId: updatedTile._id,
                   data: {
                     mobileY: updatedTile.mobileY,
-                    mobileWidth: updatedTile.mobileWidth
+                    // mobileWidth: updatedTile.mobileWidth
                   }
                 });
               }
@@ -554,14 +568,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     
     // Parse mobileWidth if it exists, otherwise use default
     let widthValue = maxWidth;
-    if (tile.mobileWidth) {
-      const widthStr = String(tile.mobileWidth).replace('px', '');
-      const parsedWidth = parseInt(widthStr, 10);
-      if (!isNaN(parsedWidth)) {
-        // Ensure width doesn't exceed screen width minus margin
-        widthValue = Math.min(parsedWidth, maxWidth);
-      }
-    }
+
     const width = `${widthValue}px`;
 
     // If user has manually set mobileHeight (exists and is not null/undefined), use fixed height
@@ -611,7 +618,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
 
     return styleObj;
-  }, []);
+  }, [window]);
 
   const changedTitlehandle = tile => {
     let tileText = tile.tileText;
