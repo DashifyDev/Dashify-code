@@ -302,7 +302,7 @@ function Library() {
             </div>
           </div>
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12'>
             {library.map((data, index) => {
               const boardId = data.boardLink.split('/').pop();
               const isLoading = loadingBoardId === boardId;
@@ -310,7 +310,8 @@ function Library() {
               return (
                 <Card
                   key={index}
-                  className='group cursor-pointer overflow-hidden relative transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 border border-gray-200/60 bg-white/95 backdrop-blur-sm'
+                  className='group cursor-pointer overflow-hidden relative transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 bg-white/95 backdrop-blur-sm'
+                  style={{ border: '1px solid #e5e7eb' }}
                   onClick={() => handleBoardClick(data)}
                 >
                   {/* Loading Overlay */}

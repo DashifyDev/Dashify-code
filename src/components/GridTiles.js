@@ -592,6 +592,11 @@ const GridTiles = memo(function GridTiles({
       } else {
         setSelectedTile(index);
       }
+    } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textDisplay') {
+      // Open Text Display editor directly
+      setCurrentTileIndex(index);
+      setSelectedTile(index);
+      setEditorOpen(true);
     }
   };
   const podStyle = index => {
@@ -1437,6 +1442,31 @@ const GridTiles = memo(function GridTiles({
                           }`}
                         >
                           Opens Text Editor
+                        </span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                          selectedTileDetail.action === 'textDisplay'
+                            ? 'bg-[#63899e]/10 text-[#63899e]'
+                            : ''
+                        }`}
+                      >
+                        <input
+                          type='radio'
+                          name='action'
+                          value='textDisplay'
+                          checked={selectedTileDetail.action === 'textDisplay'}
+                          onChange={changeAction}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                        />
+                        <span
+                          className={`text-sm font-medium transition-colors ${
+                            selectedTileDetail.action === 'textDisplay'
+                              ? 'text-[#63899e] font-semibold'
+                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          }`}
+                        >
+                          Opens Text Display
                         </span>
                       </label>
                       <label

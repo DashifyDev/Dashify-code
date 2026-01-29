@@ -58,6 +58,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const [isResizing, setIsResizing] = useState(false);
   const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after long press)
   const [longPressTimer, setLongPressTimer] = useState(null);
+  const [collapsedSections, setCollapsedSections] = useState({
+    background: true, // Only first section open by default
+    textDisplay: false,
+    action: true, 
+    order: true
+  });
   const { dbUser } = useContext(globalContext);
   const queryClient = useQueryClient();
   const hiddenFileInput = useRef(null);
@@ -645,6 +651,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       setOpenTextEdior(true);
       setTextEditorContent(editorHtml || '');
       setSelectedTile(index);
+    } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textDisplay') {
+      // Open Text Display editor directly
+      setCurrentTileIndex(index);
+      setSelectedTile(index);
+      setEditorOpen(true);
     }
   };
 
@@ -654,6 +665,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
     setSelectedTile(index);
     setSelectedTileDetail(sortedTiles[index]);
     currentBackground(sortedTiles[index]);
+    // Reset collapsed sections when opening modal - only first section open
+    setCollapsedSections({
+      background: true, // Only first section open by default
+      textDisplay: false,
+      action: true,
+      order: true
+    });
+  };
+
+  const toggleSection = section => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const handleColorImage = useCallback(
@@ -1900,12 +1925,110 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
                 {/* Content - Scrollable */}
                 <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0'>
+                  {/* Box Text Display - Moved up */}
+                  <div className='space-y-3 mt-3'>
+                    <button
+                      onClick={() => toggleSection('textDisplay')}
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    >
+                      <span>Box Text Display</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          collapsedSections.textDisplay ? 'rotate-180' : ''
+                        }`}
+                        fill='none'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path d='M19 9l-7 7-7-7' />
+                      </svg>
+                    </button>
+                    {!collapsedSections.textDisplay && (
+                      <div className='flex flex-col sm:flex-row gap-4'>
+                        {/* Left: Edit Text Content button */}
+                        <div className='flex-1'>
+                          <button
+                            onClick={() => {
+                              if (selectedTile !== null && selectedTile !== undefined) {
+                                setCurrentTileIndex(selectedTile);
+                              }
+                              setEditorOpen(true);
+                            }}
+                            className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
+                          >
+                            <Image
+                              src={text}
+                              alt='TEXT'
+                              width={40}
+                              height={40}
+                              className='group-hover:scale-110 transition-transform'
+                            />
+                            <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
+                              Edit Text Content
+                            </span>
+                          </button>
+                        </div>
+                        {/* Right: Checkbox and dropdowns */}
+                        <div className='flex flex-col gap-3 flex-1'>
+                          <label className='flex items-center gap-2 cursor-pointer group'>
+                            <input
+                              type='checkbox'
+                              checked={selectedTileDetail.displayTitle}
+                              onChange={displayTitle}
+                              className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
+                            />
+                            <span className='text-sm font-medium text-gray-700'>Show Text</span>
+                          </label>
+                          <div className='flex gap-2'>
+                            <select
+                              value={selectedTileDetail.titleX}
+                              onChange={handleChangePositionX}
+                              className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                            >
+                              <option value={1}>Left</option>
+                              <option value={2}>Center</option>
+                              <option value={3}>Right</option>
+                            </select>
+                            <select
+                              value={selectedTileDetail.titleY}
+                              onChange={handleChangePositionY}
+                              className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                            >
+                              <option value={1}>Top</option>
+                              <option value={2}>Center</option>
+                              <option value={3}>Bottom</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {/* Box Background */}
                   <div className='space-y-3'>
-                    <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                      Box Background
-                    </h3>
-                    <div className='space-y-4'>
+                    <button
+                      onClick={() => toggleSection('background')}
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    >
+                      <span>Box Background</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          collapsedSections.background ? 'rotate-180' : ''
+                        }`}
+                        fill='none'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path d='M19 9l-7 7-7-7' />
+                      </svg>
+                    </button>
+                    {!collapsedSections.background && (
+                      <div className='space-y-4'>
                       <div className='flex flex-col sm:flex-row gap-3'>
                         <label
                           className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
@@ -2016,15 +2139,35 @@ const MobileGridTiles = memo(function MobileGridTiles({
                         className='hidden'
                         onChange={handleImageChange}
                       />
-                    </div>
+                      </div>
+                    )}
                   </div>
+
+                  
 
                   {/* Box Action */}
                   <div className='space-y-3'>
-                    <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                      Box Action
-                    </h3>
-                    <div className='space-y-3'>
+                    <button
+                      onClick={() => toggleSection('action')}
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    >
+                      <span>Box Action</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          collapsedSections.action ? 'rotate-180' : ''
+                        }`}
+                        fill='none'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path d='M19 9l-7 7-7-7' />
+                      </svg>
+                    </button>
+                    {!collapsedSections.action && (
+                      <div className='space-y-3'>
                       <div className='flex flex-row flex-wrap gap-2'>
                         <label
                           className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
@@ -2078,6 +2221,31 @@ const MobileGridTiles = memo(function MobileGridTiles({
                         </label>
                         <label
                           className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                            selectedTileDetail.action === 'textDisplay'
+                              ? 'bg-[#63899e]/10 text-[#63899e]'
+                              : ''
+                          }`}
+                        >
+                          <input
+                            type='radio'
+                            name='action'
+                            value='textDisplay'
+                            checked={selectedTileDetail.action === 'textDisplay'}
+                            onChange={changeAction}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.action === 'textDisplay'
+                                ? 'text-[#63899e] font-semibold'
+                                : 'text-gray-700 group-hover:text-[#63899e]'
+                            }`}
+                          >
+                            Opens Text Display
+                          </span>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
                             selectedTileDetail.action === 'noAction'
                               ? 'bg-[#63899e]/10 text-[#63899e]'
                               : ''
@@ -2111,15 +2279,33 @@ const MobileGridTiles = memo(function MobileGridTiles({
                           className='w-full'
                         />
                       )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Box Order */}
                   <div className='space-y-3'>
-                    <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                      Box Order
-                    </h3>
-                    <div className='space-y-2'>
+                    <button
+                      onClick={() => toggleSection('order')}
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    >
+                      <span>Box Order</span>
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          collapsedSections.order ? 'rotate-180' : ''
+                        }`}
+                        fill='none'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path d='M19 9l-7 7-7-7' />
+                      </svg>
+                    </button>
+                    {!collapsedSections.order && (
+                      <div className='space-y-2'>
                       <label className='block text-sm font-medium text-gray-700'>
                         Order (used for text editor navigation):
                       </label>
@@ -2155,77 +2341,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       <p className='text-xs text-gray-500'>
                         This determines the order when navigating between boxes in the text editor
                       </p>
-                    </div>
-                  </div>
-
-                  {/* Text Display */}
-                  <div className='space-y-3'>
-                    <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                      Text Display
-                    </h3>
-                    <div className='flex flex-col sm:flex-row gap-4'>
-                      {/* Left: Edit Text Content button */}
-                      <div className='flex-1'>
-                        <button
-                          onClick={() => {
-                            if (selectedTile !== null && selectedTile !== undefined) {
-                              setCurrentTileIndex(selectedTile);
-                            }
-                            setEditorOpen(true);
-                          }}
-                          className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
-                        >
-                          <Image
-                            src={text}
-                            alt='TEXT'
-                            width={40}
-                            height={40}
-                            className='group-hover:scale-110 transition-transform'
-                          />
-                          <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
-                            Edit Text Content
-                          </span>
-                        </button>
                       </div>
-                      {/* Right: Checkbox and dropdowns */}
-                      <div className='flex flex-col gap-3 flex-1'>
-                        <label className='flex items-center gap-2 cursor-pointer group'>
-                          <input
-                            type='checkbox'
-                            checked={selectedTileDetail.displayTitle}
-                            onChange={displayTitle}
-                            className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
-                          />
-                          <span className='text-sm font-medium text-gray-700'>Show Text</span>
-                        </label>
-                        <div className='flex gap-2'>
-                          <select
-                            value={selectedTileDetail.titleX}
-                            onChange={handleChangePositionX}
-                            className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
-                          >
-                            <option value={1}>Left</option>
-                            <option value={2}>Center</option>
-                            <option value={3}>Right</option>
-                          </select>
-                          <select
-                            value={selectedTileDetail.titleY}
-                            onChange={handleChangePositionY}
-                            className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
-                          >
-                            <option value={1}>Top</option>
-                            <option value={2}>Center</option>
-                            <option value={3}>Bottom</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Footer */}
                 <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
-                  <div className='flex gap-4'>
+                  <div className='flex gap-4 justify-center'>
                     <button
                       onClick={() => tileClone(selectedTile)}
                       className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'

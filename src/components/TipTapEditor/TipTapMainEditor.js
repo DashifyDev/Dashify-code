@@ -1,34 +1,34 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
-import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
-import { TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import { TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
+import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
 import { CustomTable } from "./utils/CustomTable";
+import { StyledParagraph } from "./utils/StyledParagraph";
 import {
+  CustomHorizontalRule,
+  ExtendedTextStyle,
   IndentBlock,
   IndentCommands,
-  ExtendedTextStyle,
   LineHeight,
   SafeLink,
-  CustomHorizontalRule,
 } from "./utils/tiptapExtensions";
-import { StyledParagraph } from "./utils/StyledParagraph";
 
-import Toolbar from "./Toolbar";
-import LinkBubble from "./LinkBubble";
-import { BottomTableMenu, TopTableMenu } from "./TableBubble";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
+import LinkBubble from "./LinkBubble";
 import "./styles/TipTapMainEditor.css";
+import { BottomTableMenu, TopTableMenu } from "./TableBubble";
+import Toolbar from "./Toolbar";
 
 const TipTapMainEditor = ({ initialContent, onContentChange }) => {
   const [activeStyles, setActiveStyles] = useState({});

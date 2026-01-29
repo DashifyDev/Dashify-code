@@ -2,10 +2,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   padding: 8px;
   border-bottom: 1px solid #e0e0e0;
   background-color: #f8f9fa;
-  row-gap: 5px;
+  row-gap: 8px;
 }
 .toolbar-group {
   display: flex;
