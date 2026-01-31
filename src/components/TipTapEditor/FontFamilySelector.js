@@ -85,7 +85,7 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          width: 150px;
+          width: 140px;
           text-align: left;
           border-right: 1px solid #eee !important;
         }

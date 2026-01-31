@@ -328,3 +328,48 @@ img.text-editor-image {
   font-weight: 400;
   margin: 0px;
 }
+
+/* Animation for resize handle arrows - indicates resizing capability */
+@keyframes resizeHandleArrowUp {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-5px);
+  }
+  25% {
+    transform: translateY(-5px);
+  }
+  35% {
+    transform: translateY(0);
+  }
+  40%, 100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes resizeHandleArrowDown {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(5px);
+  }
+  25% {
+    transform: translateY(5px);
+  }
+  35% {
+    transform: translateY(0);
+  }
+  40%, 100% {
+    transform: translateY(0);
+  }
+}
+
+.resize-handle-arrow-up {
+  animation: resizeHandleArrowUp 5s ease-in-out infinite;
+}
+
+.resize-handle-arrow-down {
+  animation: resizeHandleArrowDown 5s ease-in-out infinite;
+}

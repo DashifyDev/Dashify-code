@@ -758,9 +758,9 @@ function Header() {
                             d='M12 4v16m8-8H4'
                           />
                         </svg>
-                        <span className='text-lg font-bold'>Add box</span>
+                        <span className='text-lg'>Add Box</span>
                       </a>
-                      <hr className='border-[#63899e]/30'/>
+                      <hr className='border-[#63899e]/20 m-0 p-0' />
                       <a
                         href='#'
                         onClick={e => {
@@ -785,7 +785,7 @@ function Header() {
                             d='M12 4v16m8-8H4'
                           />
                         </svg>
-                        <span className='text-lg font-bold'>Add Board</span>
+                        <span className='text-lg'>Add Board</span>
                       </a>
                     </div>
                   </div>
@@ -847,26 +847,27 @@ function Header() {
                           setList={list => setBoardPosition(list)}
                           animation={200}
                           easing='ease-out'
+                          handle='.board-drag-handle'
                           filter='.board-options-btn'
                           preventOnFilter={false}
                           className='flex flex-col'
                           key={(boards || []).map(b => String(b._id)).join(',')}
                         >
-                          {boards.map((board, index) => (
-                            <div
-                              key={board._id}
-                              className={`flex items-center justify-between px-4 py-2.5 cursor-move transition-colors ${
-                                board._id === currentActiveBoard
-                                  ? 'bg-[#63899e]/15 font-semibold text-[#538a95]'
-                                  : 'text-[#538a95] hover:bg-[#63899e]/10'
-                              }`}
-                              onClick={() => {
-                                selectBoard(board._id);
-                                setBoardMenuAnchor(null);
-                              }}
-                            >
+                        {boards.map((board, index) => (
+                          <div
+                            key={board._id}
+                              className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors ${
+                              board._id === currentActiveBoard
+                                ? 'bg-[#63899e]/15 font-semibold text-[#538a95]'
+                                : 'text-[#538a95] hover:bg-[#63899e]/10'
+                            }`}
+                            onClick={() => {
+                              selectBoard(board._id);
+                              setBoardMenuAnchor(null);
+                            }}
+                          >
                               <svg
-                                className='w-5 h-5 mr-2 text-[#538a95]/60 flex-shrink-0'
+                                className='board-drag-handle w-5 h-5 mr-2 text-[#538a95]/60 flex-shrink-0 cursor-move'
                                 fill='currentColor'
                                 viewBox='0 0 24 24'
                               >
@@ -877,36 +878,36 @@ function Header() {
                                 <circle cx='15' cy='12' r='1.5' />
                                 <circle cx='15' cy='19' r='1.5' />
                               </svg>
-                              <span className='truncate flex-1'>{board.name}</span>
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  if (options === e.currentTarget) {
-                                    setOptions(null);
-                                  } else {
-                                    setOptions(e.currentTarget);
-                                    setSelectedDashboard(board._id);
-                                    setSelectedDashIndex(index);
-                                  }
-                                }}
+                            <span className='truncate flex-1'>{board.name}</span>
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (options === e.currentTarget) {
+                                  setOptions(null);
+                                } else {
+                                  setOptions(e.currentTarget);
+                                  setSelectedDashboard(board._id);
+                                  setSelectedDashIndex(index);
+                                }
+                              }}
                                 className='board-options-btn ml-2 p-1 rounded hover:bg-[#63899e]/20 text-[#538a95] border-0 outline-none cursor-pointer'
+                            >
+                              <svg
+                                className='w-4 h-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
                               >
-                                <svg
-                                  className='w-4 h-4'
-                                  fill='none'
-                                  stroke='currentColor'
-                                  viewBox='0 0 24 24'
-                                >
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z'
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z'
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
                         </ReactSortable>
                         <div className='border-t border-[#63899e]/30 mt-2 pt-2'>
                           <button

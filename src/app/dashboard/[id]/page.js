@@ -408,41 +408,10 @@ function OptimizedDashboardPage() {
     [user, activeBoard, setBoards]
   );
 
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          flexDirection: 'column',
-          gap: '16px'
-        }}
-      >
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #63899e',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}
-        />
-        <div style={{ color: '#666' }}>Loading dashboard...</div>
-        <style jsx>{`
-          @keyframes spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
-      </div>
-    );
+  // Show loader when initially loading or when data is not ready yet
+  // Don't show loader on background refetch (isFetching) if we already have data
+  if (isLoading || (!dashboardData && !error)) {
+    return <LoadingSpinner text="Loading dashboard..." fullScreen={true} />;
   }
 
   if (error) {
@@ -455,40 +424,7 @@ function OptimizedDashboardPage() {
 
     // If it's a 404 and we have boards loaded, show loading while redirecting
     if (isNotFoundError && isBoardsLoaded && boards && boards.length > 0) {
-      return (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            flexDirection: 'column',
-            gap: '16px'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #63899e',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}
-          />
-          <div style={{ color: '#666' }}>Redirecting to available board...</div>
-          <style jsx>{`
-            @keyframes spin {
-              0% {
-                transform: rotate(0deg);
-              }
-              100% {
-                transform: rotate(360deg);
-              }
-            }
-          `}</style>
-        </div>
-      );
+      return <LoadingSpinner text="Redirecting to available board..." fullScreen={true} />;
     }
 
     // Show error for other cases
@@ -524,40 +460,7 @@ function OptimizedDashboardPage() {
 
   if (!dashboardData && !isLoading && !error && isBoardsLoaded) {
     // Show loading while redirecting (handled by useEffect above)
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          flexDirection: 'column',
-          gap: '16px'
-        }}
-      >
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #f3f3f3',
-            borderTop: '4px solid #63899e',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}
-        />
-        <div style={{ color: '#666' }}>Redirecting to available board...</div>
-        <style jsx>{`
-          @keyframes spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
-      </div>
-    );
+    return <LoadingSpinner text="Redirecting to available board..." fullScreen={true} />;
   }
 
   return (

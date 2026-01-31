@@ -47,80 +47,7 @@ const dividerOptions = [
   { variant: "dotted", className: "hr-dotted" },
 ];
 
-const TextStyleDropdown = ({ editor }) => {
-  if (!editor) return null;
 
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  const styles = [
-    {
-      key: "spaced",
-      label: "Spaced",
-      command: () => editor.chain().focus().toggleSpacedStyle().run(),
-      isActive: editor.isActive("paragraph", { isSpaced: true }),
-    },
-    {
-      key: "bordered",
-      label: "Bordered",
-      command: () => editor.chain().focus().toggleBorderedStyle().run(),
-      isActive: editor.isActive("paragraph", { isBordered: true }),
-    },
-    {
-      key: "neon",
-      label: "NEON",
-      command: () => editor.chain().focus().toggleNeonStyle().run(),
-      isActive: editor.isActive("paragraph", { isNeon: true }),
-    },
-  ];
-
-  const handleStyleSelect = (command) => {
-    command();
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  return (
-    <div ref={dropdownRef} className="text-style-dropdown">
-      <button
-        className="dropdown-toggle-btn"
-        onClick={() => setIsOpen(!isOpen)}
-        title="Paragraph Styles"
-      >
-        <FaParagraph />
-      </button>
-
-      {isOpen && (
-        <ul className="dropdown-menu">
-          {styles.map(({ key, label, command, isActive }) => (
-            <li key={key}>
-              <button
-                className={`dropdown-item text-style-${key} ${
-                  isActive ? "is-active" : ""
-                }`}
-                onClick={() => handleStyleSelect(command)}
-              >
-                <span className="dropdown-item-preview">{label}</span>
-
-                {isActive && <FaCheck className="dropdown-item-check" />}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
 
 const Toolbar = ({ editor, activeStyles }) => {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -376,20 +303,7 @@ const Toolbar = ({ editor, activeStyles }) => {
           >
             <FaStrikethrough />
           </button>
-          <button
-            onClick={() => editor.chain().focus().toggleSubscript().run()}
-            className={activeStyles.isSubscript ? "is-active" : ""}
-            title="Subscript"
-          >
-            <FaSubscript />
-          </button>
-          <button
-            onClick={() => editor.chain().focus().toggleSuperscript().run()}
-            className={activeStyles.isSuperscript ? "is-active" : ""}
-            title="Superscript"
-          >
-            <FaSuperscript />
-          </button>
+          
         </div>
 
         <div className="toolbar-group">
@@ -475,13 +389,29 @@ const Toolbar = ({ editor, activeStyles }) => {
             title="Font Size"
           >
             <option value="">Size</option>
-            {["12px", "14px", "16px", "18px", "24px", "30px"].map((size) => (
+            {[
+              "10px",
+              "12px",
+              "14px",
+              "16px",
+              "18px",
+              "20px",
+              "22px",
+              "24px",
+              "26px",
+              "28px",
+              "30px",
+              "32px",
+              "36px",
+              "40px",
+              "48px"
+            ].map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
             ))}
           </select>
-          <TextStyleDropdown editor={editor} />
+          {/* <TextStyleDropdown editor={editor} /> */}
         </div>
 
         <div className="toolbar-group">
@@ -568,33 +498,6 @@ const Toolbar = ({ editor, activeStyles }) => {
           </div>
         </div>
 
-        <div className="toolbar-group">
-          <select
-            title="Block type"
-            onChange={(e) => {
-              const val = e.target.value;
-              const chain = editor.chain().focus();
-              if (val === "paragraph") chain.setParagraph().run();
-              else if (val.startsWith("h"))
-                chain.setHeading({ level: Number(val.slice(1)) }).run();
-              else if (val === "code") chain.toggleCodeBlock().run();
-              else if (val === "blockquote") chain.toggleBlockquote().run();
-            }}
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Block
-            </option>
-            <option value="paragraph">Paragraph</option>
-            <option value="h1">Heading 1</option>
-            <option value="h2">Heading 2</option>
-            <option value="h3">Heading 3</option>
-            <option value="h4">Heading 4</option>
-            <option value="h5">Heading 5</option>
-            <option value="h6">Heading 6</option>
-            <option value="code">Code block</option>
-          </select>
-        </div>
 
         <div className="toolbar-group">
           <div className="divider-wrap" title="Insert Divider">
@@ -673,9 +576,7 @@ const Toolbar = ({ editor, activeStyles }) => {
           >
             <FaRemoveFormat />
           </button>
-          <button onClick={handlePrint} title="Print">
-            <FaPrint />
-          </button>
+
         </div>
       </div>
 

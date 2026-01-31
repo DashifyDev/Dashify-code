@@ -1270,7 +1270,7 @@ const GridTiles = memo(function GridTiles({
               <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0'>
                 {/* Box Background */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
                     Box Background
                   </h3>
                   <div className='space-y-4'>
@@ -1389,7 +1389,7 @@ const GridTiles = memo(function GridTiles({
 
                 {/* Box Action */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
                     Box Action
                   </h3>
                   <div className='space-y-3'>
@@ -1509,8 +1509,8 @@ const GridTiles = memo(function GridTiles({
 
                 {/* Text Display */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
-                    Text Display
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
+                    Box Text Display
                   </h3>
                   <div className='flex flex-col sm:flex-row gap-4'>
                     {/* Left: Edit Text Content button */}
@@ -1573,7 +1573,7 @@ const GridTiles = memo(function GridTiles({
 
                 {/* Box Order */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg'>
+                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
                     Box Order
                   </h3>
                   <div className='space-y-2'>
@@ -1698,7 +1698,7 @@ const GridTiles = memo(function GridTiles({
             />
             <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
               <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                 onClick={e => e.stopPropagation()}
               >
                 {/* Header */}
@@ -1789,18 +1789,21 @@ const GridTiles = memo(function GridTiles({
                 )}
 
               {/* Footer */}
-              <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
+              <div
+                className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 bg-gray-50/50 flex-shrink-0'
+                style={{ borderTop: '1px solid #e5e7eb' }} // tailwind's border-gray-200 as inline style
+              >
                 <Button
                   variant='outline'
                   onClick={() => setEditorOpen(false)}
-                  className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+                  className='border-gray-300 cursor-pointer w-full'
                 >
                   Close
                 </Button>
                 <Button
                   variant='default'
                   onClick={saveEditorText}
-                  className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+                  className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer w-full'
                 >
                   Save
                 </Button>

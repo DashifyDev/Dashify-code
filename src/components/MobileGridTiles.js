@@ -12,6 +12,7 @@ import isDblTouchTap from '@/hooks/isDblTouchTap';
 import { dashboardKeys } from '@/hooks/useDashboard';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
+import EditIcon from '@mui/icons-material/Edit';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
@@ -55,6 +56,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const [editorOpen, setEditorOpen] = useState(false);
   const [currentTileIndex, setCurrentTileIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false); // Ref to track dragging state for use in timeouts
   const [isResizing, setIsResizing] = useState(false);
   const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after long press)
   const [longPressTimer, setLongPressTimer] = useState(null);
@@ -162,8 +164,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         axios
           .post('/api/tile/batch-update', { updates: batchPayload })
           .then(res => {
-            console.log('[BATCH UPDATE] Successfully updated', res.data?.updated || 0, 'tiles');
-
             // Update cache in the next tick to avoid blocking UI
             // This keeps data in sync without causing white screen
             Promise.resolve().then(() => {
@@ -213,8 +213,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
               }
             });
           })
-          .catch(err => {
-            console.error('[BATCH UPDATE] Error in batch update:', err);
+          .catch(() => {
+            // Error in batch update
           });
       }, 300); // 300ms debounce
     },
@@ -224,27 +224,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
   // Handle list update (only for local state, no API calls)
   const handleListUpdate = useCallback(
     newList => {
-      console.log(
-        '[LIST UPDATE] handleListUpdate called, isInitialMount:',
-        isInitialMountRef.current,
-        'hasInitialDragState:',
-        !!initialDragStateRef.current
-      );
-
       // Skip if this is initial mount (ReactSortable may call setList on mount)
       if (isInitialMountRef.current) {
         isInitialMountRef.current = false;
-        console.log('[LIST UPDATE] Skipping initial mount');
         return;
       }
 
       // Only update if we're actually dragging (check if initialDragStateRef is set)
       if (!initialDragStateRef.current) {
-        console.log('[LIST UPDATE] No initial drag state, skipping update');
         return;
       }
-
-      console.log('[LIST UPDATE] Updating tiles, newList length:', newList.length);
 
       // Calculate new mobileY positions based on order
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
@@ -266,7 +255,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         };
       });
 
-      console.log('[LIST UPDATE] Setting tileCordinates with', updatedTiles.length, 'tiles');
       setTileCordinates(updatedTiles);
     },
     [setTileCordinates]
@@ -274,13 +262,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
   // Handle drag end - send batch update only if order actually changed
   const handleDragEnd = useCallback(() => {
-    console.log('[DRAG END] handleDragEnd called');
     setIsDragging(false);
+    isDraggingRef.current = false;
 
     // Check if order actually changed by comparing with initial state
     if (!initialDragStateRef.current) {
-      console.log('[DRAG END] No initial drag state, exiting');
-      setEditingTileId(null);
       return;
     }
 
@@ -299,27 +285,19 @@ const MobileGridTiles = memo(function MobileGridTiles({
       const initialOrder = initialDragStateRef.current.map(t => String(t._id));
       const currentOrder = sortedTiles.map(t => String(t._id));
 
-      console.log('[DRAG END] Initial order:', initialOrder);
-      console.log('[DRAG END] Current order:', currentOrder);
-
       // Check if order changed
       const orderChanged =
         initialOrder.length !== currentOrder.length ||
         initialOrder.some((id, index) => id !== currentOrder[index]);
 
-      console.log('[DRAG END] Order changed:', orderChanged);
-
       if (!orderChanged) {
         // Order didn't change, no need to save
-        console.log('[DRAG END] Order did not change, skipping save');
         initialDragStateRef.current = null;
-        setEditingTileId(null);
         return currentTiles; // Return unchanged
       }
 
       // Order changed - prepare batch update
       if (dbUser) {
-        console.log('[DRAG END] Order changed, preparing batch update');
         const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
 
         // Recalculate positions for all tiles based on current sorted order
@@ -353,26 +331,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
             }
           }));
 
-        console.log('[DRAG END] Batch updates prepared:', batchUpdates.length, 'tiles');
         if (batchUpdates.length > 0) {
           performBatchUpdate(batchUpdates);
-        } else {
-          console.log('[DRAG END] No batch updates to send');
         }
 
         // Clear initial state
         initialDragStateRef.current = null;
-        setEditingTileId(null);
 
         return updatedTiles;
       } else {
         // Guest user - update localStorage
-        console.log('[DRAG END] Guest user, updating localStorage');
         updateTilesInLocalstorage(sortedTiles);
 
         // Clear initial state
         initialDragStateRef.current = null;
-        setEditingTileId(null);
 
         return currentTiles;
       }
@@ -387,18 +359,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       const currentTile = tileCordinates.find(t => String(t._id || '') === String(tileId));
 
       if (!currentTile) {
-        console.warn(
-          'Tile not found for resize:',
-          tileId,
-          'Available tiles:',
-          tileCordinates.map(t => t._id || 'no-id')
-        );
         return;
       }
 
       const sortedIndex = sortedTiles.findIndex(t => String(t._id) === String(tileId));
       if (sortedIndex < 0) {
-        console.warn('Tile not found in sorted tiles for resize:', tileId);
         return;
       }
 
@@ -668,7 +633,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     // Reset collapsed sections when opening modal - only first section open
     setCollapsedSections({
       background: true, // Only first section open by default
-      textDisplay: false,
+      textDisplay: true,
       action: true,
       order: true
     });
@@ -739,14 +704,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
   };
 
   const handleSave = index => {
-    console.log('[ORDER DEBUG] handleSave - START');
-    console.log('[ORDER DEBUG] formValue:', formValue);
-    console.log('[ORDER DEBUG] selectedTileDetail:', selectedTileDetail);
-    console.log(
-      '[ORDER DEBUG] tileCordinates before:',
-      tileCordinates.map(t => ({ id: t._id, order: t.order }))
-    );
-
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
@@ -774,34 +731,15 @@ const MobileGridTiles = memo(function MobileGridTiles({
     const newOrder = payload.order;
     const currentOrder = items[tileIndex].order;
 
-    console.log(
-      '[ORDER DEBUG] tileId:',
-      tileId,
-      'currentOrder:',
-      currentOrder,
-      'newOrder:',
-      newOrder
-    );
-
     // Recalculate order for all tiles if order was changed
     if (newOrder !== undefined && newOrder !== null && newOrder > 0) {
       const hasCurrentOrder =
         currentOrder !== undefined && currentOrder !== null && currentOrder > 0;
 
-      console.log(
-        '[ORDER DEBUG] hasCurrentOrder:',
-        hasCurrentOrder,
-        'newOrder:',
-        newOrder,
-        'currentOrder:',
-        currentOrder
-      );
-
       // Update order for all tiles to avoid duplicates
       const updatedTiles = items.map(tile => {
         // Skip the tile being edited
         if (String(tile._id) === String(tileId)) {
-          console.log('[ORDER DEBUG] Updating edited tile:', tile._id, 'to order:', newOrder);
           return { ...tile, order: newOrder };
         }
 
@@ -812,15 +750,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         if (!hasCurrentOrder) {
           // Shift tiles with order >= newOrder up by 1 to make space
           if (hasTileOrder && tileOrder >= newOrder) {
-            console.log(
-              '[ORDER DEBUG] Shifting tile:',
-              tile._id,
-              'from order',
-              tileOrder,
-              'to',
-              tileOrder + 1,
-              '(new tile inserted)'
-            );
             return { ...tile, order: tileOrder + 1 };
           }
         }
@@ -828,15 +757,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         else if (newOrder < currentOrder) {
           // Shift tiles with order >= newOrder and < currentOrder up by 1
           if (hasTileOrder && tileOrder >= newOrder && tileOrder < currentOrder) {
-            console.log(
-              '[ORDER DEBUG] Shifting tile:',
-              tile._id,
-              'from order',
-              tileOrder,
-              'to',
-              tileOrder + 1,
-              '(moved up)'
-            );
             return { ...tile, order: tileOrder + 1 };
           }
         }
@@ -844,15 +764,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         else if (newOrder > currentOrder) {
           // Shift tiles with order > currentOrder and <= newOrder down by 1
           if (hasTileOrder && tileOrder > currentOrder && tileOrder <= newOrder) {
-            console.log(
-              '[ORDER DEBUG] Shifting tile:',
-              tile._id,
-              'from order',
-              tileOrder,
-              'to',
-              tileOrder - 1,
-              '(moved down)'
-            );
             return { ...tile, order: tileOrder - 1 };
           }
         }
@@ -860,10 +771,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         return tile;
       });
 
-      console.log(
-        '[ORDER DEBUG] tileCordinates after recalculation:',
-        updatedTiles.map(t => ({ id: t._id, order: t.order }))
-      );
       items = updatedTiles;
       setTileCordinates(updatedTiles);
     }
@@ -874,7 +781,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
     if (dbUser) {
       // Save the main tile first
       axios.patch(`/api/tile/${tileId}`, formData).then(res => {
-        console.log('[ORDER DEBUG] Main tile saved, response:', res.data);
         if (
           selectedTile === null ||
           selectedTile === undefined ||
@@ -887,7 +793,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         // Find the updated tile index again (in case items array was modified)
         const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
         if (updatedTileIndex < 0) {
-          console.error('[ORDER DEBUG] Tile not found after save:', tileId);
           return;
         }
 
@@ -922,7 +827,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
             return tile.order !== undefined && tile.order !== null && tile.order > 0;
           })
           .map(tile => {
-            console.log('[ORDER DEBUG] Saving order for tile:', tile._id, 'order:', tile.order);
             const orderFormData = new FormData();
             orderFormData.append('formValue', JSON.stringify({ order: tile.order }));
             return axios.patch(`/api/tile/${tile._id}`, orderFormData).then(res => ({
@@ -956,7 +860,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
               });
             })
             .catch(err => {
-              console.error('Error updating tile orders:', err);
+              // Error updating tile orders
             });
         }
 
@@ -980,7 +884,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
           // Find the updated tile index again (in case items array was modified by order recalculation)
           const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
           if (updatedTileIndex < 0) {
-            console.error('[ORDER DEBUG] Tile not found for guest image save:', tileId);
             setSelectedTile(null);
             return;
           }
@@ -998,7 +901,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
         // Find the updated tile index again (in case items array was modified by order recalculation)
         const updatedTileIndex = items.findIndex(t => String(t._id) === String(tileId));
         if (updatedTileIndex < 0) {
-          console.error('[ORDER DEBUG] Tile not found for guest save:', tileId);
           setSelectedTile(null);
           return;
         }
@@ -1056,14 +958,13 @@ const MobileGridTiles = memo(function MobileGridTiles({
               .then(() => {
                 // Orders updated successfully
               })
-              .catch(err => {
-                console.error('Error updating tile orders:', err);
+              .catch(() => {
+                // Error updating tile orders
               });
           }
           // React Query cache already updated by handleTileUpdate via setTileCordinates
         })
-        .catch(error => {
-          console.error('Error deleting tile:', error);
+        .catch(() => {
           // Revert optimistic update on error
           setTileCordinates(items);
           queryClient.invalidateQueries({ queryKey: dashboardKeys.detail(activeBoard) });
@@ -1187,8 +1088,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
             newTile.dashboardId = activeBoard;
             cloneMutation.mutate(newTile);
           })
-          .catch(err => {
-            console.error('Error updating tile orders:', err);
+          .catch(() => {
             // Revert local state on error
             setTileCordinates(tileCordinates);
             // Still try to add the tile
@@ -1334,6 +1234,10 @@ const MobileGridTiles = memo(function MobileGridTiles({
   // Handle long press to enter edit mode
   const longPressStartPos = useRef({ x: 0, y: 0 });
   const hasMoved = useRef(false);
+  const singleClickTimer = useRef(null);
+  const isDoubleTap = useRef(false);
+  const lastDoubleTapTime = useRef(0); // Track when double tap occurred
+  const lastEditModeExitTime = useRef(0); // Track when edit mode was exited via click
 
   const handleLongPressStart = (tileId, e) => {
     // Don't start long press on interactive elements
@@ -1369,8 +1273,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     document.addEventListener('mousemove', handleMove);
 
     const timer = setTimeout(() => {
-      if (!hasMoved.current) {
-        console.log('Entering edit mode for tile:', tileId);
+      if (!hasMoved.current && !isDoubleTap.current) {
         setEditingTileId(tileId);
         // Haptic feedback if available
         if (navigator.vibrate) {
@@ -1384,11 +1287,77 @@ const MobileGridTiles = memo(function MobileGridTiles({
     setLongPressTimer(timer);
   };
 
-  const handleLongPressEnd = () => {
+  const handleLongPressEnd = (tileId) => {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       setLongPressTimer(null);
     }
+    
+    // If it was a double tap, don't handle single click - exit early
+    if (isDoubleTap.current) {
+      isDoubleTap.current = false;
+      hasMoved.current = false;
+      // Clear single click timer if exists
+      if (singleClickTimer.current) {
+        clearTimeout(singleClickTimer.current);
+        singleClickTimer.current = null;
+      }
+      return;
+    }
+    
+    // If clicking on a different tile, clear single click timer
+    if (editingTileId && editingTileId !== String(tileId || '')) {
+      if (singleClickTimer.current) {
+        clearTimeout(singleClickTimer.current);
+        singleClickTimer.current = null;
+      }
+    }
+    
+    // If it was a long press (edit mode activated), don't handle single click
+    if (editingTileId === String(tileId || '')) {
+      hasMoved.current = false;
+      return;
+    }
+    
+    // If user moved, don't handle single click
+    if (hasMoved.current) {
+      hasMoved.current = false;
+      return;
+    }
+    
+    // Handle single click - enter edit mode after a short delay
+    // This delay allows us to detect if it's actually a double tap
+    // Don't set timer if there was a recent double tap (within last 500ms)
+    // Don't set timer if edit mode was just exited via click (within last 300ms)
+    const timeSinceDoubleTap = Date.now() - lastDoubleTapTime.current;
+    const timeSinceEditModeExit = Date.now() - lastEditModeExitTime.current;
+    if (tileId && editingTileId !== String(tileId) && timeSinceDoubleTap > 500 && timeSinceEditModeExit > 300) {
+      const currentTileId = String(tileId);
+      singleClickTimer.current = setTimeout(() => {
+        const timeSinceDoubleTap = Date.now() - lastDoubleTapTime.current;
+        const timeSinceEditModeExit = Date.now() - lastEditModeExitTime.current;
+        // Check again if it wasn't a double tap, no recent double tap, and edit mode wasn't just exited
+        if (!isDoubleTap.current && !hasMoved.current && timeSinceDoubleTap > 500 && timeSinceEditModeExit > 300) {
+          // Use functional update to check current state
+          const finalTimeSinceDoubleTap = Date.now() - lastDoubleTapTime.current;
+          const finalTimeSinceEditModeExit = Date.now() - lastEditModeExitTime.current;
+          setEditingTileId(current => {
+            // Only set if not already in edit mode, not a double tap, no recent double tap, and edit mode wasn't just exited
+            if (current !== currentTileId && !isDoubleTap.current && finalTimeSinceDoubleTap > 500 && finalTimeSinceEditModeExit > 300) {
+              // Haptic feedback if available
+              if (navigator.vibrate) {
+                navigator.vibrate(50);
+              }
+              return currentTileId;
+            }
+            return current;
+          });
+        }
+        isDoubleTap.current = false;
+        hasMoved.current = false;
+      }, 300); // Wait 300ms to detect double tap
+    }
+    
     hasMoved.current = false;
   };
 
@@ -1398,6 +1367,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
       if (batchUpdateTimeoutRef.current) {
         clearTimeout(batchUpdateTimeoutRef.current);
       }
+      if (singleClickTimer.current) {
+        clearTimeout(singleClickTimer.current);
+      }
       // Send any pending updates before unmount
       if (pendingBatchUpdatesRef.current.length > 0 && dbUser) {
         const updatesToSend = [...pendingBatchUpdatesRef.current];
@@ -1406,17 +1378,24 @@ const MobileGridTiles = memo(function MobileGridTiles({
           tileId: update.tileId,
           data: update.data
         }));
-        axios.post('/api/tile/batch-update', { updates: batchPayload }).catch(err => {
-          console.error('Error sending final batch update:', err);
+        axios.post('/api/tile/batch-update', { updates: batchPayload }).catch(() => {
+          // Error sending final batch update
         });
       }
     };
   }, [dbUser]);
 
-  // Exit edit mode when clicking outside the editing tile
+  // Exit edit mode when clicking anywhere (except resize handles and settings button)
   useEffect(() => {
+    let clickTimeoutId = null;
+
     const handleClickOutside = e => {
       if (!editingTileId) return;
+
+      // Don't exit edit mode if dragging is in progress
+      if (isDragging) {
+        return;
+      }
 
       const target = e.target;
 
@@ -1425,23 +1404,40 @@ const MobileGridTiles = memo(function MobileGridTiles({
         return;
       }
 
-      // Find the tile element that contains the click
+      // Don't exit if clicking on the tile that is in edit mode (might be start of drag)
+      // Give drag a chance to start before exiting edit mode
       const clickedTile = target.closest('[data-tile-id]');
-
       if (clickedTile) {
         const clickedTileId = clickedTile.getAttribute('data-tile-id');
-        // If clicked on a different tile or outside any tile, exit edit mode
-        if (clickedTileId !== String(editingTileId)) {
-          setEditingTileId(null);
+        const currentEditingTileId = editingTileId; // Capture current value
+        if (clickedTileId === currentEditingTileId) {
+          // Clear any existing timeout
+          if (clickTimeoutId) {
+            clearTimeout(clickTimeoutId);
+          }
+          // Use a small delay to allow drag to start
+          clickTimeoutId = setTimeout(() => {
+            // Only exit if drag didn't start and edit mode is still active for this tile
+            setEditingTileId(current => {
+              if (!isDraggingRef.current && current === currentEditingTileId) {
+                lastEditModeExitTime.current = Date.now();
+                return null;
+              }
+              return current;
+            });
+            clickTimeoutId = null;
+          }, 500);
+          return;
         }
-      } else {
-        // Clicked outside all tiles - exit edit mode
-        setEditingTileId(null);
       }
+
+      // Exit edit mode when clicking anywhere (including the same tile)
+      lastEditModeExitTime.current = Date.now(); // Record when edit mode was exited
+      setEditingTileId(null);
     };
 
     if (editingTileId) {
-      // Use a small delay to avoid immediate exit when entering edit mode
+      // Use a small delay to avoid immediate exit 2when entering edit mode
       const timeoutId = setTimeout(() => {
         document.addEventListener('touchstart', handleClickOutside, { passive: true });
         document.addEventListener('mousedown', handleClickOutside);
@@ -1449,11 +1445,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
       return () => {
         clearTimeout(timeoutId);
+        if (clickTimeoutId) {
+          clearTimeout(clickTimeoutId);
+        }
         document.removeEventListener('touchstart', handleClickOutside);
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [editingTileId]);
+  }, [editingTileId, isDragging]);
 
   // Sync currentTileIndex with selectedTile when editor opens
   useEffect(() => {
@@ -1462,6 +1461,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   }, [editorOpen, selectedTile]);
 
+
   return (
     <>
       {/* Edit mode badge - shown at top of page under header */}
@@ -1469,24 +1469,34 @@ const MobileGridTiles = memo(function MobileGridTiles({
         <div
           style={{
             position: 'fixed',
-            top: '100px', // Start from very top for testing
-            right: '0',
-            backgroundColor: '#63899e',
-            color: 'white',
-            padding: '6px 12px',
-            borderRadius: '8px 0 0 8px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            zIndex: 9999, // Very high z-index
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            left: '50%',
+            bottom: '28px',
+            transform: 'translateX(-50%)',
+            background: 'rgba(99, 137, 158, 0.85)',
+            color: '#fff',
+            padding: '10px 24px',
+            borderRadius: '36px',
+            fontSize: '15px',
+            fontWeight: 600,
+            zIndex: 9999,
+            boxShadow: '0 4px 12px rgba(99, 137, 158, 0.3)',
             pointerEvents: 'none',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
+            letterSpacing: '0.02em',
             whiteSpace: 'nowrap',
-            width: 'auto',
-            textAlign: 'center'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          Edit Mode
+          <EditIcon
+            style={{
+              fontSize: 20,
+              color: '#fff'
+            }}
+          />
+          Edit Mode Enabled
         </div>
       )}
       <div
@@ -1502,13 +1512,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
           filter='.drag-handle, .resize-handle'
           preventOnFilter={false}
           onStart={evt => {
-            console.log('[DRAG START] onStart called');
             // Only allow drag if tile is in edit mode
             const draggedTile = evt.item;
             const tileId = draggedTile.getAttribute('data-tile-id');
 
             if (tileId !== editingTileId) {
-              console.log('[DRAG START] Tile not in edit mode, preventing drag');
               return false; // Prevent drag if not in edit mode
             }
 
@@ -1517,20 +1525,15 @@ const MobileGridTiles = memo(function MobileGridTiles({
             const clickedSettings = evt.originalEvent?.target?.closest('.drag-handle');
 
             if (clickedResize || clickedSettings) {
-              console.log('[DRAG START] Clicked on resize/settings, preventing drag');
               return false; // Prevent drag
             }
 
             // Store initial state before drag starts
             initialDragStateRef.current = [...tileCordinates];
-            console.log(
-              '[DRAG START] Initial state stored:',
-              initialDragStateRef.current.map(t => t._id)
-            );
             setIsDragging(true);
+            isDraggingRef.current = true;
           }}
           onEnd={() => {
-            console.log('[DRAG END] onEnd callback called');
             handleDragEnd();
           }}
           style={{ display: 'flex', flexDirection: 'column' }}
@@ -1570,6 +1573,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     return;
                   }
 
+                  // Reset double tap flag
+                  isDoubleTap.current = false;
+
                   // If not in edit mode, start long press timer
                   if (!isEditing) {
                     handleLongPressStart(tile._id, e);
@@ -1577,21 +1583,87 @@ const MobileGridTiles = memo(function MobileGridTiles({
 
                   // Handle double tap for actions
                   if (isDblTouchTap(e)) {
-                    handleLongPressEnd(); // Cancel long press
+                    isDoubleTap.current = true;
+                    lastDoubleTapTime.current = Date.now(); // Record double tap time
+                    // Clear single click timer if exists
+                    if (singleClickTimer.current) {
+                      clearTimeout(singleClickTimer.current);
+                      singleClickTimer.current = null;
+                    }
+                    // Exit edit mode if it was activated
+                    if (editingTileId === String(tile._id)) {
+                      setEditingTileId(null);
+                    }
+                    handleLongPressEnd(tile._id); // Cancel long press
                     onDoubleTap(e, tile.action, tile.tileContent, tile, index);
                   }
                 }}
-                onTouchEnd={handleLongPressEnd}
-                onTouchCancel={handleLongPressEnd}
+                onTouchEnd={() => {
+                  handleLongPressEnd(tile._id);
+                }}
+                onTouchCancel={() => {
+                  // Clear single click timer on cancel
+                  if (singleClickTimer.current) {
+                    clearTimeout(singleClickTimer.current);
+                    singleClickTimer.current = null;
+                  }
+                  handleLongPressEnd(tile._id);
+                }}
                 onDoubleClick={e => {
                   if (isResizing) return;
                   const target = e.target;
                   if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
                     return;
                   }
+                  isDoubleTap.current = true;
+                  lastDoubleTapTime.current = Date.now(); // Record double tap time
+                  // Clear single click timer if exists
+                  if (singleClickTimer.current) {
+                    clearTimeout(singleClickTimer.current);
+                    singleClickTimer.current = null;
+                  }
+                  // Exit edit mode if it was activated
+                  if (editingTileId === String(tile._id)) {
+                    setEditingTileId(null);
+                  }
                   onDoubleTap(e, tile.action, tile.tileContent, tile, index);
                 }}
               >
+                {/* Drag handle indicator - shows when tile is in edit mode */}
+                {isEditing && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      left: '8px',
+                      width: '28px',
+                      height: '28px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 10,
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '4px',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <svg
+                      width='24'
+                      height='24'
+                      fill='currentColor'
+                      viewBox='0 0 24 24'
+                      style={{ color: '#63899e' }}
+                    >
+                      <circle cx='9' cy='5' r='1.5' />
+                      <circle cx='9' cy='12' r='1.5' />
+                      <circle cx='9' cy='19' r='1.5' />
+                      <circle cx='15' cy='5' r='1.5' />
+                      <circle cx='15' cy='12' r='1.5' />
+                      <circle cx='15' cy='19' r='1.5' />
+                    </svg>
+                  </div>
+                )}
+
                 {/* Settings button - opens tile settings modal */}
                 <div
                   className='drag-handle'
@@ -1622,115 +1694,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     // Prevent drag when clicking settings button
                   }}
                 >
-                  <MoreHorizSharpIcon style={{ fontSize: '20px' }} />
+                  <MoreHorizSharpIcon style={{ fontSize: '20px', color: '#63899e' }} />
                 </div>
 
                 {/* Resize handle for top edge - only visible in edit mode */}
-                {isEditing && (
-                  <div
-                    className='resize-handle resize-handle-top'
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '40px', // Even larger touch area for easier interaction
-                      cursor: 'ns-resize',
-                      zIndex: 15,
-                      touchAction: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: 'rgba(128, 128, 128, 0.3)', // Gray background for better visibility
-                      borderTop: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
-                      borderTopLeftRadius: '10px',
-                      borderTopRightRadius: '10px',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
-                    }}
-                    onTouchStart={e => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setIsResizing(true);
-                      const startY = e.touches[0].clientY;
-                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-                      const startTop = tile.mobileY || 0;
-
-                      const handleMove = moveEvent => {
-                        moveEvent.preventDefault();
-                        const currentY = moveEvent.touches[0].clientY;
-                        const deltaY = startY - currentY; // Inverted for top resize
-                        const newHeight = Math.max(100, startHeight + deltaY);
-                        handleResize(tile._id, newHeight, true);
-                      };
-
-                      const handleEnd = () => {
-                        setIsResizing(false);
-                        // Exit edit mode after resize ends
-                        setEditingTileId(null);
-                        document.removeEventListener('touchmove', handleMove, { passive: false });
-                        document.removeEventListener('touchend', handleEnd);
-                      };
-
-                      document.addEventListener('touchmove', handleMove, { passive: false });
-                      document.addEventListener('touchend', handleEnd);
-                    }}
-                    onMouseDown={e => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setIsResizing(true);
-                      const startY = e.clientY;
-                      const startHeight = parseInt(tile.mobileHeight || tile.height || '150', 10);
-
-                      const handleMove = moveEvent => {
-                        moveEvent.preventDefault();
-                        const currentY = moveEvent.clientY;
-                        const deltaY = startY - currentY; // Inverted for top resize
-                        const newHeight = Math.max(100, startHeight + deltaY);
-                        handleResize(tile._id, newHeight, true);
-                      };
-
-                      const handleEnd = () => {
-                        setIsResizing(false);
-                        // Exit edit mode after resize ends
-                        setEditingTileId(null);
-                        document.removeEventListener('mousemove', handleMove);
-                        document.removeEventListener('mouseup', handleEnd);
-                      };
-
-                      document.addEventListener('mousemove', handleMove);
-                      document.addEventListener('mouseup', handleEnd);
-                    }}
-                  >
-                    {/* Visual indicator - resize icons (up and down arrows) */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '-4px',
-                        pointerEvents: 'none',
-                        lineHeight: 0
-                      }}
-                    >
-                      <KeyboardArrowUpIcon
-                        style={{
-                          fontSize: '24px',
-                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
-                          pointerEvents: 'none',
-                          marginBottom: '-4px'
-                        }}
-                      />
-                      <KeyboardArrowDownIcon
-                        style={{
-                          fontSize: '24px',
-                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
-                          pointerEvents: 'none',
-                          marginTop: '-4px'
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+                
 
                 {/* Resize handle for bottom edge - only visible in edit mode */}
                 {isEditing && (
@@ -1738,21 +1706,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     className='resize-handle resize-handle-bottom'
                     style={{
                       position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '40px', // Even larger touch area for easier interaction
+                      bottom: '-12px', // Sit slightly outside the box edge
+                      left: '12px',
+                      right: '12px',
+                      height: '42px', // 32-44px total tap area
                       cursor: 'ns-resize',
                       zIndex: 15,
                       touchAction: 'none',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(128, 128, 128, 0.3)', // Gray background for better visibility
-                      borderBottom: '2px solid rgba(99, 137, 158, 0.6)', // Border for definition
-                      borderBottomLeftRadius: '10px',
-                      borderBottomRightRadius: '10px',
-                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)' // Subtle shadow for depth
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)', // White background for better contrast
+                      border: '2px solid rgba(99, 137, 158, 0.8)', // Border with theme color
+                      borderRadius: '10px',
+                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.2)' // Subtle shadow for depth
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1809,6 +1776,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   >
                     {/* Visual indicator - resize icons (up and down arrows) */}
                     <div
+                      className='resize-handle-arrows'
                       style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -1819,17 +1787,19 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       }}
                     >
                       <KeyboardArrowUpIcon
+                        className='resize-handle-arrow-up'
                         style={{
                           fontSize: '24px',
-                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          color: '#63899e', // Theme color for better contrast with white background
                           pointerEvents: 'none',
                           marginBottom: '-4px'
                         }}
                       />
                       <KeyboardArrowDownIcon
+                        className='resize-handle-arrow-down'
                         style={{
                           fontSize: '24px',
-                          color: 'rgba(50, 50, 50, 0.9)', // Dark color for better harmony with gray background
+                          color: '#63899e', // Theme color for better contrast with white background
                           pointerEvents: 'none',
                           marginTop: '-4px'
                         }}
@@ -1892,7 +1862,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
             {/* Modal */}
             <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
               <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[100vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                 onClick={e => e.stopPropagation()}
               >
                 {/* Header */}
@@ -2028,7 +1998,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       </svg>
                     </button>
                     {!collapsedSections.background && (
-                      <div className='space-y-4'>
+                    <div className='space-y-4'>
                       <div className='flex flex-col sm:flex-row gap-3'>
                         <label
                           className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
@@ -2139,7 +2109,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                         className='hidden'
                         onChange={handleImageChange}
                       />
-                      </div>
+                    </div>
                     )}
                   </div>
 
@@ -2167,7 +2137,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       </svg>
                     </button>
                     {!collapsedSections.action && (
-                      <div className='space-y-3'>
+                    <div className='space-y-3'>
                       <div className='flex flex-row flex-wrap gap-2'>
                         <label
                           className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
@@ -2279,7 +2249,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                           className='w-full'
                         />
                       )}
-                      </div>
+                    </div>
                     )}
                   </div>
 
@@ -2305,7 +2275,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       </svg>
                     </button>
                     {!collapsedSections.order && (
-                      <div className='space-y-2'>
+                    <div className='space-y-2'>
                       <label className='block text-sm font-medium text-gray-700'>
                         Order (used for text editor navigation):
                       </label>
@@ -2341,29 +2311,32 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       <p className='text-xs text-gray-500'>
                         This determines the order when navigating between boxes in the text editor
                       </p>
-                      </div>
+                    </div>
                     )}
                   </div>
                 </div>
 
                 {/* Footer */}
                 <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
-                  <div className='flex gap-4 justify-center'>
+                  <div className='flex gap-4 justify-center w-full'>
                     <button
                       onClick={() => tileClone(selectedTile)}
-                      className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                      className='flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none min-w-0'
+                      style={{ maxWidth: '50%' }}
                     >
                       <DifferenceOutlinedIcon className='text-[#63899e]' />
                       <span>Duplicate</span>
                     </button>
                     <button
                       onClick={() => deleteTile(selectedTile)}
-                      className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                      className='flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none min-w-0'
+                      style={{ maxWidth: '50%' }}
                     >
                       <DeleteOutlineIcon />
                       <span>Delete</span>
                     </button>
                   </div>
+                  <hr className='w-full border-gray-100' />
                   <div className='flex items-center gap-3 sm:justify-end'>
                     <Button
                       variant='outline'
@@ -2426,12 +2399,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
               />
               <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
                 <div
-                  className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-4xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                  className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                   onClick={e => e.stopPropagation()}
                 >
                   {/* Header */}
                   <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                    <h2 className='text-xl font-bold text-[#63899e]'>Edit Text</h2>
+                    <h2 className='text-xl font-bold text-[#63899e] m-0'>Edit Text</h2>
                     <button
                       onClick={() => setEditorOpen(false)}
                       className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
@@ -2517,18 +2490,20 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   )}
 
                 {/* Footer */}
-                <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
+                <div className="flex items-center gap-3 p-4 sm:p-6 bg-gray-50/50 flex-shrink-0 sm:justify-end"
+                style={{ borderTop: '1px solid #e5e7eb' }} // inline style for border
+              >
                   <Button
                     variant='outline'
                     onClick={() => setEditorOpen(false)}
-                    className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+                    className='border-gray-300 cursor-pointer w-1/2'
                   >
                     Close
                   </Button>
                   <Button
                     variant='default'
                     onClick={saveEditorText}
-                    className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+                    className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer w-1/2'
                   >
                     Save
                   </Button>

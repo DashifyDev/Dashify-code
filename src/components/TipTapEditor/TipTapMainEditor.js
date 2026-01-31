@@ -6,8 +6,6 @@ import { createRoot } from "react-dom/client";
 
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
 import { TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
@@ -45,8 +43,6 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       IndentBlock,
       IndentCommands,
       Underline,
-      Subscript,
-      Superscript,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       SafeLink.configure({ openOnClick: false, autolink: true }),
       Image.configure({ inline: true }),
@@ -70,8 +66,6 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
         isItalic: editor.isActive("italic"),
         isUnderline: editor.isActive("underline"),
         isStrike: editor.isActive("strike"),
-        isSubscript: editor.isActive("subscript"),
-        isSuperscript: editor.isActive("superscript"),
         textAlign:
           ["left", "center", "right", "justify"].find((align) =>
             editor.isActive({ textAlign: align }),
@@ -92,8 +86,6 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
         isItalic: editor.isActive("italic"),
         isUnderline: editor.isActive("underline"),
         isStrike: editor.isActive("strike"),
-        isSubscript: editor.isActive("subscript"),
-        isSuperscript: editor.isActive("superscript"),
         textAlign:
           ["left", "center", "right", "justify"].find((align) =>
             editor.isActive({ textAlign: align }),

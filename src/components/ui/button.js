@@ -7,11 +7,11 @@ export function Button({
   size = 'default',
   ...props 
 }) {
-  const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 border-0 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
-    default: 'bg-[#63899e] text-white hover:bg-[#4a6d7e] shadow-sm hover:shadow-md',
-    outline: 'border border-[#63899e] bg-transparent hover:bg-[#63899e] hover:text-white shadow-sm hover:shadow-md',
+    default: 'bg-[#63899e] text-white hover:bg-[#4a6d7e] shadow-sm hover:shadow-md border-0',
+    outline: 'border border-solid border-[#63899e] bg-transparent text-[#63899e] hover:bg-[#63899e] hover:text-white',
     ghost: 'hover:bg-gray-100 hover:text-[#63899e]',
     link: 'underline-offset-4 hover:underline text-[#63899e]',
   };

@@ -2,11 +2,16 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 8px;
   border-bottom: 1px solid #e0e0e0;
   background-color: #f8f9fa;
   row-gap: 8px;
+}
+@media (max-width: 768px) {
+  .toolbar {
+    justify-content: center;
+  }
 }
 .toolbar-group {
   display: flex;
