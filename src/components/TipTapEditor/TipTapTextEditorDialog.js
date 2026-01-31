@@ -19,6 +19,7 @@ const TipTapTextEditorDialog = ({
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
   const editorContainerRef = useRef(null);
   const isInitialMountRef = useRef(true);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     const nextHeading =
@@ -29,6 +30,29 @@ const TipTapTextEditorDialog = ({
     setIndexValue(selectedTileIndex);
     setEditorContent(content || '');
   }, [selectedTileIndex, content, tileDetails]);
+
+  // Fix height for iOS Safari
+  useEffect(() => {
+    if (!open || !modalRef.current) return;
+
+    const setModalHeight = () => {
+      if (modalRef.current) {
+        // Use window.innerHeight for iOS Safari compatibility
+        const vh = window.innerHeight * 0.01;
+        modalRef.current.style.setProperty('--vh', `${vh}px`);
+        modalRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+
+    setModalHeight();
+    window.addEventListener('resize', setModalHeight);
+    window.addEventListener('orientationchange', setModalHeight);
+
+    return () => {
+      window.removeEventListener('resize', setModalHeight);
+      window.removeEventListener('orientationchange', setModalHeight);
+    };
+  }, [open]);
 
   // Prevent editor from auto-focusing when modal opens
   useEffect(() => {
@@ -127,8 +151,14 @@ const TipTapTextEditorDialog = ({
       {/* Modal - Desktop: centered, Mobile: bottom sheet */}
       <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
         <div
-          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[98vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
+          ref={modalRef}
+          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
           onClick={e => e.stopPropagation()}
+          style={{
+            height: typeof window !== 'undefined' && window.innerWidth < 640 
+              ? `${window.innerHeight}px` 
+              : undefined
+          }}
         >
           {/* Header */}
           <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
