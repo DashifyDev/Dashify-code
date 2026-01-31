@@ -18,6 +18,7 @@ const TipTapTextEditorDialog = ({
   const [textBoxHeading, setTextBoxHeading] = useState('');
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
   const editorContainerRef = useRef(null);
+  const inputRef = useRef(null);
   const isInitialMountRef = useRef(true);
   const modalRef = useRef(null);
 
@@ -54,49 +55,87 @@ const TipTapTextEditorDialog = ({
     };
   }, [open]);
 
-  // Prevent editor from auto-focusing when modal opens
+  // Prevent editor and input from auto-focusing when modal opens
   useEffect(() => {
     if (open && isInitialMountRef.current) {
       // Blur any focused elements immediately when modal opens
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
+      const blurActive = () => {
+        if (document.activeElement && document.activeElement.blur) {
+          document.activeElement.blur();
+        }
+        // Also blur ProseMirror editor if it exists
+        const proseMirror = document.querySelector('.ProseMirror');
+        if (proseMirror && document.activeElement === proseMirror) {
+          proseMirror.blur();
+        }
+      };
 
-      // Prevent focus on editor when modal first opens
+      blurActive();
+
+      // Prevent focus on editor and input when modal first opens
       const preventFocus = (e) => {
+        // Prevent focus on input
+        if (inputRef.current && (e.target === inputRef.current || inputRef.current.contains(e.target))) {
+          e.preventDefault();
+          e.stopPropagation();
+          blurActive();
+          return;
+        }
+
+        // Prevent focus on editor - check entire editor container
         if (editorContainerRef.current && editorContainerRef.current.contains(e.target)) {
-          // Check if the target is the editor content area
+          // Check if the target is anywhere in the editor area (ProseMirror, toolbar, etc.)
           const editorElement = editorContainerRef.current.querySelector('.ProseMirror');
+          const toolbarElement = editorContainerRef.current.querySelector('.tiptap-editor-container');
+          
           if (editorElement && (e.target === editorElement || editorElement.contains(e.target))) {
             e.preventDefault();
             e.stopPropagation();
-            // Blur any focused elements
-            if (document.activeElement && document.activeElement.blur) {
-              document.activeElement.blur();
-            }
+            blurActive();
+            return;
+          }
+          
+          // Also prevent focus on toolbar elements initially
+          if (toolbarElement && toolbarElement.contains(e.target) && e.target !== toolbarElement) {
+            e.preventDefault();
+            e.stopPropagation();
+            blurActive();
+            return;
           }
         }
       };
 
-      // Add event listeners to prevent focus
-      const timeoutId = setTimeout(() => {
-        document.addEventListener('focusin', preventFocus, true);
-        document.addEventListener('mousedown', preventFocus, true);
-        document.addEventListener('touchstart', preventFocus, true);
-      }, 50); // Small delay to ensure modal is fully rendered
+      // Add event listeners to prevent focus immediately
+      document.addEventListener('focusin', preventFocus, true);
+      document.addEventListener('focus', preventFocus, true);
+      document.addEventListener('mousedown', preventFocus, true);
+      document.addEventListener('touchstart', preventFocus, true);
 
-      // Remove listeners after a short delay to allow normal interaction
+      // Continuously blur editor for a short period
+      const blurInterval = setInterval(() => {
+        blurActive();
+      }, 50);
+
+      // Remove listeners after a delay to allow normal interaction
       const removeTimeoutId = setTimeout(() => {
+        clearInterval(blurInterval);
         document.removeEventListener('focusin', preventFocus, true);
+        document.removeEventListener('focus', preventFocus, true);
         document.removeEventListener('mousedown', preventFocus, true);
         document.removeEventListener('touchstart', preventFocus, true);
         isInitialMountRef.current = false;
-      }, 500);
+        // Make editor editable after delay
+        const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
+        if (proseMirror) {
+          proseMirror.setAttribute('contenteditable', 'true');
+        }
+      }, 800);
 
       return () => {
-        clearTimeout(timeoutId);
+        clearInterval(blurInterval);
         clearTimeout(removeTimeoutId);
         document.removeEventListener('focusin', preventFocus, true);
+        document.removeEventListener('focus', preventFocus, true);
         document.removeEventListener('mousedown', preventFocus, true);
         document.removeEventListener('touchstart', preventFocus, true);
       };
@@ -164,11 +203,13 @@ const TipTapTextEditorDialog = ({
           <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
             <div className='flex-1 min-w-0 mr-4'>
               <Input
+                ref={inputRef}
                 type='text'
                 value={textBoxHeading}
                 onChange={e => setTextBoxHeading(e.target.value)}
                 placeholder='Enter title...'
                 className='text-lg font-semibold border border-gray-300 bg-white rounded-lg focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:border-[#63899e] px-4 h-11 transition-all duration-200'
+                autoFocus={false}
               />
             </div>
             <button
@@ -202,6 +243,7 @@ const TipTapTextEditorDialog = ({
               <TipTapMainEditor
                 initialContent={editorContent}
                 onContentChange={html => setEditorContent(html)}
+                editable={!isInitialMountRef.current}
               />
             </div>
           </div>

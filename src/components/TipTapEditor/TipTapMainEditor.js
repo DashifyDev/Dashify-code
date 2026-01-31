@@ -28,7 +28,7 @@ import "./styles/TipTapMainEditor.css";
 import { BottomTableMenu, TopTableMenu } from "./TableBubble";
 import Toolbar from "./Toolbar";
 
-const TipTapMainEditor = ({ initialContent, onContentChange }) => {
+const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) => {
   const [activeStyles, setActiveStyles] = useState({});
 
   const editor = useEditor({
@@ -56,6 +56,8 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       CustomHorizontalRule,
     ],
     content: initialContent || "",
+    editable: editable,
+    autofocus: false,
 
     onUpdate: ({ editor }) => {
       if (onContentChange) {
@@ -100,7 +102,15 @@ const TipTapMainEditor = ({ initialContent, onContentChange }) => {
       });
     },
     immediatelyRender: false,
+    autofocus: false,
   });
+
+  // Update editable state when prop changes
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(editable);
+    }
+  }, [editor, editable]);
 
   useEffect(() => {
     return () => {
