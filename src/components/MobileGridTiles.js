@@ -74,6 +74,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const pendingBatchUpdatesRef = useRef([]);
   const initialDragStateRef = useRef(null); // Store initial state when drag starts
   const isInitialMountRef = useRef(true); // Track if component just mounted
+  const settingsModalRef = useRef(null); // Ref for settings modal
 
   // Sort tiles by order (mobileY position) for display
   const sortedTiles = useMemo(() => {
@@ -1461,6 +1462,29 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   }, [editorOpen, selectedTile]);
 
+  // Fix height for iOS Safari - Settings Modal
+  useEffect(() => {
+    if (!showModel || !settingsModalRef.current) return;
+
+    const setModalHeight = () => {
+      if (settingsModalRef.current) {
+        // Use window.innerHeight for iOS Safari compatibility
+        const vh = window.innerHeight * 0.01;
+        settingsModalRef.current.style.setProperty('--vh', `${vh}px`);
+        settingsModalRef.current.style.height = `${window.innerHeight}px`;
+      }
+    };
+
+    setModalHeight();
+    window.addEventListener('resize', setModalHeight);
+    window.addEventListener('orientationchange', setModalHeight);
+
+    return () => {
+      window.removeEventListener('resize', setModalHeight);
+      window.removeEventListener('orientationchange', setModalHeight);
+    };
+  }, [showModel]);
+
 
   return (
     <>
@@ -1862,8 +1886,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
             {/* Modal */}
             <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
               <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[100vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                ref={settingsModalRef}
+                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                 onClick={e => e.stopPropagation()}
+                style={{
+                  height: typeof window !== 'undefined' && window.innerWidth < 640 
+                    ? `${window.innerHeight}px` 
+                    : undefined
+                }}
               >
                 {/* Header */}
                 <div className='flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
@@ -2336,7 +2366,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       <span>Delete</span>
                     </button>
                   </div>
-                  <hr className='w-full border-gray-100' />
+                  <hr className="w-full" style={{ borderColor: 'rgb(221, 221, 221)' }} />
                   <div className='flex items-center gap-3 sm:justify-end'>
                     <Button
                       variant='outline'

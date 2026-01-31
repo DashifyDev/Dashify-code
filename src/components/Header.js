@@ -1463,22 +1463,23 @@ function Header() {
                   Are you sure you want to delete this dashboard?
                 </p>
               </div>
-              <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
+              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
                 <Button
-                  variant='outline'
+                  variant="outline"
                   onClick={() => {
                     setOpenDashDeleteModel(false);
                     setSelectedDashIndex(null);
                   }}
+                  className="w-1/2"
                 >
                   Cancel
                 </Button>
                 <Button
-                  variant='default'
+                  variant="default"
                   onClick={() => {
                     deleteDashboard(selectedDashboard, selectedDashIndex);
                   }}
-                  className='bg-red-600 hover:bg-red-700 text-white'
+                  className="bg-red-600 hover:bg-red-700 text-white w-1/2"
                 >
                   Delete
                 </Button>
@@ -1515,15 +1516,21 @@ function Header() {
                   autoFocus
                 />
               </div>
-              <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
-                <Button variant='outline' onClick={() => setShowDashboardModel(false)}>
+              <div className="px-6 py-4 border-t border-gray-200 flex items-center gap-3 
+                justify-end sm:justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDashboardModel(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
                 <Button
-                  variant='default'
+                  variant="default"
                   onClick={() => {
                     selectedDashboard ? updatedDashBoard() : addBoard();
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Save
                 </Button>
@@ -1561,24 +1568,27 @@ function Header() {
                 />
               </div>
               <div className='px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3'>
-                <Button
-                  variant='outline'
-                  onClick={() => {
-                    setShareLinkModal(false);
-                    setIsCopied(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                {isCopied ? (
-                  <Button variant='default' disabled>
-                    Copied
+                <div className="flex gap-3">
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      setShareLinkModal(false);
+                      setIsCopied(false);
+                    }}
+                    className="w-1/2"
+                  >
+                    Cancel
                   </Button>
-                ) : (
-                  <Button variant='default' onClick={() => handleCopy()}>
-                    Copy
-                  </Button>
-                )}
+                  {isCopied ? (
+                    <Button variant='default' disabled className="w-1/2">
+                      Copied
+                    </Button>
+                  ) : (
+                    <Button variant='default' onClick={() => handleCopy()} className="w-1/2">
+                      Copy
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
