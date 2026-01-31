@@ -1739,7 +1739,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       const handleEnd = () => {
                         setIsResizing(false);
                         // Exit edit mode after resize ends
-                        setEditingTileId(null);
+                        // setEditingTileId(null);
                         document.removeEventListener('touchmove', handleMove, { passive: false });
                         document.removeEventListener('touchend', handleEnd);
                       };
