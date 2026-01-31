@@ -1516,12 +1516,11 @@ function Header() {
                   autoFocus
                 />
               </div>
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center gap-3 
-                justify-end sm:justify-end">
+              <div className="px-6 py-4 border-t border-gray-200 flex items-center gap-3 justify-end sm:justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setShowDashboardModel(false)}
-                  className="w-full sm:w-auto"
+                  className="w-1/2"
                 >
                   Cancel
                 </Button>
@@ -1530,7 +1529,7 @@ function Header() {
                   onClick={() => {
                     selectedDashboard ? updatedDashBoard() : addBoard();
                   }}
-                  className="w-full sm:w-auto"
+                  className="w-1/2"
                 >
                   Save
                 </Button>

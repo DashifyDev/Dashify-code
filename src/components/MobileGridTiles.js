@@ -2366,7 +2366,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       <span>Delete</span>
                     </button>
                   </div>
-                  <hr className="w-full" style={{ borderColor: 'rgb(221, 221, 221)' }} />
+                  <div className="w-full h-[1px] bg-gray-200" />
                   <div className='flex items-center gap-3 sm:justify-end'>
                     <Button
                       variant='outline'
