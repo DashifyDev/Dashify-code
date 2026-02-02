@@ -17,13 +17,17 @@ const TipTapTextEditorDialog = ({
   const [editorContent, setEditorContent] = useState(content || '');
   const [textBoxHeading, setTextBoxHeading] = useState('');
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
+  const [isContentReady, setIsContentReady] = useState(false);
   const editorContainerRef = useRef(null);
   const inputRef = useRef(null);
   const isInitialMountRef = useRef(true);
   const modalRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setIsContentReady(false);
+      return;
+    }
     
     const nextHeading =
       tileDetails[selectedTileIndex] && tileDetails[selectedTileIndex].editorHeading
@@ -35,6 +39,19 @@ const TipTapTextEditorDialog = ({
     // Get content from tileDetails if content prop is not provided
     const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || '';
     setEditorContent(tileContent);
+    
+    // Set content ready after a small delay to ensure content is set
+    // Use longer delay on mobile devices for better reliability
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const delay = isMobile ? 100 : 50;
+    
+    const timeoutId = setTimeout(() => {
+      setIsContentReady(true);
+    }, delay);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [open, selectedTileIndex, content, tileDetails]);
 
   // Fix height for iOS Safari
@@ -170,7 +187,11 @@ const TipTapTextEditorDialog = ({
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
     setTextBoxHeading(td.editorHeading || 'Title');
-    setEditorContent(td.tileContent || '');
+    const newContent = td.tileContent || '';
+    setEditorContent(newContent);
+    setIsContentReady(false);
+    // Small delay to ensure content is set before rendering editor
+    setTimeout(() => setIsContentReady(true), 50);
   };
 
   const goNext = () => {
@@ -179,7 +200,11 @@ const TipTapTextEditorDialog = ({
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
     setTextBoxHeading(td.editorHeading || 'Title');
-    setEditorContent(td.tileContent || '');
+    const newContent = td.tileContent || '';
+    setEditorContent(newContent);
+    setIsContentReady(false);
+    // Small delay to ensure content is set before rendering editor
+    setTimeout(() => setIsContentReady(true), 50);
   };
 
   if (!open) return null;
@@ -245,12 +270,14 @@ const TipTapTextEditorDialog = ({
               ref={editorContainerRef}
               className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'
             >
-              <TipTapMainEditor
-                key={`editor-${open}-${indexValue}`}
-                initialContent={editorContent}
-                onContentChange={html => setEditorContent(html)}
-                editable={!isInitialMountRef.current}
-              />
+              {isContentReady && (
+                <TipTapMainEditor
+                  key={`editor-${open}-${indexValue}-${editorContent ? 'has-content' : 'empty'}`}
+                  initialContent={editorContent}
+                  onContentChange={html => setEditorContent(html)}
+                  editable={!isInitialMountRef.current}
+                />
+              )}
             </div>
           </div>
 {/* Navigation Indicator */} 
