@@ -15,7 +15,7 @@ import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
 import EditIcon from '@mui/icons-material/Edit';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import TuneIcon from '@mui/icons-material/Tune';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import Image from 'next/image';
@@ -619,8 +619,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       setSelectedTile(index);
     } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textDisplay') {
       // Open Text Display editor directly
+      const currentTile = sortedTiles[index];
       setCurrentTileIndex(index);
       setSelectedTile(index);
+      setSelectedTileDetail(currentTile);
+      setFormValue({ tileText: currentTile.tileText || '' });
       setEditorOpen(true);
     }
   };
@@ -1221,6 +1224,83 @@ const MobileGridTiles = memo(function MobileGridTiles({
   };
 
   const saveEditorText = () => {
+    // Get the current tile from sortedTiles using currentTileIndex
+    if (
+      currentTileIndex === null ||
+      currentTileIndex === undefined ||
+      currentTileIndex < 0 ||
+      currentTileIndex >= sortedTiles.length
+    ) {
+      setEditorOpen(false);
+      return;
+    }
+
+    const currentTile = sortedTiles[currentTileIndex];
+    if (!currentTile || !currentTile._id) {
+      setEditorOpen(false);
+      return;
+    }
+
+    // Get the updated tileText from formValue
+    const updatedTileText = formValue.tileText || selectedTileDetail.tileText || '';
+
+    // Find the tile in tileCordinates by _id
+    const items = [...tileCordinates];
+    const tileIndex = items.findIndex(t => String(t._id) === String(currentTile._id));
+    
+    if (tileIndex < 0) {
+      setEditorOpen(false);
+      return;
+    }
+
+    const tileId = items[tileIndex]._id;
+
+    // Update tile locally first
+    const updatedTile = {
+      ...items[tileIndex],
+      tileText: updatedTileText
+    };
+    items[tileIndex] = updatedTile;
+    setTileCordinates(items);
+    
+    // Update selectedTileDetail to reflect changes
+    setSelectedTileDetail(updatedTile);
+
+    // Save to server if user is logged in
+    if (dbUser) {
+      const formData = new FormData();
+      const payload = { tileText: updatedTileText };
+      formData.append('formValue', JSON.stringify(payload));
+
+      axios.patch(`/api/tile/${tileId}`, formData).then(res => {
+        if (res.data) {
+          // Update tile with server response
+          const serverUpdatedTile = { ...items[tileIndex], ...res.data };
+          items[tileIndex] = serverUpdatedTile;
+          setTileCordinates(items);
+          
+          // Update selectedTileDetail with server response
+          setSelectedTileDetail(serverUpdatedTile);
+
+          // Update React Query cache
+          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile))
+            };
+          });
+        }
+      }).catch(err => {
+        console.error('Error saving tile text:', err);
+      });
+    } else {
+      // Save to localStorage for guest users
+      updateTilesInLocalstorage(items);
+    }
+
+    // Clear formValue
+    setFormValue({});
     setEditorOpen(false);
   };
 
@@ -1455,12 +1535,32 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   }, [editingTileId, isDragging]);
 
-  // Sync currentTileIndex with selectedTile when editor opens
+  // Sync currentTileIndex with selectedTile when editor opens and initialize content
   useEffect(() => {
     if (editorOpen && selectedTile !== null && selectedTile !== undefined) {
       setCurrentTileIndex(selectedTile);
+      // Initialize selectedTileDetail and formValue with current tile data
+      if (selectedTile >= 0 && selectedTile < sortedTiles.length) {
+        const currentTile = sortedTiles[selectedTile];
+        setSelectedTileDetail(currentTile);
+        setFormValue({ tileText: currentTile.tileText || '' });
+      }
     }
-  }, [editorOpen, selectedTile]);
+  }, [editorOpen, selectedTile, sortedTiles]);
+
+  // Sync content when currentTileIndex changes in editor
+  useEffect(() => {
+    if (editorOpen && currentTileIndex !== null && currentTileIndex !== undefined) {
+      if (currentTileIndex >= 0 && currentTileIndex < sortedTiles.length) {
+        const currentTile = sortedTiles[currentTileIndex];
+        // Only update if tile data is different to avoid unnecessary re-renders
+        if (!selectedTileDetail._id || selectedTileDetail._id !== currentTile._id) {
+          setSelectedTileDetail(currentTile);
+          setFormValue({ tileText: currentTile.tileText || '' });
+        }
+      }
+    }
+  }, [editorOpen, currentTileIndex, sortedTiles]);
 
   // Fix height for iOS Safari - Settings Modal
   useEffect(() => {
@@ -1660,20 +1760,23 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       position: 'absolute',
                       top: '8px',
                       left: '8px',
-                      width: '28px',
-                      height: '28px',
+                      width: '32px',
+                      height: '32px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: 10,
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '4px',
-                      pointerEvents: 'none'
+                      backgroundColor: 'rgba(255, 255, 255, 1)',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 137, 158, 0.1)',
+                      pointerEvents: 'none',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)'
                     }}
                   >
                     <svg
-                      width='24'
-                      height='24'
+                      width='20'
+                      height='20'
                       fill='currentColor'
                       viewBox='0 0 24 24'
                       style={{ color: '#63899e' }}
@@ -1689,24 +1792,26 @@ const MobileGridTiles = memo(function MobileGridTiles({
                 )}
 
                 {/* Settings button - opens tile settings modal */}
-                <div
+                {isEditing && (<div
                   className='drag-handle'
                   style={{
                     position: 'absolute',
                     top: '8px',
                     right: '8px',
-                    width: '24px',
-                    height: '24px',
+                    width: '32px',
+                    height: '32px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 10,
-                    opacity: isEditing ? 1 : 0.7,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: '4px',
-                    padding: '2px',
-                    transition: 'opacity 0.2s ease'
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    borderRadius: '8px',
+                    padding: '4px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 137, 158, 0.1)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)'
                   }}
                   onClick={e => {
                     e.stopPropagation();
@@ -1717,9 +1822,17 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     handleLongPressEnd(); // Cancel long press
                     // Prevent drag when clicking settings button
                   }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(99, 137, 158, 0.2)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 137, 158, 0.1)';
+                  }}
                 >
-                  <MoreHorizSharpIcon style={{ fontSize: '20px', color: '#63899e' }} />
-                </div>
+                  <TuneIcon style={{ fontSize: '20px', color: '#63899e' }} />
+                </div>)}
 
                 {/* Resize handle for top edge - only visible in edit mode */}
                 
@@ -1740,10 +1853,13 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)', // White background for better contrast
-                      border: '2px solid rgba(99, 137, 158, 0.8)', // Border with theme color
-                      borderRadius: '10px',
-                      boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.2)' // Subtle shadow for depth
+                      backgroundColor: 'rgba(255, 255, 255, 1)', // Fully opaque white background
+                      border: '2px solid rgba(99, 137, 158, 0.9)', // More opaque border with theme color
+                      borderRadius: '12px',
+                      boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 137, 158, 0.15)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      transition: 'all 0.2s ease'
                     }}
                     onTouchStart={e => {
                       e.stopPropagation();
@@ -1926,10 +2042,10 @@ const MobileGridTiles = memo(function MobileGridTiles({
                 {/* Content - Scrollable */}
                 <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0'>
                   {/* Box Text Display - Moved up */}
-                  <div className='space-y-3 mt-3'>
+                  <div className='space-y-3 mt-6'>
                     <button
                       onClick={() => toggleSection('textDisplay')}
-                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
                     >
                       <span>Box Text Display</span>
                       <svg
@@ -2010,7 +2126,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   <div className='space-y-3'>
                     <button
                       onClick={() => toggleSection('background')}
-                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
                     >
                       <span>Box Background</span>
                       <svg
@@ -2149,7 +2265,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   <div className='space-y-3'>
                     <button
                       onClick={() => toggleSection('action')}
-                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
                     >
                       <span>Box Action</span>
                       <svg
@@ -2287,7 +2403,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   <div className='space-y-3'>
                     <button
                       onClick={() => toggleSection('order')}
-                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-3 py-2 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                      className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
                     >
                       <span>Box Order</span>
                       <svg

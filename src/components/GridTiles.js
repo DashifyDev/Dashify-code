@@ -60,6 +60,12 @@ const GridTiles = memo(function GridTiles({
   const [colorBackground, setColorBackground] = useState();
   const [editorOpen, setEditorOpen] = useState(false);
   const [currentTileIndex, setCurrentTileIndex] = useState(0);
+  const [collapsedSections, setCollapsedSections] = useState({
+    background: true, // Only first section open by default
+    textDisplay: false,
+    action: true,
+    order: true
+  });
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
   const queryClient = useQueryClient();
   const cloneMutation = useMutation(
@@ -119,12 +125,32 @@ const GridTiles = memo(function GridTiles({
     setMinHeightWidth(tileCordinates.map(() => ({ width: 50, height: 50 })));
   }, [tileCordinates]);
 
-  // Sync currentTileIndex with selectedTile when editor opens
+  // Sync currentTileIndex with selectedTile when editor opens and initialize content
   useEffect(() => {
     if (editorOpen && selectedTile !== null && selectedTile !== undefined) {
       setCurrentTileIndex(selectedTile);
+      // Initialize selectedTileDetail and formValue with current tile data
+      if (selectedTile >= 0 && selectedTile < tileCordinates.length) {
+        const currentTile = tileCordinates[selectedTile];
+        setSelectedTileDetail(currentTile);
+        setFormValue({ tileText: currentTile.tileText || '' });
+      }
     }
-  }, [editorOpen, selectedTile]);
+  }, [editorOpen, selectedTile, tileCordinates]);
+
+  // Sync content when currentTileIndex changes in editor
+  useEffect(() => {
+    if (editorOpen && currentTileIndex !== null && currentTileIndex !== undefined) {
+      if (currentTileIndex >= 0 && currentTileIndex < tileCordinates.length) {
+        const currentTile = tileCordinates[currentTileIndex];
+        // Only update if tile data is different to avoid unnecessary re-renders
+        if (!selectedTileDetail._id || selectedTileDetail._id !== currentTile._id) {
+          setSelectedTileDetail(currentTile);
+          setFormValue({ tileText: currentTile.tileText || '' });
+        }
+      }
+    }
+  }, [editorOpen, currentTileIndex, tileCordinates]);
 
   const handleColorImage = useCallback(
     e => {
@@ -157,6 +183,20 @@ const GridTiles = memo(function GridTiles({
       setSelectedTileDetail(tileCordinates[index]);
       currentBackground(tileCordinates[index]);
     }
+    // Reset collapsed sections when opening modal - only first section open
+    setCollapsedSections({
+      background: true, // Only first section open by default
+      textDisplay: false,
+      action: true,
+      order: true
+    });
+  };
+
+  const toggleSection = section => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
   };
 
   const enterText = value => {
@@ -594,8 +634,11 @@ const GridTiles = memo(function GridTiles({
       }
     } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textDisplay') {
       // Open Text Display editor directly
+      const currentTile = tileCordinates[index];
       setCurrentTileIndex(index);
       setSelectedTile(index);
+      setSelectedTileDetail(currentTile);
+      setFormValue({ tileText: currentTile.tileText || '' });
       setEditorOpen(true);
     }
   };
@@ -1126,6 +1169,83 @@ const GridTiles = memo(function GridTiles({
   };
 
   const saveEditorText = () => {
+    // Get the current tile from tileCordinates using currentTileIndex
+    if (
+      currentTileIndex === null ||
+      currentTileIndex === undefined ||
+      currentTileIndex < 0 ||
+      currentTileIndex >= tileCordinates.length
+    ) {
+      setEditorOpen(false);
+      return;
+    }
+
+    const currentTile = tileCordinates[currentTileIndex];
+    if (!currentTile || !currentTile._id) {
+      setEditorOpen(false);
+      return;
+    }
+
+    // Get the updated tileText from formValue
+    const updatedTileText = formValue.tileText || selectedTileDetail.tileText || '';
+
+    // Find the tile in tileCordinates by _id
+    const items = [...tileCordinates];
+    const tileIndex = items.findIndex(t => String(t._id) === String(currentTile._id));
+    
+    if (tileIndex < 0) {
+      setEditorOpen(false);
+      return;
+    }
+
+    const tileId = items[tileIndex]._id;
+
+    // Update tile locally first
+    const updatedTile = {
+      ...items[tileIndex],
+      tileText: updatedTileText
+    };
+    items[tileIndex] = updatedTile;
+    setTileCordinates(items);
+    
+    // Update selectedTileDetail to reflect changes
+    setSelectedTileDetail(updatedTile);
+
+    // Save to server if user is logged in
+    if (dbUser) {
+      const formData = new FormData();
+      const payload = { tileText: updatedTileText };
+      formData.append('formValue', JSON.stringify(payload));
+
+      axios.patch(`/api/tile/${tileId}`, formData).then(res => {
+        if (res.data) {
+          // Update tile with server response
+          const serverUpdatedTile = { ...items[tileIndex], ...res.data };
+          items[tileIndex] = serverUpdatedTile;
+          setTileCordinates(items);
+          
+          // Update selectedTileDetail with server response
+          setSelectedTileDetail(serverUpdatedTile);
+
+          // Update React Query cache
+          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile))
+            };
+          });
+        }
+      }).catch(err => {
+        console.error('Error saving tile text:', err);
+      });
+    } else {
+      // Save to localStorage for guest users
+      updateTilesInLocalstorage(items);
+    }
+
+    // Clear formValue
+    setFormValue({});
     setEditorOpen(false);
   };
 
@@ -1267,12 +1387,29 @@ const GridTiles = memo(function GridTiles({
               </div>
 
               {/* Content - Scrollable */}
-              <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0'>
+              <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0 mt-6'>
                 {/* Box Background */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
-                    Box Background
-                  </h3>
+                  <button
+                    onClick={() => toggleSection('background')}
+                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                  >
+                    <span>Box Background</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        collapsedSections.background ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+                  {!collapsedSections.background && (
                   <div className='space-y-4'>
                     <div className='flex flex-col sm:flex-row gap-3'>
                       <label
@@ -1385,13 +1522,31 @@ const GridTiles = memo(function GridTiles({
                       onChange={handleImageChange}
                     />
                   </div>
+                  )}
                 </div>
 
                 {/* Box Action */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
-                    Box Action
-                  </h3>
+                  <button
+                    onClick={() => toggleSection('action')}
+                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                  >
+                    <span>Box Action</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        collapsedSections.action ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+                  {!collapsedSections.action && (
                   <div className='space-y-3'>
                     <div className='flex flex-row flex-wrap gap-2'>
                       <label
@@ -1505,13 +1660,31 @@ const GridTiles = memo(function GridTiles({
                       />
                     )}
                   </div>
+                  )}
                 </div>
 
                 {/* Text Display */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
-                    Box Text Display
-                  </h3>
+                  <button
+                    onClick={() => toggleSection('textDisplay')}
+                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                  >
+                    <span>Box Text Display</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        collapsedSections.textDisplay ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+                  {!collapsedSections.textDisplay && (
                   <div className='flex flex-col sm:flex-row gap-4'>
                     {/* Left: Edit Text Content button */}
                     <div className='flex-1'>
@@ -1569,13 +1742,31 @@ const GridTiles = memo(function GridTiles({
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
 
                 {/* Box Order */}
                 <div className='space-y-3'>
-                  <h3 className='text-base font-semibold text-[#63899e] bg-[#63899e]/20 px-3 py-2 rounded-lg'>
-                    Box Order
-                  </h3>
+                  <button
+                    onClick={() => toggleSection('order')}
+                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                  >
+                    <span>Box Order</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        collapsedSections.order ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+                  {!collapsedSections.order && (
                   <div className='space-y-2'>
                     <label className='block text-sm font-medium text-gray-700'>
                       Order (used for text editor navigation):
@@ -1612,6 +1803,7 @@ const GridTiles = memo(function GridTiles({
                       This determines the order when navigating between boxes in the text editor
                     </p>
                   </div>
+                  )}
                 </div>
               </div>
 
