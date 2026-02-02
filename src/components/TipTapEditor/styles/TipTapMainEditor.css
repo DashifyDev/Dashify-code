@@ -1,7 +1,5 @@
-@media (max-width: 768px) {
-  .tiptap-editor-container {
-    height: 100%;
-  }
+.tiptap-editor-container {
+  height: 100%;
 }
 .tiptap-editor-container .tiptap-link {
   color: #3b82f6;

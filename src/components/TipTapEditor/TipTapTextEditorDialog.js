@@ -23,14 +23,19 @@ const TipTapTextEditorDialog = ({
   const modalRef = useRef(null);
 
   useEffect(() => {
+    if (!open) return;
+    
     const nextHeading =
       tileDetails[selectedTileIndex] && tileDetails[selectedTileIndex].editorHeading
         ? tileDetails[selectedTileIndex].editorHeading
         : 'Title';
     setTextBoxHeading(nextHeading);
     setIndexValue(selectedTileIndex);
-    setEditorContent(content || '');
-  }, [selectedTileIndex, content, tileDetails]);
+    
+    // Get content from tileDetails if content prop is not provided
+    const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || '';
+    setEditorContent(tileContent);
+  }, [open, selectedTileIndex, content, tileDetails]);
 
   // Fix height for iOS Safari
   useEffect(() => {
@@ -241,6 +246,7 @@ const TipTapTextEditorDialog = ({
               className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'
             >
               <TipTapMainEditor
+                key={`editor-${open}-${indexValue}`}
                 initialContent={editorContent}
                 onContentChange={html => setEditorContent(html)}
                 editable={!isInitialMountRef.current}
