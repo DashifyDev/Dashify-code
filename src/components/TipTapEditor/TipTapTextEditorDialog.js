@@ -17,12 +17,14 @@ const TipTapTextEditorDialog = ({
   const [editorContent, setEditorContent] = useState(content || '');
   const [textBoxHeading, setTextBoxHeading] = useState('');
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
+  const [isContentReady, setIsContentReady] = useState(false);
   const editorContainerRef = useRef(null);
   const inputRef = useRef(null);
   const modalRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
+      setIsContentReady(false);
       return;
     }
     
@@ -36,6 +38,16 @@ const TipTapTextEditorDialog = ({
     // Get content from tileDetails if content prop is not provided
     const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || '';
     setEditorContent(tileContent);
+    
+    // Set content ready after a small delay to ensure content is set
+    setIsContentReady(false);
+    const timeoutId = setTimeout(() => {
+      setIsContentReady(true);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [open, selectedTileIndex, content, tileDetails]);
 
   // Fix height for iOS Safari
@@ -61,6 +73,55 @@ const TipTapTextEditorDialog = ({
     };
   }, [open]);
 
+  // Prevent auto-focus on mobile devices
+  useEffect(() => {
+    if (!open) return;
+
+    // Prevent focus on editor when modal opens
+    const preventFocus = (e) => {
+      const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
+      if (proseMirror) {
+        // Prevent focus events
+        if (e && (e.target === proseMirror || proseMirror.contains(e.target))) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        // Blur if already focused
+        if (document.activeElement === proseMirror) {
+          proseMirror.blur();
+        }
+      }
+    };
+
+    // Blur immediately
+    preventFocus();
+
+    // Add event listeners to prevent focus
+    const events = ['focusin', 'focus', 'mousedown', 'touchstart'];
+    events.forEach(eventType => {
+      document.addEventListener(eventType, preventFocus, true);
+    });
+
+    // Also blur after delays
+    const timeoutIds = [
+      setTimeout(() => preventFocus(), 100),
+      setTimeout(() => preventFocus(), 300),
+      setTimeout(() => {
+        // Remove listeners after modal is fully rendered
+        events.forEach(eventType => {
+          document.removeEventListener(eventType, preventFocus, true);
+        });
+      }, 500)
+    ];
+
+    return () => {
+      timeoutIds.forEach(id => clearTimeout(id));
+      events.forEach(eventType => {
+        document.removeEventListener(eventType, preventFocus, true);
+      });
+    };
+  }, [open]);
+
 
   const handleClose = () => {
     onClose && onClose(editorContent);
@@ -81,7 +142,9 @@ const TipTapTextEditorDialog = ({
     const td = tileDetails[nextIndex] || {};
     setTextBoxHeading(td.editorHeading || 'Title');
     const newContent = td.tileContent || '';
+    setIsContentReady(false);
     setEditorContent(newContent);
+    setTimeout(() => setIsContentReady(true), 50);
   };
 
   const goNext = () => {
@@ -91,7 +154,9 @@ const TipTapTextEditorDialog = ({
     const td = tileDetails[nextIndex] || {};
     setTextBoxHeading(td.editorHeading || 'Title');
     const newContent = td.tileContent || '';
+    setIsContentReady(false);
     setEditorContent(newContent);
+    setTimeout(() => setIsContentReady(true), 50);
   };
 
   if (!open) return null;
@@ -157,11 +222,13 @@ const TipTapTextEditorDialog = ({
               ref={editorContainerRef}
               className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'
             >
-              <TipTapMainEditor
-                key={`editor-${indexValue}`}
-                initialContent={editorContent}
-                onContentChange={html => setEditorContent(html)}
-              />
+              {isContentReady && (
+                <TipTapMainEditor
+                  key={`editor-${indexValue}-${editorContent ? 'has-content' : 'empty'}`}
+                  initialContent={editorContent}
+                  onContentChange={html => setEditorContent(html)}
+                />
+              )}
             </div>
           </div>
 {/* Navigation Indicator */} 
