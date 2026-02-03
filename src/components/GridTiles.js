@@ -62,7 +62,7 @@ const GridTiles = memo(function GridTiles({
   const [currentTileIndex, setCurrentTileIndex] = useState(0);
   const [collapsedSections, setCollapsedSections] = useState({
     background: true, // Only first section open by default
-    textDisplay: false,
+    textDisplay: true,
     action: true,
     order: true
   });
@@ -186,7 +186,7 @@ const GridTiles = memo(function GridTiles({
     // Reset collapsed sections when opening modal - only first section open
     setCollapsedSections({
       background: true, // Only first section open by default
-      textDisplay: false,
+      textDisplay: true,
       action: true,
       order: true
     });

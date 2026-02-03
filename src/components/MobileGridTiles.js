@@ -58,8 +58,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false); // Ref to track dragging state for use in timeouts
   const [isResizing, setIsResizing] = useState(false);
-  const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after long press)
-  const [longPressTimer, setLongPressTimer] = useState(null);
+  const [editingTileId, setEditingTileId] = useState(null); // Tile in edit mode (after click)
   const [collapsedSections, setCollapsedSections] = useState({
     background: true, // Only first section open by default
     textDisplay: false,
@@ -1320,59 +1319,9 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const lastDoubleTapTime = useRef(0); // Track when double tap occurred
   const lastEditModeExitTime = useRef(0); // Track when edit mode was exited via click
 
-  const handleLongPressStart = (tileId, e) => {
-    // Don't start long press on interactive elements
-    const target = e.target;
-    if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
-      return;
-    }
-
-    // Store initial touch position
-    const touch = e.touches?.[0] || { clientX: e.clientX, clientY: e.clientY };
-    longPressStartPos.current = { x: touch.clientX, y: touch.clientY };
-    hasMoved.current = false;
-
-    // Track movement during long press
-    const handleMove = moveEvent => {
-      const currentTouch = moveEvent.touches?.[0] || {
-        clientX: moveEvent.clientX,
-        clientY: moveEvent.clientY
-      };
-      const deltaX = Math.abs(currentTouch.clientX - longPressStartPos.current.x);
-      const deltaY = Math.abs(currentTouch.clientY - longPressStartPos.current.y);
-
-      // If moved more than 10px, cancel long press (user is scrolling)
-      if (deltaX > 10 || deltaY > 10) {
-        hasMoved.current = true;
-        handleLongPressEnd();
-        document.removeEventListener('touchmove', handleMove);
-        document.removeEventListener('mousemove', handleMove);
-      }
-    };
-
-    document.addEventListener('touchmove', handleMove, { passive: true });
-    document.addEventListener('mousemove', handleMove);
-
-    const timer = setTimeout(() => {
-      if (!hasMoved.current && !isDoubleTap.current) {
-        setEditingTileId(tileId);
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-      }
-      document.removeEventListener('touchmove', handleMove);
-      document.removeEventListener('mousemove', handleMove);
-    }, 500); // 0.5 seconds - shorter for easier editing
-
-    setLongPressTimer(timer);
-  };
-
-  const handleLongPressEnd = (tileId) => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
+  const handleClick = (tileId) => {
+    // Don't handle click on interactive elements
+    if (!tileId) return;
     
     // If it was a double tap, don't handle single click - exit early
     if (isDoubleTap.current) {
@@ -1387,15 +1336,15 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
     
     // If clicking on a different tile, clear single click timer
-    if (editingTileId && editingTileId !== String(tileId || '')) {
+    if (editingTileId && editingTileId !== String(tileId)) {
       if (singleClickTimer.current) {
         clearTimeout(singleClickTimer.current);
         singleClickTimer.current = null;
       }
     }
     
-    // If it was a long press (edit mode activated), don't handle single click
-    if (editingTileId === String(tileId || '')) {
+    // If already in edit mode for this tile, don't handle click
+    if (editingTileId === String(tileId)) {
       hasMoved.current = false;
       return;
     }
@@ -1412,7 +1361,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
     // Don't set timer if edit mode was just exited via click (within last 300ms)
     const timeSinceDoubleTap = Date.now() - lastDoubleTapTime.current;
     const timeSinceEditModeExit = Date.now() - lastEditModeExitTime.current;
-    if (tileId && editingTileId !== String(tileId) && timeSinceDoubleTap > 500 && timeSinceEditModeExit > 300) {
+    if (editingTileId !== String(tileId) && timeSinceDoubleTap > 500 && timeSinceEditModeExit > 300) {
       const currentTileId = String(tileId);
       singleClickTimer.current = setTimeout(() => {
         const timeSinceDoubleTap = Date.now() - lastDoubleTapTime.current;
@@ -1700,10 +1649,28 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   // Reset double tap flag
                   isDoubleTap.current = false;
 
-                  // If not in edit mode, start long press timer
-                  if (!isEditing) {
-                    handleLongPressStart(tile._id, e);
+                  // Store initial touch position for movement detection
+                  const touch = e.touches?.[0];
+                  if (touch) {
+                    longPressStartPos.current = { x: touch.clientX, y: touch.clientY };
+                    hasMoved.current = false;
                   }
+
+                  // Track movement during touch
+                  const handleMove = moveEvent => {
+                    const currentTouch = moveEvent.touches?.[0];
+                    if (currentTouch && longPressStartPos.current) {
+                      const deltaX = Math.abs(currentTouch.clientX - longPressStartPos.current.x);
+                      const deltaY = Math.abs(currentTouch.clientY - longPressStartPos.current.y);
+                      // If moved more than 10px, mark as moved (user is scrolling)
+                      if (deltaX > 10 || deltaY > 10) {
+                        hasMoved.current = true;
+                        document.removeEventListener('touchmove', handleMove);
+                      }
+                    }
+                  };
+
+                  document.addEventListener('touchmove', handleMove, { passive: true });
 
                   // Handle double tap for actions
                   if (isDblTouchTap(e)) {
@@ -1718,12 +1685,18 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     if (editingTileId === String(tile._id)) {
                       setEditingTileId(null);
                     }
-                    handleLongPressEnd(tile._id); // Cancel long press
+                    document.removeEventListener('touchmove', handleMove);
                     onDoubleTap(e, tile.action, tile.tileContent, tile, index);
+                  } else {
+                    // Remove listener on touch end
+                    const handleEnd = () => {
+                      document.removeEventListener('touchmove', handleMove);
+                    };
+                    e.target.addEventListener('touchend', handleEnd, { once: true });
                   }
                 }}
                 onTouchEnd={() => {
-                  handleLongPressEnd(tile._id);
+                  handleClick(tile._id);
                 }}
                 onTouchCancel={() => {
                   // Clear single click timer on cancel
@@ -1731,7 +1704,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     clearTimeout(singleClickTimer.current);
                     singleClickTimer.current = null;
                   }
-                  handleLongPressEnd(tile._id);
+                  hasMoved.current = false;
+                }}
+                onClick={e => {
+                  // Don't handle if resizing or clicking on interactive elements
+                  if (isResizing) return;
+                  const target = e.target;
+                  if (target.closest('.resize-handle') || target.closest('.drag-handle')) {
+                    return;
+                  }
+                  handleClick(tile._id);
                 }}
                 onDoubleClick={e => {
                   if (isResizing) return;
@@ -1819,7 +1801,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
                   }}
                   onTouchStart={e => {
                     e.stopPropagation();
-                    handleLongPressEnd(); // Cancel long press
                     // Prevent drag when clicking settings button
                   }}
                   onMouseEnter={e => {

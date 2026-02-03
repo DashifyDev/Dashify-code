@@ -17,15 +17,12 @@ const TipTapTextEditorDialog = ({
   const [editorContent, setEditorContent] = useState(content || '');
   const [textBoxHeading, setTextBoxHeading] = useState('');
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
-  const [isContentReady, setIsContentReady] = useState(false);
   const editorContainerRef = useRef(null);
   const inputRef = useRef(null);
-  const isInitialMountRef = useRef(true);
   const modalRef = useRef(null);
 
   useEffect(() => {
     if (!open) {
-      setIsContentReady(false);
       return;
     }
     
@@ -39,19 +36,6 @@ const TipTapTextEditorDialog = ({
     // Get content from tileDetails if content prop is not provided
     const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || '';
     setEditorContent(tileContent);
-    
-    // Set content ready after a small delay to ensure content is set
-    // Use longer delay on mobile devices for better reliability
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const delay = isMobile ? 100 : 50;
-    
-    const timeoutId = setTimeout(() => {
-      setIsContentReady(true);
-    }, delay);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
   }, [open, selectedTileIndex, content, tileDetails]);
 
   // Fix height for iOS Safari
@@ -77,97 +61,6 @@ const TipTapTextEditorDialog = ({
     };
   }, [open]);
 
-  // Prevent editor and input from auto-focusing when modal opens
-  useEffect(() => {
-    if (open && isInitialMountRef.current) {
-      // Blur any focused elements immediately when modal opens
-      const blurActive = () => {
-        if (document.activeElement && document.activeElement.blur) {
-          document.activeElement.blur();
-        }
-        // Also blur ProseMirror editor if it exists
-        const proseMirror = document.querySelector('.ProseMirror');
-        if (proseMirror && document.activeElement === proseMirror) {
-          proseMirror.blur();
-        }
-      };
-
-      blurActive();
-
-      // Prevent focus on editor and input when modal first opens
-      const preventFocus = (e) => {
-        // Prevent focus on input
-        if (inputRef.current && (e.target === inputRef.current || inputRef.current.contains(e.target))) {
-          e.preventDefault();
-          e.stopPropagation();
-          blurActive();
-          return;
-        }
-
-        // Prevent focus on editor - check entire editor container
-        if (editorContainerRef.current && editorContainerRef.current.contains(e.target)) {
-          // Check if the target is anywhere in the editor area (ProseMirror, toolbar, etc.)
-          const editorElement = editorContainerRef.current.querySelector('.ProseMirror');
-          const toolbarElement = editorContainerRef.current.querySelector('.tiptap-editor-container');
-          
-          if (editorElement && (e.target === editorElement || editorElement.contains(e.target))) {
-            e.preventDefault();
-            e.stopPropagation();
-            blurActive();
-            return;
-          }
-          
-          // Also prevent focus on toolbar elements initially
-          if (toolbarElement && toolbarElement.contains(e.target) && e.target !== toolbarElement) {
-            e.preventDefault();
-            e.stopPropagation();
-            blurActive();
-            return;
-          }
-        }
-      };
-
-      // Add event listeners to prevent focus immediately
-      document.addEventListener('focusin', preventFocus, true);
-      document.addEventListener('focus', preventFocus, true);
-      document.addEventListener('mousedown', preventFocus, true);
-      document.addEventListener('touchstart', preventFocus, true);
-
-      // Continuously blur editor for a short period
-      const blurInterval = setInterval(() => {
-        blurActive();
-      }, 50);
-
-      // Remove listeners after a delay to allow normal interaction
-      const removeTimeoutId = setTimeout(() => {
-        clearInterval(blurInterval);
-        document.removeEventListener('focusin', preventFocus, true);
-        document.removeEventListener('focus', preventFocus, true);
-        document.removeEventListener('mousedown', preventFocus, true);
-        document.removeEventListener('touchstart', preventFocus, true);
-        isInitialMountRef.current = false;
-        // Make editor editable after delay
-        const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
-        if (proseMirror) {
-          proseMirror.setAttribute('contenteditable', 'true');
-        }
-      }, 800);
-
-      return () => {
-        clearInterval(blurInterval);
-        clearTimeout(removeTimeoutId);
-        document.removeEventListener('focusin', preventFocus, true);
-        document.removeEventListener('focus', preventFocus, true);
-        document.removeEventListener('mousedown', preventFocus, true);
-        document.removeEventListener('touchstart', preventFocus, true);
-      };
-    }
-    
-    if (!open) {
-      // Reset flag when modal closes
-      isInitialMountRef.current = true;
-    }
-  }, [open]);
 
   const handleClose = () => {
     onClose && onClose(editorContent);
@@ -189,9 +82,6 @@ const TipTapTextEditorDialog = ({
     setTextBoxHeading(td.editorHeading || 'Title');
     const newContent = td.tileContent || '';
     setEditorContent(newContent);
-    setIsContentReady(false);
-    // Small delay to ensure content is set before rendering editor
-    setTimeout(() => setIsContentReady(true), 50);
   };
 
   const goNext = () => {
@@ -202,9 +92,6 @@ const TipTapTextEditorDialog = ({
     setTextBoxHeading(td.editorHeading || 'Title');
     const newContent = td.tileContent || '';
     setEditorContent(newContent);
-    setIsContentReady(false);
-    // Small delay to ensure content is set before rendering editor
-    setTimeout(() => setIsContentReady(true), 50);
   };
 
   if (!open) return null;
@@ -270,14 +157,11 @@ const TipTapTextEditorDialog = ({
               ref={editorContainerRef}
               className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'
             >
-              {isContentReady && (
-                <TipTapMainEditor
-                  key={`editor-${open}-${indexValue}-${editorContent ? 'has-content' : 'empty'}`}
-                  initialContent={editorContent}
-                  onContentChange={html => setEditorContent(html)}
-                  editable={!isInitialMountRef.current}
-                />
-              )}
+              <TipTapMainEditor
+                key={`editor-${indexValue}`}
+                initialContent={editorContent}
+                onContentChange={html => setEditorContent(html)}
+              />
             </div>
           </div>
 {/* Navigation Indicator */} 

@@ -1,6 +1,6 @@
-.tiptap-editor-container {
+/* .tiptap-editor-container {
   height: 100%;
-}
+} */
 .tiptap-editor-container .tiptap-link {
   color: #3b82f6;
   text-decoration: underline;
@@ -97,8 +97,13 @@
 
 .tiptap-editor-container .tiptap-scroll-area {
   min-height: 350px;
-  max-height: 400px;
+  max-height: 500px;
   overflow: auto;
+}
+@media (max-width: 768px) {
+  .tiptap-editor-container .tiptap-scroll-area {
+    max-height: 400px;
+  }
 }
 
 .link-bubble-menu,
