@@ -1545,7 +1545,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
             left: '50%',
             bottom: '28px',
             transform: 'translateX(-50%)',
-            background: 'rgba(99, 137, 158, 0.85)',
+            background: 'rgba(99, 137, 158, 0.6)',
             color: '#fff',
             padding: '10px 24px',
             borderRadius: '36px',
@@ -1559,8 +1559,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)'
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
           }}
         >
           <EditIcon
@@ -1748,12 +1748,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       alignItems: 'center',
                       justifyContent: 'center',
                       zIndex: 10,
-                      backgroundColor: 'rgba(255, 255, 255, 1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.6)',
                       borderRadius: '8px',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 137, 158, 0.1)',
                       pointerEvents: 'none',
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)'
+                      backdropFilter: 'blur(3px)',
+                      WebkitBackdropFilter: 'blur(3px)'
                     }}
                   >
                     <svg
@@ -1787,12 +1787,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 10,
-                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.6)',
                     borderRadius: '8px',
                     padding: '4px',
                     transition: 'all 0.2s ease',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(99, 137, 158, 0.1)',
-                    backdropFilter: 'blur(8px)',
+                    backdropFilter: 'blur(3px)',
                     WebkitBackdropFilter: 'blur(8px)'
                   }}
                   onClick={e => {
@@ -1824,9 +1824,10 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     className='resize-handle resize-handle-bottom'
                     style={{
                       position: 'absolute',
-                      bottom: '-12px', // Sit slightly outside the box edge
-                      left: '12px',
-                      right: '12px',
+                      bottom: '0',
+                      left: '0',
+                      right: '0',
+                      width: '100%',
                       height: '42px', // 32-44px total tap area
                       cursor: 'ns-resize',
                       zIndex: 15,
@@ -1834,12 +1835,14 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 1)', // Fully opaque white background
-                      border: '2px solid rgba(99, 137, 158, 0.9)', // More opaque border with theme color
-                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.6)', // Semi-transparent white background for backdrop-filter
+                      borderBottomLeftRadius: '10px',
+                      borderBottomRightRadius: '10px',
+                      borderTopLeftRadius: '0',
+                      borderTopRightRadius: '0',
                       boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 137, 158, 0.15)',
-                      backdropFilter: 'blur(10px)',
-                      WebkitBackdropFilter: 'blur(10px)',
+                      backdropFilter: 'blur(3px)',
+                      WebkitBackdropFilter: 'blur(3px)',
                       transition: 'all 0.2s ease'
                     }}
                     onTouchStart={e => {
