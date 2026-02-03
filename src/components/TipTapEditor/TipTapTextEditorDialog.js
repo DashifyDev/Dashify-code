@@ -21,6 +21,7 @@ const TipTapTextEditorDialog = ({
   const editorContainerRef = useRef(null);
   const inputRef = useRef(null);
   const modalRef = useRef(null);
+  const initialViewportHeight = useRef(null);
 
   useEffect(() => {
     if (!open) {
@@ -50,26 +51,45 @@ const TipTapTextEditorDialog = ({
     };
   }, [open, selectedTileIndex, content, tileDetails]);
 
-  // Fix height for iOS Safari
+  // Fix height for iOS Safari - store initial viewport height
   useEffect(() => {
-    if (!open || !modalRef.current) return;
+    if (!open) {
+      initialViewportHeight.current = null;
+      return;
+    }
+
+    // Store initial viewport height when modal opens (before keyboard appears)
+    if (!initialViewportHeight.current) {
+      initialViewportHeight.current = window.innerHeight;
+    }
+
+    if (!modalRef.current) return;
 
     const setModalHeight = () => {
       if (modalRef.current) {
-        // Use window.innerHeight for iOS Safari compatibility
-        const vh = window.innerHeight * 0.01;
+        // Use stored initial height or current height, whichever is larger
+        // This prevents modal from shrinking when keyboard appears
+        const currentHeight = window.innerHeight;
+        const heightToUse = initialViewportHeight.current || currentHeight;
+        
+        const vh = heightToUse * 0.01;
         modalRef.current.style.setProperty('--vh', `${vh}px`);
-        modalRef.current.style.height = `${window.innerHeight}px`;
+        modalRef.current.style.height = `${heightToUse}px`;
       }
     };
 
     setModalHeight();
-    window.addEventListener('resize', setModalHeight);
-    window.addEventListener('orientationchange', setModalHeight);
+    
+    // Only update on orientation change, not on resize (to avoid keyboard resize)
+    const handleOrientationChange = () => {
+      initialViewportHeight.current = window.innerHeight;
+      setModalHeight();
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
-      window.removeEventListener('resize', setModalHeight);
-      window.removeEventListener('orientationchange', setModalHeight);
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [open]);
 
@@ -177,7 +197,7 @@ const TipTapTextEditorDialog = ({
           onClick={e => e.stopPropagation()}
           style={{
             height: typeof window !== 'undefined' && window.innerWidth < 640 
-              ? `${window.innerHeight}px` 
+              ? (initialViewportHeight.current ? `${initialViewportHeight.current}px` : '100dvh')
               : undefined
           }}
         >
