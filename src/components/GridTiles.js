@@ -1388,6 +1388,87 @@ const GridTiles = memo(function GridTiles({
 
               {/* Content - Scrollable */}
               <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0 mt-6'>
+                {/* Text Display */}
+                <div className='space-y-3'>
+                  <button
+                    onClick={() => toggleSection('textDisplay')}
+                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                  >
+                    <span>Box Text Display</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        collapsedSections.textDisplay ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+                  {!collapsedSections.textDisplay && (
+                  <div className='flex flex-col sm:flex-row gap-4'>
+                    {/* Left: Edit Text Content button */}
+                    <div className='flex-1'>
+                      <button
+                        onClick={() => {
+                          if (selectedTile !== null && selectedTile !== undefined) {
+                            setCurrentTileIndex(selectedTile);
+                          }
+                          setEditorOpen(true);
+                        }}
+                        className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
+                      >
+                        <Image
+                          src={text}
+                          alt='TEXT'
+                          width={40}
+                          height={40}
+                          className='group-hover:scale-110 transition-transform'
+                        />
+                        <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
+                          Edit Text Content
+                        </span>
+                      </button>
+                    </div>
+                    {/* Right: Checkbox and dropdowns */}
+                    <div className='flex flex-col gap-3 flex-1'>
+                      <label className='flex items-center gap-2 cursor-pointer group'>
+                        <input
+                          type='checkbox'
+                          checked={selectedTileDetail.displayTitle}
+                          onChange={displayTitle}
+                          className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
+                        />
+                        <span className='text-sm font-medium text-gray-700'>Show Text</span>
+                      </label>
+                      <div className='flex gap-2'>
+                        <select
+                          value={selectedTileDetail.titleX}
+                          onChange={handleChangePositionX}
+                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                        >
+                          <option value={1}>Left</option>
+                          <option value={2}>Center</option>
+                          <option value={3}>Right</option>
+                        </select>
+                        <select
+                          value={selectedTileDetail.titleY}
+                          onChange={handleChangePositionY}
+                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                        >
+                          <option value={1}>Top</option>
+                          <option value={2}>Center</option>
+                          <option value={3}>Bottom</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  )}
+                </div>
                 {/* Box Background */}
                 <div className='space-y-3'>
                   <button
@@ -1663,87 +1744,7 @@ const GridTiles = memo(function GridTiles({
                   )}
                 </div>
 
-                {/* Text Display */}
-                <div className='space-y-3'>
-                  <button
-                    onClick={() => toggleSection('textDisplay')}
-                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
-                  >
-                    <span>Box Text Display</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform duration-200 ${
-                        collapsedSections.textDisplay ? 'rotate-180' : ''
-                      }`}
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path d='M19 9l-7 7-7-7' />
-                    </svg>
-                  </button>
-                  {!collapsedSections.textDisplay && (
-                  <div className='flex flex-col sm:flex-row gap-4'>
-                    {/* Left: Edit Text Content button */}
-                    <div className='flex-1'>
-                      <button
-                        onClick={() => {
-                          if (selectedTile !== null && selectedTile !== undefined) {
-                            setCurrentTileIndex(selectedTile);
-                          }
-                          setEditorOpen(true);
-                        }}
-                        className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
-                      >
-                        <Image
-                          src={text}
-                          alt='TEXT'
-                          width={40}
-                          height={40}
-                          className='group-hover:scale-110 transition-transform'
-                        />
-                        <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
-                          Edit Text Content
-                        </span>
-                      </button>
-                    </div>
-                    {/* Right: Checkbox and dropdowns */}
-                    <div className='flex flex-col gap-3 flex-1'>
-                      <label className='flex items-center gap-2 cursor-pointer group'>
-                        <input
-                          type='checkbox'
-                          checked={selectedTileDetail.displayTitle}
-                          onChange={displayTitle}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
-                        />
-                        <span className='text-sm font-medium text-gray-700'>Show Text</span>
-                      </label>
-                      <div className='flex gap-2'>
-                        <select
-                          value={selectedTileDetail.titleX}
-                          onChange={handleChangePositionX}
-                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
-                        >
-                          <option value={1}>Left</option>
-                          <option value={2}>Center</option>
-                          <option value={3}>Right</option>
-                        </select>
-                        <select
-                          value={selectedTileDetail.titleY}
-                          onChange={handleChangePositionY}
-                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
-                        >
-                          <option value={1}>Top</option>
-                          <option value={2}>Center</option>
-                          <option value={3}>Bottom</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  )}
-                </div>
+                
 
                 {/* Box Order */}
                 <div className='space-y-3'>
