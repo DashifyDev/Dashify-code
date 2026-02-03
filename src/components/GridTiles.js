@@ -1176,7 +1176,7 @@ const GridTiles = memo(function GridTiles({
       currentTileIndex < 0 ||
       currentTileIndex >= tileCordinates.length
     ) {
-      setEditorOpen(false);
+    setEditorOpen(false);
       return;
     }
 
@@ -1748,7 +1748,7 @@ const GridTiles = memo(function GridTiles({
 
                 {/* Box Order */}
                 <div className='space-y-3'>
-                  <button
+                      <button
                     onClick={() => toggleSection('order')}
                     className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
                   >
@@ -1891,12 +1891,12 @@ const GridTiles = memo(function GridTiles({
             />
             <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
               <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[75vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                 onClick={e => e.stopPropagation()}
               >
                 {/* Header */}
                 <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                  <h2 className='text-xl font-bold text-[#63899e]'>Edit Text</h2>
+                  <h2 className='text-xl font-bold text-[#63899e] m-0'>Edit Text</h2>
                   <button
                     onClick={() => setEditorOpen(false)}
                     className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'

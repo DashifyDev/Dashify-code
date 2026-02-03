@@ -20,8 +20,6 @@ const TipTapTextEditorDialog = ({
   const [isContentReady, setIsContentReady] = useState(false);
   const editorContainerRef = useRef(null);
   const inputRef = useRef(null);
-  const modalRef = useRef(null);
-  const initialViewportHeight = useRef(null);
 
   useEffect(() => {
     if (!open) {
@@ -51,54 +49,13 @@ const TipTapTextEditorDialog = ({
     };
   }, [open, selectedTileIndex, content, tileDetails]);
 
-  // Fix height for iOS Safari - store initial viewport height
-  useEffect(() => {
-    if (!open) {
-      initialViewportHeight.current = null;
-      return;
-    }
-
-    // Store initial viewport height when modal opens (before keyboard appears)
-    if (!initialViewportHeight.current) {
-      initialViewportHeight.current = window.innerHeight;
-    }
-
-    if (!modalRef.current) return;
-
-    const setModalHeight = () => {
-      if (modalRef.current) {
-        // Use stored initial height or current height, whichever is larger
-        // This prevents modal from shrinking when keyboard appears
-        const currentHeight = window.innerHeight;
-        const heightToUse = initialViewportHeight.current || currentHeight;
-        
-        const vh = heightToUse * 0.01;
-        modalRef.current.style.setProperty('--vh', `${vh}px`);
-        modalRef.current.style.height = `${heightToUse}px`;
-      }
-    };
-
-    setModalHeight();
-    
-    // Only update on orientation change, not on resize (to avoid keyboard resize)
-    const handleOrientationChange = () => {
-      initialViewportHeight.current = window.innerHeight;
-      setModalHeight();
-    };
-
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange);
-    };
-  }, [open]);
 
   // Prevent auto-focus on mobile devices
   useEffect(() => {
     if (!open) return;
 
     // Prevent focus on editor when modal opens
-    const preventFocus = (e) => {
+      const preventFocus = (e) => {
       const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
       if (proseMirror) {
         // Prevent focus events
@@ -134,7 +91,7 @@ const TipTapTextEditorDialog = ({
       }, 500)
     ];
 
-    return () => {
+      return () => {
       timeoutIds.forEach(id => clearTimeout(id));
       events.forEach(eventType => {
         document.removeEventListener(eventType, preventFocus, true);
@@ -192,14 +149,8 @@ const TipTapTextEditorDialog = ({
       {/* Modal - Desktop: centered, Mobile: bottom sheet */}
       <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
         <div
-          ref={modalRef}
-          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100dvh] sm:h-auto sm:max-h-[75vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
+          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[75vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
           onClick={e => e.stopPropagation()}
-          style={{
-            height: typeof window !== 'undefined' && window.innerWidth < 640 
-              ? (initialViewportHeight.current ? `${initialViewportHeight.current}px` : '100dvh')
-              : undefined
-          }}
         >
           {/* Header */}
           <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
