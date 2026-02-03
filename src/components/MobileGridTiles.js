@@ -74,6 +74,8 @@ const MobileGridTiles = memo(function MobileGridTiles({
   const initialDragStateRef = useRef(null); // Store initial state when drag starts
   const isInitialMountRef = useRef(true); // Track if component just mounted
   const settingsModalRef = useRef(null); // Ref for settings modal
+  const editorModalRef = useRef(null); // Ref for editor modal
+  const initialEditorViewportHeight = useRef(null); // Store initial viewport height for editor modal
 
   // Sort tiles by order (mobileY position) for display
   const sortedTiles = useMemo(() => {
@@ -1511,6 +1513,46 @@ const MobileGridTiles = memo(function MobileGridTiles({
     }
   }, [editorOpen, currentTileIndex, sortedTiles]);
 
+  // Fix height for editor modal - store initial viewport height
+  useEffect(() => {
+    if (!editorOpen) {
+      initialEditorViewportHeight.current = null;
+      return;
+    }
+
+    // Store initial viewport height when modal opens (before keyboard appears)
+    if (!initialEditorViewportHeight.current) {
+      initialEditorViewportHeight.current = window.innerHeight;
+    }
+
+    if (!editorModalRef.current) return;
+
+    const setModalHeight = () => {
+      if (editorModalRef.current) {
+        // Use stored initial height or current height, whichever is larger
+        // This prevents modal from shrinking when keyboard appears
+        const currentHeight = window.innerHeight;
+        const heightToUse = initialEditorViewportHeight.current || currentHeight;
+        
+        editorModalRef.current.style.height = `${heightToUse}px`;
+      }
+    };
+
+    setModalHeight();
+    
+    // Only update on orientation change, not on resize (to avoid keyboard resize)
+    const handleOrientationChange = () => {
+      initialEditorViewportHeight.current = window.innerHeight;
+      setModalHeight();
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [editorOpen]);
+
   // Fix height for iOS Safari - Settings Modal
   useEffect(() => {
     if (!showModel || !settingsModalRef.current) return;
@@ -2529,11 +2571,12 @@ const MobileGridTiles = memo(function MobileGridTiles({
               />
               <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
                 <div
+                  ref={editorModalRef}
                   className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1104px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
                   onClick={e => e.stopPropagation()}
                   style={{
                     height: typeof window !== 'undefined' && window.innerWidth < 640 
-                      ? `${window.innerHeight}px` 
+                      ? (initialEditorViewportHeight.current ? `${initialEditorViewportHeight.current}px` : '100dvh')
                       : undefined
                   }}
                 >
