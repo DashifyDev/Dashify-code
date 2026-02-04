@@ -13,7 +13,7 @@
 }
 
 .tiptap-editor-container .ProseMirror {
-  min-height: 350px;
+  min-height: 450px;
   padding: 10px;
   line-height: normal;
 }
@@ -96,7 +96,7 @@
 }
 
 .tiptap-editor-container .tiptap-scroll-area {
-  min-height: 350px;
+  min-height: 450px;
   max-height: 500px;
   overflow: auto;
 }
