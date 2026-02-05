@@ -766,16 +766,34 @@ const GridTiles = memo(function GridTiles({
     e.preventDefault();
     let items = [...tileCordinates];
     let tileId = tileCordinates[index]._id;
+    const currentTile = items[index];
+
+    // Debug: log resize info
+    console.log('[Resize Debug] direction:', direction);
+    console.log('[Resize Debug] delta:', delta);
+    console.log('[Resize Debug] new position:', position);
+    console.log('[Resize Debug] old position:', { x: currentTile.x, y: currentTile.y });
+    console.log('[Resize Debug] new size:', { width: ref.style.width, height: ref.style.height });
+    console.log('[Resize Debug] old size:', { width: currentTile.width, height: currentTile.height });
+
+    // When resizing from left or top edges, position changes too
+    // We need to save both size AND position to prevent jumping
     let toUpdate = {
       width: ref.style.width,
-      height: ref.style.height
+      height: ref.style.height,
+      x: position.x,
+      y: position.y
     };
+
+    console.log('[Resize Debug] toUpdate:', toUpdate);
+
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setTileCordinates(items);
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then(res => {
         if (res.data) {
+          console.log('[Resize Debug] Server response:', res.data);
           // Update React Query cache
           queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
             if (!oldData) return oldData;

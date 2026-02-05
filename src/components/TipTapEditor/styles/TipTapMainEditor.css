@@ -16,6 +16,7 @@
   min-height: 450px;
   padding: 10px;
   line-height: normal;
+  background-color: #f3f3f3f4
 }
 .tiptap-editor-container .ProseMirror p {
   margin: 0;

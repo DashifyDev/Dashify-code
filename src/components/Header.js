@@ -199,17 +199,16 @@ function Header() {
     const newX = START_X + colIndex * (TILE_WIDTH + TILE_SPACING);
     const newY = START_Y + rowIndex * ROW_HEIGHT;
 
-    // Calculate order based on existing tiles count
-    const maxOrder =
-      currentTiles.length > 0 ? Math.max(...currentTiles.map(t => t.order || 0), 0) : 0;
-    const newOrder = maxOrder + 1;
+    // New tile always gets order: 1 (first position)
+    // All existing tiles will be shifted by +1
+    const newOrder = 1;
 
     // Calculate mobile profile defaults
     const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     // Increased side padding: 24px on each side (48px total)
     const mobileWidth = `${windowWidth - 48}px`;
-    // Calculate mobileY based on userCreatedTiles to ensure proper stacking from top
-    const mobileY = userCreatedTiles.length * 166; // Position based on user-created tiles count
+    // New tile at the top, mobileY: 0
+    const mobileY = 0;
 
     const newtile = {
       dashboardId: currentActiveBoard,
@@ -230,59 +229,101 @@ function Header() {
     };
 
     if (dbUser) {
-      // Optimistic update
+      // Shift all existing tiles order by +1 and mobileY by +166
+      const MOBILE_TILE_HEIGHT = 166;
+      const updatedTiles = currentTiles.map(tile => {
+        const currentTileOrder = tile.order || 0;
+        const currentMobileY = tile.mobileY || 0;
+        return {
+          ...tile,
+          order: currentTileOrder + 1,
+          mobileY: currentMobileY + MOBILE_TILE_HEIGHT
+        };
+      });
+
+      // Optimistic update - add new tile at beginning with updated existing tiles
       const tempTile = { ...newtile, _id: `temp_${Date.now()}` };
-      setTiles(prevTiles => [...prevTiles, tempTile]);
+      setTiles([tempTile, ...updatedTiles]);
 
       // Update React Query cache optimistically
       queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          tiles: [...(oldData.tiles || []), tempTile]
+          tiles: [tempTile, ...updatedTiles]
         };
       });
 
-      axios
-        .post('/api/tile/tile', newtile)
-        .then(res => {
-          // Replace temporary block with real one
-          setTiles(prevTiles =>
-            prevTiles.map(tile => (tile._id === tempTile._id ? res.data : tile))
-          );
+      // Prepare batch update for existing tiles (shift order and mobileY)
+      const tilesToUpdate = currentTiles
+        .filter(tile => tile._id && !tile._id.toString().startsWith('temp_'))
+        .map(tile => ({
+          tileId: tile._id,
+          data: {
+            order: (tile.order || 0) + 1,
+            mobileY: (tile.mobileY || 0) + MOBILE_TILE_HEIGHT
+          }
+        }));
 
-          // Update React Query cache
-          queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: (oldData.tiles || []).map(tile =>
-                tile._id === tempTile._id ? res.data : tile
-              )
-            };
-          });
-          // ensure subscribers see the latest data
-          queryClient.setQueryData(detailKey, old => {
-            if (!old) return { ...res.data };
-            return {
-              ...(old || {}),
-              tiles: (old.tiles || []).map(t => (t._id === tempTile._id ? res.data : t))
-            };
-          });
-        })
-        .catch(error => {
-          console.error('Error adding tile:', error);
-          // Remove temporary block on error
-          setTiles(prevTiles => prevTiles.filter(tile => tile._id !== tempTile._id));
+      // First update existing tiles, then add new tile
+      const addNewTile = () => {
+        axios
+          .post('/api/tile/tile', newtile)
+          .then(res => {
+            // Replace temporary block with real one
+            setTiles(prevTiles =>
+              prevTiles.map(tile => (tile._id === tempTile._id ? res.data : tile))
+            );
 
-          queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: oldData.tiles.filter(tile => tile._id !== tempTile._id)
-            };
+            // Update React Query cache
+            queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: (oldData.tiles || []).map(tile =>
+                  tile._id === tempTile._id ? res.data : tile
+                )
+              };
+            });
+            // ensure subscribers see the latest data
+            queryClient.setQueryData(detailKey, old => {
+              if (!old) return { ...res.data };
+              return {
+                ...(old || {}),
+                tiles: (old.tiles || []).map(t => (t._id === tempTile._id ? res.data : t))
+              };
+            });
+          })
+          .catch(error => {
+            console.error('Error adding tile:', error);
+            // Remove temporary block on error and revert tile positions
+            setTiles(currentTiles);
+
+            queryClient.setQueryData(dashboardKeys.detail(currentActiveBoard), oldData => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: currentTiles
+              };
+            });
           });
-        });
+      };
+
+      // Update existing tiles first, then add new tile
+      if (tilesToUpdate.length > 0) {
+        axios
+          .post('/api/tile/batch-update', { updates: tilesToUpdate })
+          .then(() => {
+            addNewTile();
+          })
+          .catch(err => {
+            console.error('Error updating tile orders:', err);
+            // Still try to add the tile
+            addNewTile();
+          });
+      } else {
+        addNewTile();
+      }
     } else {
       let boardIndex = boards.findIndex(obj => obj._id === currentActiveBoard);
       if (boardIndex === -1) {
@@ -293,9 +334,18 @@ function Header() {
       if (!items[boardIndex].tiles) {
         items[boardIndex].tiles = [];
       }
-      // Add temporary ID for guest users too
+
+      // Shift all existing tiles order by +1 and mobileY by +166
+      const MOBILE_TILE_HEIGHT = 166;
+      items[boardIndex].tiles = items[boardIndex].tiles.map(tile => ({
+        ...tile,
+        order: (tile.order || 0) + 1,
+        mobileY: (tile.mobileY || 0) + MOBILE_TILE_HEIGHT
+      }));
+
+      // Add temporary ID for guest users too and add at the beginning
       const tempTile = { ...newtile, _id: `temp_${Date.now()}_${Math.random()}` };
-      items[boardIndex].tiles.push(tempTile);
+      items[boardIndex].tiles.unshift(tempTile);
 
       // Update localStorage first to ensure useDashboard hook sees the latest data
       localStorage.setItem('Dasify', JSON.stringify(items));
