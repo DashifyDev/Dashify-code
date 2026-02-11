@@ -249,7 +249,7 @@ const GridTiles = memo(function GridTiles({
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
-      (payload.backgroundAction = 'image'), (payload.displayTitle = false);
+      payload.backgroundAction = 'image';
       formData.append('tileImage', payload.tileBackground);
       delete payload.tileBackground;
     }
@@ -1270,7 +1270,16 @@ const GridTiles = memo(function GridTiles({
   return (
     <div className='main_grid_container'>
       <div className='tiles_container'>
-        {tileCordinates.map((tile, index) => {
+        {/* Sort tiles by created date (oldest first, newest last) using MongoDB _id */}
+        {[...tileCordinates]
+          .map((tile, originalIndex) => ({ tile, originalIndex }))
+          .sort((a, b) => {
+            if (!a.tile._id && !b.tile._id) return 0;
+            if (!a.tile._id) return -1;
+            if (!b.tile._id) return 1;
+            return a.tile._id.localeCompare(b.tile._id);
+          })
+          .map(({ tile, originalIndex: index }) => {
           const computedStyle = style(index, tile);
           const isImgBackground = isBackgroundImage(tile.tileBackground);
           return (
@@ -1573,7 +1582,7 @@ const GridTiles = memo(function GridTiles({
                     {selectedTileDetail.backgroundAction === 'image' && (
                       <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
                         <div
-                          className='relative w-20 h-20 rounded-lg border-2 border-gray-300 hover:border-[#63899e] transition-colors cursor-pointer overflow-hidden bg-gray-100 flex items-center justify-center'
+                          className='relative w-20 h-20 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group'
                           onClick={handleImageInput}
                         >
                           {imagePreview ||
@@ -1592,13 +1601,16 @@ const GridTiles = memo(function GridTiles({
                               className='w-full h-full object-cover'
                             />
                           ) : (
-                            <Image
-                              src={imageUpload}
-                              alt='Upload image'
-                              width={40}
-                              height={40}
-                              className='opacity-50'
-                            />
+                            <div className='flex flex-col items-center gap-1'>
+                              <Image
+                                src={imageUpload}
+                                alt='Upload image'
+                                width={32}
+                                height={32}
+                                className='opacity-70 group-hover:opacity-100 transition-opacity duration-200'
+                              />
+                              <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span>
+                            </div>
                           )}
                         </div>
                         <div className='flex-1 min-w-0'>

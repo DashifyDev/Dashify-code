@@ -713,7 +713,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
       payload.backgroundAction = 'image';
-      payload.displayTitle = false;
       formData.append('tileImage', payload.tileBackground);
       delete payload.tileBackground;
     }
@@ -2234,7 +2233,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       {selectedTileDetail.backgroundAction === 'image' && (
                         <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
                           <div
-                            className='relative w-20 h-20 rounded-lg border-2 border-gray-300 hover:border-[#63899e] transition-colors cursor-pointer overflow-hidden bg-gray-100 flex items-center justify-center'
+                            className='relative w-20 h-20 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group'
                             onClick={handleImageInput}
                           >
                             {imagePreview ||
@@ -2253,13 +2252,16 @@ const MobileGridTiles = memo(function MobileGridTiles({
                                 className='w-full h-full object-cover'
                               />
                             ) : (
-                              <Image
-                                src={imageUpload}
-                                alt='Upload image'
-                                width={40}
-                                height={40}
-                                className='opacity-50'
-                              />
+                              <div className='flex flex-col items-center gap-1'>
+                                <Image
+                                  src={imageUpload}
+                                  alt='Upload image'
+                                  width={32}
+                                  height={32}
+                                  className='opacity-70 group-hover:opacity-100 transition-opacity duration-200'
+                                />
+                                <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span>
+                              </div>
                             )}
                           </div>
                           <div className='flex-1 min-w-0'>
@@ -2487,9 +2489,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
                     )}
                   </div>
                 </div>
+                <div className="w-full h-[1px] bg-gray-200" />
 
                 {/* Footer */}
                 <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
+                  
                   <div className='flex gap-4 justify-center w-full'>
                     <button
                       onClick={() => tileClone(selectedTile)}
@@ -2508,7 +2512,6 @@ const MobileGridTiles = memo(function MobileGridTiles({
                       <span>Delete</span>
                     </button>
                   </div>
-                  <div className="w-full h-[1px] bg-gray-200" />
                   <div className='flex items-center gap-3 sm:justify-end'>
                     <Button
                       variant='outline'
