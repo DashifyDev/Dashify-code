@@ -6,6 +6,7 @@ import { useDashboardData } from '@/context/optimizedContext';
 import useAdmin from '@/hooks/isAdmin';
 import { dashboardKeys } from '@/hooks/useDashboard';
 import useIsMobile from '@/hooks/useIsMobile';
+import { safeSetItem } from '@/utils/safeLocalStorage';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -316,7 +317,7 @@ function OptimizedDashboardPage() {
       };
       let items = boards;
       items = [payload, ...items];
-      localStorage.setItem('Dasify', JSON.stringify(items));
+      safeSetItem('Dasify', JSON.stringify(items));
       setBoards(items);
       setTiles(newTiles);
 
@@ -390,7 +391,7 @@ function OptimizedDashboardPage() {
   );
 
   const updateTilesInLocalstorage = useCallback(
-    tileArray => {
+    (tileArray, options = {}) => {
       if (!user) {
         const existingBoards = JSON.parse(localStorage.getItem('Dasify') || '[]');
         const boardIndex = existingBoards.findIndex(board => board._id === activeBoard);
@@ -400,7 +401,7 @@ function OptimizedDashboardPage() {
             ...updatedBoards[boardIndex],
             tiles: tileArray
           };
-          localStorage.setItem('Dasify', JSON.stringify(updatedBoards));
+          safeSetItem('Dasify', JSON.stringify(updatedBoards), { showAlert: !!options.showAlert });
           setBoards(updatedBoards);
         }
       }

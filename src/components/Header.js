@@ -13,6 +13,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import { v4 as uuidv4 } from 'uuid';
+import { safeSetItem } from '../utils/safeLocalStorage';
 import logo from '../assets/logo.png';
 import SideDrawer from './SideDrawer';
 import { Button } from './ui/button';
@@ -161,7 +162,7 @@ function Header() {
           router.push(`/dashboard/${res.data[0]._id}`);
         }
       }
-      localStorage.setItem('Dasify', JSON.stringify(res.data));
+      safeSetItem('Dasify', JSON.stringify(res.data));
     });
   };
 
@@ -348,7 +349,7 @@ function Header() {
       items[boardIndex].tiles.unshift(tempTile);
 
       // Update localStorage first to ensure useDashboard hook sees the latest data
-      localStorage.setItem('Dasify', JSON.stringify(items));
+      safeSetItem('Dasify', JSON.stringify(items));
       setBoards(items);
 
       // Use functional update to ensure we get the latest state
@@ -560,7 +561,7 @@ function Header() {
       };
       let items = boards;
       items = [payload, ...items];
-      localStorage.setItem('Dasify', JSON.stringify(items));
+      safeSetItem('Dasify', JSON.stringify(items));
       setBoards(items);
       setTiles([tempDefTile1, tempDefTile2]);
 
@@ -605,7 +606,7 @@ function Header() {
       let item = items[boardIndex];
       item = { ...item, name: dashBoardName };
       items[boardIndex] = item;
-      localStorage.setItem('Dasify', JSON.stringify(items));
+      safeSetItem('Dasify', JSON.stringify(items));
     }
   };
 
@@ -625,7 +626,7 @@ function Header() {
     } else {
       if (list.length > 1) {
         setBoards(list);
-        localStorage.setItem('Dasify', JSON.stringify(list));
+        safeSetItem('Dasify', JSON.stringify(list));
       }
     }
   };
@@ -675,7 +676,7 @@ function Header() {
       let items = boards;
       items.splice(index, 1);
       setBoards(items);
-      localStorage.setItem('Dasify', JSON.stringify(items));
+      safeSetItem('Dasify', JSON.stringify(items));
       setDash(isLastIndex, index);
     }
     setOpenDashDeleteModel(false);
@@ -709,7 +710,7 @@ function Header() {
     } else {
       const newBoard = { ...currentBoard, _id: uuidv4() };
       setBoards([...boards, newBoard]);
-      localStorage.setItem('Dasify', JSON.stringify([...boards, newBoard]));
+      safeSetItem('Dasify', JSON.stringify([...boards, newBoard]), { showAlert: true });
     }
   };
 

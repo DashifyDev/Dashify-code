@@ -895,7 +895,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
           let item = { ...items[updatedTileIndex], ...updatedData };
           items[updatedTileIndex] = item;
           setTileCordinates(items);
-          updateTilesInLocalstorage(items);
+          updateTilesInLocalstorage(items, { showAlert: true });
           setSelectedTile(null);
         };
         reader.readAsDataURL(formValue.tileBackground);

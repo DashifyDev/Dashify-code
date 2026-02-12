@@ -394,7 +394,7 @@ const GridTiles = memo(function GridTiles({
           let item = { ...items[selectedTile], ...updatedData };
           items[selectedTile] = item;
           setTileCordinates(items);
-          updateTilesInLocalstorage(items);
+          updateTilesInLocalstorage(items, { showAlert: true });
           setSelectedTile(null);
         };
         reader.readAsDataURL(formValue.tileBackground);

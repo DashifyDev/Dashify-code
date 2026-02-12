@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { safeSetItem } from '@/utils/safeLocalStorage';
 
 function Library() {
   const [library, setLibrary] = useState([]);
@@ -175,7 +176,7 @@ function Library() {
         };
         let items = boards;
         items = [...items, payload];
-        localStorage.setItem('Dasify', JSON.stringify(items));
+        safeSetItem('Dasify', JSON.stringify(items));
         setBoards(items);
         setTiles(newTiles);
 
