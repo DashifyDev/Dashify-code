@@ -66,7 +66,7 @@ const ColorPicker = ({ handleColorChange, colorBackground }) => {
       >
         <div className="relative">
           <div
-            className="w-12 h-12 rounded-lg border-2 border-gray-300 shadow-inner"
+            className="w-16 h-16 sm:w-12 sm:h-12  rounded-lg border-2 border-gray-300 shadow-inner"
             style={{
               backgroundColor: color.a !== undefined && color.a < 1 
                 ? `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`

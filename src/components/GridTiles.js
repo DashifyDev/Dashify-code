@@ -1572,7 +1572,7 @@ const GridTiles = memo(function GridTiles({
                       </label>
                     </div>
                     {selectedTileDetail.backgroundAction === 'color' && (
-                      <div className='pl-2'>
+                      <div>
                         <ColorPicker
                           handleColorChange={handleColorChange}
                           colorBackground={colorBackground}
@@ -1580,9 +1580,9 @@ const GridTiles = memo(function GridTiles({
                       </div>
                     )}
                     {selectedTileDetail.backgroundAction === 'image' && (
-                      <div className='flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200'>
+                      <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200'>
                         <div
-                          className='relative w-20 h-20 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group'
+                          className='relative w-12 h-12 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group'
                           onClick={handleImageInput}
                         >
                           {imagePreview ||
@@ -1605,20 +1605,21 @@ const GridTiles = memo(function GridTiles({
                               <Image
                                 src={imageUpload}
                                 alt='Upload image'
-                                width={32}
-                                height={32}
-                                className='opacity-70 group-hover:opacity-100 transition-opacity duration-200'
+                                width={28}
+                                height={28}
+                                className='opacity-70 group-hover:opacity-100 transition-opacity duration-200 ml-1'
                               />
-                              <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span>
+                              {/* <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span> */}
                             </div>
                           )}
                         </div>
                         <div className='flex-1 min-w-0'>
-                          <p className='text-xs text-gray-500 mb-1'>Selected file:</p>
-                          <p className='text-sm font-medium text-gray-700 truncate'>
+                          <p className='text-xs text-gray-500 font-medium m-0'>Selected file</p>
+                          <p className='text-sm font-medium text-gray-700 truncate m-0'>
                             {imageFileName ||
                               (selectedTileDetail.tileBackground &&
-                              typeof selectedTileDetail.tileBackground === 'string'
+                              typeof selectedTileDetail.tileBackground === 'string' &&
+                              isBackgroundImage(selectedTileDetail.tileBackground)
                                 ? 'Image loaded'
                                 : 'No file selected')}
                           </p>
