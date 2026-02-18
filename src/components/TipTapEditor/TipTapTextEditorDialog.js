@@ -191,7 +191,7 @@ const TipTapTextEditorDialog = ({
             {/* Editor */}
             <div 
               ref={editorContainerRef}
-              className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'
+              className='flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6'
             >
               {isContentReady && (
                 <TipTapMainEditor

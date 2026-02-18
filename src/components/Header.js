@@ -344,8 +344,8 @@ function Header() {
         mobileY: (tile.mobileY || 0) + MOBILE_TILE_HEIGHT
       }));
 
-      // Add temporary ID for guest users too and add at the beginning
-      const tempTile = { ...newtile, _id: `temp_${Date.now()}_${Math.random()}` };
+      // Add temporary ID and createdAt for guest users and add at the beginning
+      const tempTile = { ...newtile, _id: `temp_${Date.now()}_${Math.random()}`, createdAt: new Date().toISOString() };
       items[boardIndex].tiles.unshift(tempTile);
 
       // Update localStorage first to ensure useDashboard hook sees the latest data

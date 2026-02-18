@@ -1042,7 +1042,7 @@ const GridTiles = memo(function GridTiles({
       // mobileHeight will be copied from content if it exists
     };
 
-    // Remove _id so a new one will be created
+    // Remove _id so a new one will be created (createdAt is preserved from original)
     delete newTile._id;
 
     setShowModel(false);
@@ -1270,14 +1270,19 @@ const GridTiles = memo(function GridTiles({
   return (
     <div className='main_grid_container'>
       <div className='tiles_container'>
-        {/* Sort tiles by created date (oldest first, newest last) using MongoDB _id */}
+        {console.log('tileCordinates', tileCordinates)}
+        {/* Sort tiles by createdAt (oldest first, newest last), fallback to _id */}
         {[...tileCordinates]
           .map((tile, originalIndex) => ({ tile, originalIndex }))
           .sort((a, b) => {
+            const dateA = a.tile.createdAt ? new Date(a.tile.createdAt).getTime() : 0;
+            const dateB = b.tile.createdAt ? new Date(b.tile.createdAt).getTime() : 0;
+            if (dateA && dateB && dateA !== dateB) return dateA - dateB;
+            // Fallback to _id for old tiles without createdAt
             if (!a.tile._id && !b.tile._id) return 0;
             if (!a.tile._id) return -1;
             if (!b.tile._id) return 1;
-            return a.tile._id.localeCompare(b.tile._id);
+            return String(a.tile._id).localeCompare(String(b.tile._id));
           })
           .map(({ tile, originalIndex: index }) => {
           const computedStyle = style(index, tile);
@@ -1949,7 +1954,7 @@ const GridTiles = memo(function GridTiles({
 
                 {/* Editor Content */}
                 <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
-                  <div className='flex-1 min-w-0 overflow-y-auto px-4 sm:px-6 pt-4 sm:pt-6'>
+                  <div className='flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6'>
                     <TipTapMainEditor
                       initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
                       onContentChange={html => enterText(html)}

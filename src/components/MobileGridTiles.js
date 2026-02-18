@@ -1058,7 +1058,7 @@ const MobileGridTiles = memo(function MobileGridTiles({
       order: newOrder
     };
 
-    // Remove _id so a new one will be created
+    // Remove _id so a new one will be created (createdAt is preserved from original)
     delete newTile._id;
 
     setShowModel(false);

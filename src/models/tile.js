@@ -81,6 +81,11 @@ const tileSchema = new Schema({
   mobileHeight: {
     type: String,
   },
+  // Creation timestamp – preserved during board/tile duplication for consistent ordering
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Tile = models.Tile || model("Tile", tileSchema);
