@@ -1055,10 +1055,11 @@ const MobileGridTiles = memo(function MobileGridTiles({
       // Only copy mobileHeight if it was manually set (not default)
       // If content had mobileHeight set, keep it; otherwise don't set it (use min-height)
       ...(content.mobileHeight ? { mobileHeight: content.mobileHeight } : {}),
-      order: newOrder
+      order: newOrder,
+      createdAt: new Date().toISOString(),
     };
 
-    // Remove _id so a new one will be created (createdAt is preserved from original)
+    // Remove _id so a new one will be created
     delete newTile._id;
 
     setShowModel(false);

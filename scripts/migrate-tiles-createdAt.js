@@ -75,7 +75,10 @@ async function migrateTilesCreatedAt() {
     for (let i = 0; i < tiles.length; i++) {
       const tile = tiles[i];
       // Extract creation timestamp directly from ObjectId
-      const createdAt = tile._id.getTimestamp();
+      let createdAt = tile._id.getTimestamp();
+
+      // Add +i seconds for each tile: first = +1s, second = +2s, etc.
+      createdAt = new Date(createdAt.getTime() + (i + 1) * 1000);
 
       bulkOps.push({
         updateOne: {

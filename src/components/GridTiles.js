@@ -1041,11 +1041,12 @@ const GridTiles = memo(function GridTiles({
       order: newOrder,
       mobileX: 0,
       mobileY: mobileY,
-      mobileWidth: mobileWidth
+      mobileWidth: mobileWidth,
+      createdAt: new Date().toISOString(),
       // mobileHeight will be copied from content if it exists
     };
 
-    // Remove _id so a new one will be created (createdAt is preserved from original)
+    // Remove _id so a new one will be created
     delete newTile._id;
 
     setShowModel(false);
