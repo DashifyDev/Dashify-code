@@ -35,12 +35,15 @@ const SunEditor = dynamic(() => import('suneditor-react'), {
   ssr: false
 });
 
+console.log('[GridTiles] Module loaded');
+
 const GridTiles = memo(function GridTiles({
   tileCordinates,
   setTileCordinates,
   activeBoard,
-  updateTilesInLocalstorage
+  updateTilesInLocalstorage 
 }) {
+  console.log('[GridTiles] Render, tiles count:', tileCordinates?.length);
   const [showOption, setShowOption] = useState(null);
   const [showModel, setShowModel] = useState(false);
   const [selectedTile, setSelectedTile] = useState(null);
@@ -1164,8 +1167,27 @@ const GridTiles = memo(function GridTiles({
     }));
   }, [tileDepsKey, style, isBackgroundImage]);
 
+  // Sort tiles by createdAt (oldest first, newest last) for desktop rendering order
+  // No useMemo needed — component is already wrapped in memo, so it only re-renders on prop changes
+  const sortedTilesWithIndex = [...tileCordinates]
+    .map((tile, originalIndex) => ({ tile, originalIndex }))
+    .sort((a, b) => {
+      const dateA = a.tile.createdAt ? new Date(a.tile.createdAt).getTime() : 0;
+      const dateB = b.tile.createdAt ? new Date(b.tile.createdAt).getTime() : 0;
+      // Sort by createdAt if both have it
+      if (dateA && dateB) return dateA - dateB;
+      // Tiles with createdAt come before tiles without
+      if (dateA) return -1;
+      if (dateB) return 1;
+      // Fallback to _id for tiles without createdAt
+      const idA = a.tile._id ? String(a.tile._id) : '';
+      const idB = b.tile._id ? String(b.tile._id) : '';
+      return idA.localeCompare(idB);
+    });
+
+  console.log('sortedTilesWithIndex', sortedTilesWithIndex); 
   const currentBackground = tile => {
-    if (tile.tileBackground) {
+    if (tile.tileBackground) { 
       if (isBackgroundImage(tile.tileBackground)) {
         if (tile.tileBackground.startsWith('data:image/')) {
           setImageFileName('uploaded-image.png');
@@ -1270,21 +1292,7 @@ const GridTiles = memo(function GridTiles({
   return (
     <div className='main_grid_container'>
       <div className='tiles_container'>
-        {console.log('tileCordinates', tileCordinates)}
-        {/* Sort tiles by createdAt (oldest first, newest last), fallback to _id */}
-        {[...tileCordinates]
-          .map((tile, originalIndex) => ({ tile, originalIndex }))
-          .sort((a, b) => {
-            const dateA = a.tile.createdAt ? new Date(a.tile.createdAt).getTime() : 0;
-            const dateB = b.tile.createdAt ? new Date(b.tile.createdAt).getTime() : 0;
-            if (dateA && dateB && dateA !== dateB) return dateA - dateB;
-            // Fallback to _id for old tiles without createdAt
-            if (!a.tile._id && !b.tile._id) return 0;
-            if (!a.tile._id) return -1;
-            if (!b.tile._id) return 1;
-            return String(a.tile._id).localeCompare(String(b.tile._id));
-          })
-          .map(({ tile, originalIndex: index }) => {
+        {sortedTilesWithIndex.map(({ tile, originalIndex: index }) => {  
           const computedStyle = style(index, tile);
           const isImgBackground = isBackgroundImage(tile.tileBackground);
           return (

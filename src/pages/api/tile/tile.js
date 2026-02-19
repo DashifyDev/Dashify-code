@@ -11,6 +11,10 @@ const tile = async (req, res) => {
         if (req.body._id) {
           delete data._id;
         }
+        // Set createdAt only for new tiles (not copies that already have it)
+        if (!data.createdAt) {
+          data.createdAt = new Date();
+        }
         const tile = await Tile.create(data);
         var dashboard = await Dashboard.findOne({ _id: boardId });
         dashboard = dashboard.toObject();

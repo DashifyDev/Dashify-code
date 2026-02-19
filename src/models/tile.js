@@ -81,10 +81,9 @@ const tileSchema = new Schema({
   mobileHeight: {
     type: String,
   },
-  // Creation timestamp – preserved during board/tile duplication for consistent ordering
+  // Creation timestamp – set explicitly on new tile creation, preserved during duplication
   createdAt: {
     type: Date,
-    default: Date.now,
   },
 });
 

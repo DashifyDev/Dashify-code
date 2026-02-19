@@ -33,15 +33,16 @@ const BATCH_SIZE = 500;
 /**
  * Migration script: Add createdAt to existing tiles.
  *
- * Simply fetches all tiles sorted by _id (ascending = oldest first).
- * Assigns createdAt with 1-second offset per tile to preserve order.
+ * Each tile's createdAt is extracted directly from its MongoDB ObjectId,
+ * which already encodes the exact creation timestamp.
+ * Oldest _id = oldest createdAt, newest _id = newest createdAt.
  */
 async function migrateTilesCreatedAt() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Get all tiles without createdAt, sorted by _id ascending (oldest first)
+    // Get all tiles without createdAt
     const tiles = await Tile.find(
       {
         $or: [
@@ -50,7 +51,7 @@ async function migrateTilesCreatedAt() {
         ]
       },
       { _id: 1 }
-    )
+    ).lean();
 
     console.log(`Found ${tiles.length} tiles without createdAt`);
 
@@ -61,9 +62,6 @@ async function migrateTilesCreatedAt() {
     }
 
     const startTime = Date.now();
-    // Base time: timestamp from the very first (oldest) tile's ObjectId
-    const baseTime = tiles[0]._id.getTimestamp().getTime();
-
     let bulkOps = [];
     let updatedCount = 0;
 
@@ -76,8 +74,8 @@ async function migrateTilesCreatedAt() {
 
     for (let i = 0; i < tiles.length; i++) {
       const tile = tiles[i];
-      // Each tile gets +1 second offset so oldest = smallest date, newest = largest
-      const createdAt = new Date(baseTime + (i * 1000));
+      // Extract creation timestamp directly from ObjectId
+      const createdAt = tile._id.getTimestamp();
 
       bulkOps.push({
         updateOne: {

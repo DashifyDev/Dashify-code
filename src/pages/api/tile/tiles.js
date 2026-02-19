@@ -15,6 +15,10 @@ const tiles = async (req, res) => {
 
         const sanitizedTiles = tiles.map((tile) => {
           const { _id, ...rest } = tile;
+          // Set createdAt only for new tiles (not copies that already have it)
+          if (!rest.createdAt) {
+            rest.createdAt = new Date();
+          }
           return rest;
         });
 

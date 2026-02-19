@@ -89,6 +89,7 @@ export const getDashboardMinimal = async (id) => {
         mobileY: 1,
         mobileWidth: 1,
         mobileHeight: 1,
+        createdAt: 1,
       },
     )
       .sort({ order: 1, mobileY: 1 }) // Sort by order first, then by mobileY as fallback

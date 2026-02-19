@@ -127,7 +127,7 @@ function OptimizedDashboardPage() {
 
       // Only skip update if we have local changes AND it's not a new tile addition
       // This allows updates when new tiles are added from Header.js
-      if (
+      if ( 
         hasLocalChangesRef.current &&
         !isInitialLoadRef.current &&
         !hasNewTiles &&
