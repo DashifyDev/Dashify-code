@@ -97,8 +97,8 @@
 }
 
 .tiptap-editor-container .tiptap-scroll-area {
-  min-height: 450px; 
-  max-height: 450px; 
+  min-height: 420px; 
+  max-height: 420px; 
   overflow: auto;
 }
 @media (max-width: 768px) {

@@ -1962,7 +1962,7 @@ const GridTiles = memo(function GridTiles({
                 </div>
 
                 {/* Editor Content */}
-                <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+                <div className='flex-1 overflow-auto flex items-stretch min-h-0'>
                   <div className='flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6'>
                     <TipTapMainEditor
                       initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
