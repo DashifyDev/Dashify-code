@@ -13,8 +13,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { ReactSortable } from 'react-sortablejs';
 import { v4 as uuidv4 } from 'uuid';
-import { safeSetItem } from '../utils/safeLocalStorage';
 import logo from '../assets/logo.png';
+import { safeSetItem } from '../utils/safeLocalStorage';
 import SideDrawer from './SideDrawer';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -1471,7 +1471,7 @@ function Header() {
                     Login
                   </Link>
                   <Link
-                    href='/api/auth/login'
+                    href='/api/auth/login?screen_hint=signup'
                     prefetch={false}
                     className='px-4 py-2 text-sm font-semibold bg-[#63899e] text-white rounded-lg hover:bg-[#4a6d7e] transition-colors shadow-sm hover:shadow-md'
                   >

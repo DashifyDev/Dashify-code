@@ -14,7 +14,7 @@ function Login() {
             </Link>
           </ListItemText>
           <ListItemText>
-            <Link href="/api/auth/login" prefetch={false} className="sign_btn">
+            <Link href="/api/auth/login?screen_hint=signup" prefetch={false} className="sign_btn">
               Sign up
             </Link>
           </ListItemText>
