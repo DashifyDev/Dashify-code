@@ -19,12 +19,18 @@ const AppContextProvider = ({ children }) => {
     if (user) {
       axios
         .post("/api/manage/getUser", user)
-        .then((res) => {
-          setDbuser(res.data);
+        .then(async (res) => {
+          // If guest data exists, migrate it BEFORE setting dbUser.
+          // This ensures boards are available in the DB when Header fetches them.
           if (localData) {
             localStorage.removeItem("Dasify");
-            addGuestUserData(res.data._id, localData);
+            try {
+              await addGuestUserData(res.data._id, localData);
+            } catch (e) {
+              console.warn("Failed to migrate guest data:", e);
+            }
           }
+          setDbuser(res.data);
         })
         .catch((error) => {
           console.error(
@@ -36,7 +42,7 @@ const AppContextProvider = ({ children }) => {
   }, [user]);
 
   const addGuestUserData = (userId, localData) => {
-    axios
+    return axios
       .post("/api/manage/addGuestData", { userId: userId, localData })
       .then((res) => {
         localStorage.removeItem("Dasify");

@@ -12,7 +12,9 @@ const addGuestData = async (req, res) => {
     if (oldUser.length >= 1) {
       res.status(200).json({ message: "user alredy Exists" });
     } else {
-      localData.forEach(async (dashboardObj, index) => {
+      // Use for...of to properly await each operation before responding
+      for (let index = 0; index < localData.length; index++) {
+        const dashboardObj = localData[index];
         try {
           let tiles = dashboardObj.tiles;
 
@@ -34,7 +36,7 @@ const addGuestData = async (req, res) => {
         } catch (error) {
           console.error("Error inserting data:", error);
         }
-      });
+      }
       return res.status(200).json({ message: "saved User Data" });
     }
   } catch (err) {
