@@ -1,0 +1,42 @@
+---
+description: ESLint, Prettier, and code organization standards for Dashify
+globs: src/**/*.{js,jsx}
+alwaysApply: true
+---
+
+# Code Quality
+
+## Tooling
+
+- **ESLint**: Follow rules. ESLint is intentionally skipped during builds (`ignoreDuringBuilds: true`) but must still pass locally.
+- **Prettier**: Run `npm run format` before committing.
+- Fix all lint/format errors before committing.
+
+## Prettier Config
+
+- Double quotes, semicolons, 2 spaces, printWidth 100
+- Trailing comma: es5, arrowParens: avoid, endOfLine: lf
+
+## JavaScript Rules
+
+- Prefer `const` over `let`; never use `var`
+- No duplicate imports
+- Avoid `console.log` in production — use `console.warn` for expected edge cases, `console.error` for actual errors
+- No unused variables (prefix with `_` if intentionally unused)
+
+## File Size Guidelines
+
+| Type       | Max Lines |
+|------------|-----------|
+| Component  | 200       |
+| API route  | 150       |
+| File (general) | 400   |
+
+Split larger files into focused modules.
+
+## Error Handling
+
+- **User-facing errors**: Surface via UI state or alerts — not console
+- **API routes**: Return appropriate HTTP status codes with `{ error: message }` JSON
+- **Client fetches**: Handle errors in `.catch()` or React Query's `onError`; log with `console.error` only
+- **Guest localStorage**: Always wrap in try/catch; use `src/utils/safeLocalStorage.js`
