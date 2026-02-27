@@ -18,6 +18,8 @@ import { safeSetItem } from '../utils/safeLocalStorage';
 import SideDrawer from './SideDrawer';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import LimitReachedModal from "./LimitReachedModal";
+import { isUserPro, FREE_PLAN_MAX_BOARDS, FREE_PLAN_MAX_TILES_PER_BOARD } from "@/constants/plans";
 
 function Header() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
@@ -51,6 +53,9 @@ function Header() {
   const isMobile = useIsMobile();
   const [boardMenuAnchor, setBoardMenuAnchor] = useState(null);
   const [addTilesMenuAnchor, setAddTilesMenuAnchor] = useState(null);
+  const [showBoardLimitModal, setShowBoardLimitModal] = useState(false);
+  const [showTileLimitModal, setShowTileLimitModal] = useState(false);
+  const isPro = isUserPro(dbUser);
 
   const currentActiveBoard = id || activeBoard;
 
@@ -184,6 +189,11 @@ function Header() {
     const detailKey = dashboardKeys.detail(currentActiveBoard);
     const cachedDashboardData = queryClient.getQueryData(detailKey);
     const currentTiles = cachedDashboardData?.tiles || tiles || [];
+
+    if (dbUser && !isPro && currentTiles.length >= FREE_PLAN_MAX_TILES_PER_BOARD) {
+      setShowTileLimitModal(true);
+      return;
+    }
 
     // Count only tiles that are user-created (not the default welcome tile)
     // Filter out tiles with width > 200px (default welcome tile is 600px)
@@ -384,7 +394,10 @@ function Header() {
   };
 
   const addBoard = () => {
-    const boardsLength = boards.length;
+    if (dbUser && !isPro && boards.length >= FREE_PLAN_MAX_BOARDS) {
+      setShowBoardLimitModal(true);
+      return;
+    }
     setShowDashboardModel(false);
     let payload;
     if (dbUser) {
@@ -485,10 +498,17 @@ function Header() {
             });
           })
           .catch(error => {
-            console.error('Error creating default tiles:', error);
-            // Remove temporary blocks on error
+            if (error.response?.status === 403) {
+              setShowTileLimitModal(true);
+            }
+            // Remove temporary board and tiles on error
             setTiles([]);
             setBoards(prev => prev.filter(board => board._id !== newBoard._id));
+            queryClient.removeQueries({ queryKey: dashboardKeys.detail(newBoard._id) });
+            queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
+            if (error.response?.status !== 403) {
+              console.error('Error creating default tiles:', error);
+            }
           });
 
         // ensure React Query lists/cache reflect the newly created board for other contexts
@@ -499,11 +519,17 @@ function Header() {
           console.warn('Failed to update query cache after creating dashboard', e);
         }
         router.push(`/dashboard/${newBoard._id}`);
+      }).catch(err => {
+        if (err.response?.status === 403) {
+          setShowBoardLimitModal(true);
+        } else {
+          console.error('Error creating dashboard:', err);
+        }
       });
     } else {
       const boardId = uuidv4();
       const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-      
+
       // Default tiles: Step 1 and Step 2
       // Position from top-left corner, one below the other
       const START_X = 25;
@@ -1436,6 +1462,12 @@ function Header() {
 
                       {/* Menu Items */}
                       <div>
+                        <Link
+                          href='/subscription'
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200'
+                        >
+                          Subscription
+                        </Link>
                         <a
                           href='/api/auth/logout'
                           className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-50/50 transition-all duration-200 group'
@@ -1644,6 +1676,18 @@ function Header() {
           </div>
         </>
       )}
+      <LimitReachedModal
+        type="board"
+        limit={FREE_PLAN_MAX_BOARDS}
+        open={showBoardLimitModal}
+        onClose={() => setShowBoardLimitModal(false)}
+      />
+      <LimitReachedModal
+        type="tile"
+        limit={FREE_PLAN_MAX_TILES_PER_BOARD}
+        open={showTileLimitModal}
+        onClose={() => setShowTileLimitModal(false)}
+      />
     </header>
   );
 }
