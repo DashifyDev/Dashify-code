@@ -4,6 +4,8 @@ import User from "@/models/user";
 import mongoose from "mongoose";
 import { getUserDashboards } from "@/utils/databaseIndexes";
 import { getSession } from "@auth0/nextjs-auth0";
+import { getUserPlan } from "@/services/subscriptionService";
+import { FREE_PLAN_MAX_BOARDS } from "@/constants/plans";
 
 const addDashBoard = async (req, res) => {
   try {
@@ -32,6 +34,10 @@ const addDashBoard = async (req, res) => {
         let existingDashboards;
         if (data.userId) {
           existingDashboards = await Dashboard.find({ userId: data.userId });
+          const { isPro } = await getUserPlan(data.userId);
+          if (!isPro && existingDashboards.length >= FREE_PLAN_MAX_BOARDS) {
+            return res.status(403).json({ message: "Board limit reached" });
+          }
         } else if (data.sessionId) {
           existingDashboards = await Dashboard.find({
             sessionId: data.sessionId,
