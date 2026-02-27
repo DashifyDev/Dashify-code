@@ -13,14 +13,20 @@ import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { safeSetItem } from '@/utils/safeLocalStorage';
+import { isUserPro, FREE_PLAN_MAX_BOARDS, FREE_PLAN_MAX_TILES_PER_BOARD } from '@/constants/plans';
+import LimitReachedModal from '@/components/LimitReachedModal';
 
 function Library() {
   const [library, setLibrary] = useState([]);
   const [originalLibrary, setOriginalLibrary] = useState([]);
   const [noSearchResult, setNoSearchResult] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('mostPopular');
-  const [loadingBoardId, setLoadingBoardId] = useState(null); // Track which board is loading
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [loadingBoardId, setLoadingBoardId] = useState(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [limitModalType, setLimitModalType] = useState(null); // 'board' | 'tile' | null
   const { dbUser, setBoards, boards, setTiles } = useContext(globalContext);
+  const isPro = isUserPro(dbUser);
   const queryClient = useQueryClient();
   const isAdmin = useAdmin();
   const router = useRouter();
@@ -31,13 +37,19 @@ function Library() {
     { id: 'aToz', filter: 'A-to-Z' }
   ];
 
+  const typeOptions = [
+    { id: 'all', label: 'All' },
+    { id: 'community', label: 'Community' },
+    { id: 'premium', label: 'Premium' },
+  ];
+
   useEffect(() => {
-    axios.get(`/api/template/addTemplate?filter=${selectedFilter}`).then(res => {
+    axios.get(`/api/template/addTemplate?filter=${selectedFilter}&type=${typeFilter}`).then(res => {
       setOriginalLibrary(res.data);
       setLibrary(res.data);
       setNoSearchResult(false);
     });
-  }, [selectedFilter]);
+  }, [selectedFilter, typeFilter]);
 
   // useEffect(() => {
   //   (async () => {
@@ -63,12 +75,12 @@ function Library() {
   //   })()
   // }, [boards, library])
 
-  const selectFilter = async id => {
+  const selectFilter = id => {
     setSelectedFilter(id);
-    const result = await axios.get(`/api/template/addTemplate?filter=${id}`);
-    setOriginalLibrary(result.data);
-    setLibrary(result.data);
-    setNoSearchResult(false);
+  };
+
+  const selectType = id => {
+    setTypeFilter(id);
   };
 
   var handleSearch = event => {
@@ -101,6 +113,15 @@ function Library() {
   };
 
   const handleBoardClick = async data => {
+    if (data.isPremium && !isPro) {
+      setShowPremiumModal(true);
+      return;
+    }
+    if (dbUser && !isPro && boards.length >= FREE_PLAN_MAX_BOARDS) {
+      setLimitModalType('board');
+      return;
+    }
+
     const boardId = data.boardLink.split('/').pop();
     setLoadingBoardId(boardId);
 
@@ -154,13 +175,15 @@ function Library() {
                 router.push(`/dashboard/${newBoard._id}`);
               })
               .catch(err => {
-                console.error('Error creating tiles:', err);
                 setLoadingBoardId(null);
+                if (err.response?.status === 403) setLimitModalType('tile');
+                else console.error('Error creating tiles:', err);
               });
           })
           .catch(err => {
-            console.error('Error creating dashboard:', err);
             setLoadingBoardId(null);
+            if (err.response?.status === 403) setLimitModalType('board');
+            else console.error('Error creating dashboard:', err);
           });
       } else {
         const boardId = uuidv4();
@@ -277,6 +300,31 @@ function Library() {
               </div>
             </div>
           </div>
+
+          {/* Type - same style as Filter */}
+          <div className='flex flex-col sm:flex-row sm:items-center gap-3'>
+            <span className='text-sm font-semibold text-gray-700 whitespace-nowrap hidden sm:block'>
+              Type:
+            </span>
+            <div className='inline-flex items-center rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 p-1.5 gap-1.5 shadow-inner border border-gray-200/50'>
+              {typeOptions.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => selectType(opt.id)}
+                  className={`relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ease-in-out border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:ring-offset-2 ${
+                    typeFilter === opt.id
+                      ? 'bg-gradient-to-r from-[#63899e] to-[#4a6d7e] text-white shadow-lg shadow-[#63899e]/30 scale-105'
+                      : 'text-gray-600 hover:text-[#63899e] hover:bg-white/60 active:scale-95'
+                  }`}
+                >
+                  {typeFilter === opt.id && (
+                    <span className='absolute inset-0 rounded-lg bg-white/20 animate-pulse' />
+                  )}
+                  <span className='relative z-10'>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Board Cards Grid */}
@@ -321,19 +369,40 @@ function Library() {
                       <LoadingSpinner size='medium' text='Loading board...' />
                     </div>
                   )}
-<CardTitle className='text-xl sm:text-2xl line-clamp-2 group-hover:text-[#4a6d7e] transition-colors px-4'>
+                  <CardTitle className='text-xl sm:text-2xl line-clamp-2 group-hover:text-[#4a6d7e] transition-colors px-4'>
                       {data.boardName}
                     </CardTitle>
-                  {/* Image */}
+                  {/* Image - blurred with big lock when premium */}
                   <div className='relative w-full h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100'>
                     <div className='absolute inset-0 bg-gradient-to-t from-black/5 to-transparent z-10' />
                     <Image
                       src={data.boardImage}
                       alt={data.boardName || 'board-image'}
                       fill
-                      className='object-cover group-hover:scale-110 transition-transform duration-500 ease-out'
+                      className={`object-cover transition-all duration-300 ${
+                        data.isPremium ? 'blur-md scale-105' : 'group-hover:scale-110'
+                      }`}
                       sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
                     />
+                    {data.isPremium && (
+                      <div className='absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-900/40'>
+                        <svg
+                          className='w-16 h-16 sm:w-20 sm:h-20 text-white drop-shadow-lg flex-shrink-0'
+                          fill='currentColor'
+                          viewBox='0 0 20 20'
+                          aria-hidden
+                        >
+                          <path
+                            fillRule='evenodd'
+                            d='M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0v2z'
+                            clipRule='evenodd'
+                          />
+                        </svg>
+                        <span className='mt-2 text-sm font-bold text-white uppercase tracking-wide drop-shadow'>
+                          Pro
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -369,6 +438,51 @@ function Library() {
           </div>
         )}
       </div>
+
+      {showPremiumModal && (
+        <div
+          className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'
+          onClick={() => setShowPremiumModal(false)}
+        >
+          <div
+            className='bg-white rounded-xl p-6 max-w-sm mx-4 shadow-2xl'
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className='text-lg font-semibold mb-2'>Premium Template</h3>
+            <p className='text-gray-600 mb-6'>Upgrade to Pro to use premium templates.</p>
+            <div className='flex gap-3 justify-end'>
+              <button
+                className='px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50'
+                onClick={() => setShowPremiumModal(false)}
+              >
+                Close
+              </button>
+              <button
+                className='px-4 py-2 bg-[#63899e] text-white rounded-lg text-sm hover:bg-[#4a6d7e]'
+                onClick={() => {
+                  setShowPremiumModal(false);
+                  router.push('/subscription');
+                }}
+              >
+                View Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LimitReachedModal
+        type='board'
+        limit={FREE_PLAN_MAX_BOARDS}
+        open={limitModalType === 'board'}
+        onClose={() => setLimitModalType(null)}
+      />
+      <LimitReachedModal
+        type='tile'
+        limit={FREE_PLAN_MAX_TILES_PER_BOARD}
+        open={limitModalType === 'tile'}
+        onClose={() => setLimitModalType(null)}
+      />
     </div>
   );
 }

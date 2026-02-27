@@ -5,12 +5,13 @@ import useIsMobile from '@/hooks/useIsMobile';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import logo from '../../assets/logo.png';
 
 function LibraryHeader() {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const dropdownRef = useRef(null);
   const { dbUser } = useContext(globalContext);
   const isMobile = useIsMobile();
   const { user } = useUser();
@@ -20,9 +21,20 @@ function LibraryHeader() {
   };
 
   const handlePicClick = event => {
-    setAnchorEl(event.currentTarget);
-    navigator.clipboard.writeText(window.location.href);
+    event.stopPropagation();
+    setAnchorEl(prev => (prev ? null : event.currentTarget));
   };
+
+  useEffect(() => {
+    if (!anchorEl) return;
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setAnchorEl(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [anchorEl]);
 
   return (
     <header className='sticky top-0 z-50 w-full border-b border-gray-200/60 bg-white/95 backdrop-blur-sm shadow-sm'>
@@ -62,7 +74,7 @@ function LibraryHeader() {
 
             {/* User Menu or Auth Buttons */}
             {dbUser ? (
-              <div className='relative'>
+              <div ref={dropdownRef} className='relative'>
                 <button
                   onClick={handlePicClick}
                   className='flex items-center focus:outline-none focus:ring-2 focus:ring-[#63899e] focus:ring-offset-2 rounded-full border-0 outline-none transition-all duration-200 hover:ring-2 hover:ring-[#63899e]/30'
@@ -101,6 +113,20 @@ function LibraryHeader() {
 
                       {/* Menu Items */}
                       <div>
+                        <Link
+                          href='/account'
+                          onClick={() => setAnchorEl(null)}
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200'
+                        >
+                          Account
+                        </Link>
+                        <Link
+                          href='/subscription'
+                          onClick={() => setAnchorEl(null)}
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200'
+                        >
+                          Subscription
+                        </Link>
                         <a
                           href='/api/auth/logout'
                           className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-50/50 transition-all duration-200 group'
