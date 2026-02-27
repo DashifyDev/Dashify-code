@@ -20,6 +20,15 @@ export const createDatabaseIndexes = async () => {
 
     await Dashboard.collection.createIndex({ userId: 1, position: 1 });
 
+    // Prevent duplicate board names per user (e.g. from concurrent migration)
+    await Dashboard.collection.createIndex(
+      { userId: 1, name: 1 },
+      {
+        unique: true,
+        partialFilterExpression: { userId: { $exists: true, $ne: null } },
+      }
+    );
+
     await Dashboard.collection.createIndex({ sessionId: 1, createdAt: 1 });
 
     await Tile.collection.createIndex({ isInsidePod: 1 });
@@ -220,7 +229,15 @@ export const getUserDashboards = async (userId, sessionId, isAdmin = false) => {
     // Now sort by position
     dashboards.sort((a, b) => (a.position || 0) - (b.position || 0));
 
-    return dashboards;
+    // Deduplicate by name (keep first by position) so UI never shows duplicate board names
+    const seenNames = new Set();
+    const deduped = dashboards.filter(d => {
+      if (seenNames.has(d.name)) return false;
+      seenNames.add(d.name);
+      return true;
+    });
+
+    return deduped;
   } catch (error) {
     console.error("Error fetching user dashboards:", error);
     throw error;
