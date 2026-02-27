@@ -86,7 +86,7 @@ export const SUBSCRIPTION_PLANS = [
   },
 ];
 
-export const DEFAULT_BOARD_NAMES = ["Welcome to Boardzy!", "More Boards"];
+export const DEFAULT_BOARD_NAMES = ["Welcome to Boardzy!", "More Boards..."];
 
 /** localStorage key for guest active board snapshot (used for migration on signup). */
 export const ACTIVE_DASHBOARD_KEY = "activeDashboard";
