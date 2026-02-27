@@ -692,8 +692,8 @@ function Header() {
   };
 
   const handlePicClick = event => {
-    setAnchorEl(event.currentTarget);
-    navigator.clipboard.writeText(window.location.href);
+    event.stopPropagation();
+    setAnchorEl(prev => (prev ? null : event.currentTarget));
   };
 
   async function handleCopy() {
@@ -1436,6 +1436,20 @@ function Header() {
 
                       {/* Menu Items */}
                       <div>
+                        <Link
+                          href='/account'
+                          onClick={() => setAnchorEl(null)}
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200'
+                        >
+                          Account
+                        </Link>
+                        <Link
+                          href='/subscription'
+                          onClick={() => setAnchorEl(null)}
+                          className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-200'
+                        >
+                          Subscription
+                        </Link>
                         <a
                           href='/api/auth/logout'
                           className='flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-50/50 transition-all duration-200 group'
