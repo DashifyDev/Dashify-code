@@ -1,5 +1,5 @@
-import React from 'react';
-import HowToUseHeader from './howToUseHeader';
+import React from "react";
+import HowToUseHeader from "./howToUseHeader";
 
 function HowToUseLayout({ children }) {
   return (
@@ -11,4 +11,3 @@ function HowToUseLayout({ children }) {
 }
 
 export default HowToUseLayout;
-

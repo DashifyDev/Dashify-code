@@ -18,7 +18,7 @@ const defaultDashboard = async (req, res) => {
           .populate("tiles")
           .sort({ position: 1 });
 
-        let adminBoards = allAdminBoards.filter((board) => {
+        let adminBoards = allAdminBoards.filter(board => {
           const userIdMatch =
             board.userId?.toString() === adminUser._id.toString() ||
             (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
@@ -27,7 +27,7 @@ const defaultDashboard = async (req, res) => {
         });
 
         if (allAdminBoards.length > adminBoards.length) {
-          adminBoards = allAdminBoards.filter((board) => {
+          adminBoards = allAdminBoards.filter(board => {
             const userIdMatch =
               board.userId?.toString() === adminUser._id.toString() ||
               (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());
@@ -39,7 +39,7 @@ const defaultDashboard = async (req, res) => {
           const newestAdminBoard = adminBoards[0];
           const adminBoardId = newestAdminBoard._id.toString();
 
-          const nonAdminBoards = allAdminBoards.filter((board) => {
+          const nonAdminBoards = allAdminBoards.filter(board => {
             const userIdMatch =
               board.userId?.toString() === adminUser._id.toString() ||
               (board.userId?._id && board.userId._id.toString() === adminUser._id.toString());

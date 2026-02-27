@@ -28,6 +28,7 @@ description: Generate or update .env.example by scanning the codebase for all pr
    - Any variables that were already in `.env.example` vs newly added
 
 Example output format for `.env.example`:
+
 ```env
 # Environment variables required to run Boardzy/Dashify
 # Copy this file to .env.local and fill in real values

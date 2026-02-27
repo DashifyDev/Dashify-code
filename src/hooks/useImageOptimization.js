@@ -25,7 +25,7 @@ export const useImageOptimization = (images = [], options = {}) => {
   }, [images]);
 
   const preloadImage = useCallback(
-    (src) => {
+    src => {
       return new Promise((resolve, reject) => {
         const img = new Image();
 
@@ -50,7 +50,7 @@ export const useImageOptimization = (images = [], options = {}) => {
         img.src = src;
       });
     },
-    [priority],
+    [priority]
   );
 
   const preloadImages = useCallback(async () => {
@@ -68,13 +68,13 @@ export const useImageOptimization = (images = [], options = {}) => {
       for (let i = 0; i < imageUrls.length; i += batchSize) {
         const batch = imageUrls.slice(i, i + batchSize);
 
-        const promises = batch.map(async (src) => {
+        const promises = batch.map(async src => {
           try {
             await preloadImage(src);
-            setLoadedImages((prev) => new Set([...prev, src]));
+            setLoadedImages(prev => new Set([...prev, src]));
             return { src, success: true };
           } catch (error) {
-            setFailedImages((prev) => new Set([...prev, src]));
+            setFailedImages(prev => new Set([...prev, src]));
             return { src, success: false, error };
           }
         });
@@ -87,7 +87,7 @@ export const useImageOptimization = (images = [], options = {}) => {
 
         // Add delay between batches
         if (i + batchSize < imageUrls.length && delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     } finally {
@@ -97,7 +97,7 @@ export const useImageOptimization = (images = [], options = {}) => {
 
   // Generate blur placeholder for images
   const generateBlurPlaceholder = useCallback(
-    async (src) => {
+    async src => {
       if (!enableBlurPlaceholder) return null;
 
       try {
@@ -113,25 +113,22 @@ export const useImageOptimization = (images = [], options = {}) => {
         return null;
       }
     },
-    [enableBlurPlaceholder],
+    [enableBlurPlaceholder]
   );
 
   // Get image loading status
   const getImageStatus = useCallback(
-    (src) => {
+    src => {
       if (loadedImages.has(src)) return "loaded";
       if (failedImages.has(src)) return "failed";
       return "loading";
     },
-    [loadedImages, failedImages],
+    [loadedImages, failedImages]
   );
 
   // Check if all images are loaded
   const allImagesLoaded = useMemo(() => {
-    return (
-      imageUrls.length > 0 &&
-      loadedImages.size + failedImages.size === imageUrls.length
-    );
+    return imageUrls.length > 0 && loadedImages.size + failedImages.size === imageUrls.length;
   }, [imageUrls.length, loadedImages.size, failedImages.size]);
 
   // Auto-preload images when they change
@@ -181,7 +178,7 @@ export const useResponsiveImage = (src, options = {}) => {
       onLoad: handleLoad,
       onError: handleError,
     }),
-    [src, sizes, priority, quality, handleLoad, handleError],
+    [src, sizes, priority, quality, handleLoad, handleError]
   );
 
   return {

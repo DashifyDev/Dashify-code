@@ -41,9 +41,7 @@ function Info() {
             <li>To visualize your dreams</li>
             <li>To bring ideas to life</li>
           </ul>
-          <h5 style={{ textAlign: "center" }}>
-            A place to create your boardzy
-          </h5>
+          <h5 style={{ textAlign: "center" }}>A place to create your boardzy</h5>
         </div>
       </section>
       <section className="mobile-web-information">
@@ -55,9 +53,8 @@ function Info() {
         <div className="about_boardzyContant">
           <h2 className="section-heading">What is Boardzy?</h2>
           <p>
-            Boardzy is an app for creating, well…boards! Boards to organize
-            life, dreams, goals. Boards for travel plans, wishlists, vision
-            boards & projects.
+            Boardzy is an app for creating, well…boards! Boards to organize life, dreams, goals.
+            Boards for travel plans, wishlists, vision boards & projects.
           </p>
           <p>Boardzy can help you board anything!!</p>
         </div>
@@ -74,14 +71,8 @@ function Info() {
 
         <div className="use_boardzyContant">
           <h2 className="section-heading">How to use Boardzy</h2>
-          <p>
-            Create boards on Boardzy by using a template or starting from
-            scratch.
-          </p>
-          <p>
-            Either way, check out this video to learn more about how to use
-            Boardzy
-          </p>
+          <p>Create boards on Boardzy by using a template or starting from scratch.</p>
+          <p>Either way, check out this video to learn more about how to use Boardzy</p>
           {/* <ol type="number">
             <li>+New Dashboard</li>
             <li>+Boxes</li>
@@ -115,8 +106,8 @@ function Info() {
           <h2 className="section-heading">Also: Dashboard Your Life!</h2>
           <p>Looking for a better way to organize?</p>
           <p>
-            Check out this simple, but effective framework to help organize your
-            life with dashboards, here on Boardzy.
+            Check out this simple, but effective framework to help organize your life with
+            dashboards, here on Boardzy.
           </p>
           <p>
             <Link href={"https://dashboardyourlife.com/"}>
@@ -149,10 +140,7 @@ function Info() {
           <h3>
             Submit New Feature Ideas:
             <br />
-            <a
-              href="https://boardzy.canny.io/boardzy-feature-requests"
-              target="_blank"
-            >
+            <a href="https://boardzy.canny.io/boardzy-feature-requests" target="_blank">
               Boardzy Feature Requests
             </a>
           </h3>

@@ -47,12 +47,9 @@ class ErrorBoundary extends Component {
           }}
         >
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
-          <h2 style={{ color: "#dc3545", marginBottom: "16px" }}>
-            Something went wrong
-          </h2>
+          <h2 style={{ color: "#dc3545", marginBottom: "16px" }}>Something went wrong</h2>
           <p style={{ color: "#6c757d", marginBottom: "20px" }}>
-            We're sorry, but something unexpected happened. Please try
-            refreshing the page.
+            We're sorry, but something unexpected happened. Please try refreshing the page.
           </p>
           <button
             onClick={() => window.location.reload()}

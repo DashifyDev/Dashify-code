@@ -4,6 +4,29 @@ import PropTypes from "prop-types";
 import { globalContext } from "./globalContext";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import axios from "axios";
+import { ACTIVE_DASHBOARD_KEY } from "@/constants/plans";
+
+function getActiveDashboardFromStorage() {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(ACTIVE_DASHBOARD_KEY) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && parsed.name != null ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearGuestStorage() {
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("Dasify");
+      localStorage.removeItem(ACTIVE_DASHBOARD_KEY);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
 
 const AppContextProvider = ({ children }) => {
   const { user } = useUser();
@@ -15,39 +38,28 @@ const AppContextProvider = ({ children }) => {
   const [isBoardsLoaded, setIsBoardsLoaded] = useState(false);
 
   React.useEffect(() => {
-    let localData = JSON.parse(localStorage.getItem("Dasify"));
-    if (user) {
-      axios
-        .post("/api/manage/getUser", user)
-        .then(async (res) => {
-          // If guest data exists, migrate it BEFORE setting dbUser.
-          // This ensures boards are available in the DB when Header fetches them.
-          if (localData) {
-            localStorage.removeItem("Dasify");
-            try {
-              await addGuestUserData(res.data._id, localData);
-            } catch (e) {
-              console.warn("Failed to migrate guest data:", e);
-            }
-          }
-          setDbuser(res.data);
-        })
-        .catch((error) => {
-          console.error(
-            "Error in getUser API:",
-            error.response?.data || error.message,
-          );
-        });
-    }
-  }, [user]);
+    if (!user) return;
 
-  const addGuestUserData = (userId, localData) => {
-    return axios
-      .post("/api/manage/addGuestData", { userId: userId, localData })
-      .then((res) => {
-        localStorage.removeItem("Dasify");
+    axios
+      .post("/api/manage/getUser", user)
+      .then(async res => {
+        const userId = res.data._id;
+        const activeDashboard = getActiveDashboardFromStorage();
+        try {
+          await axios.post("/api/manage/migrateGuestActiveBoard", {
+            userId,
+            activeDashboard,
+          });
+        } catch (e) {
+          console.warn("Failed to migrate guest active board:", e);
+        }
+        clearGuestStorage();
+        setDbuser(res.data);
+      })
+      .catch(error => {
+        console.error("Error in getUser API:", error.response?.data || error.message);
       });
-  };
+  }, [user]);
 
   return (
     <globalContext.Provider

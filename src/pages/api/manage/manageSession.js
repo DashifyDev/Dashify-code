@@ -15,7 +15,7 @@ const manageSession = async (req, res) => {
       let dashBoardIds = [];
       let dashboards = await Dashboard.find({ sessionId: sid });
 
-      dashboards.forEach((board) => {
+      dashboards.forEach(board => {
         dashBoardIds = [...dashBoardIds, board._id];
         totalTiles = [...totalTiles, ...board.tiles];
         totalPods = [...totalPods, ...board.pods];
@@ -29,10 +29,7 @@ const manageSession = async (req, res) => {
         res.status(200).json({ messgae: "update old user" });
       }
     } else {
-      let data = await Dashboard.updateMany(
-        { sessionId: sid },
-        { $set: { userId: id } },
-      );
+      let data = await Dashboard.updateMany({ sessionId: sid }, { $set: { userId: id } });
       if (data) {
         res.status(200).json({ messgae: "update new user" });
       }

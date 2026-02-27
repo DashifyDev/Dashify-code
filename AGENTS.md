@@ -21,25 +21,30 @@ There is no test runner — no test files exist in this project.
 ## Critical Architecture Rules
 
 ### Routing Split — Never Violate
+
 - `src/app/` — App Router: **pages and layouts only**
 - `src/pages/api/` — **All API routes** (Pages Router). Never create API routes under `src/app/`.
 
 ### Data Model
+
 - `User` → `Dashboard` (board) → `Tile[]` + `Pod[]`
 - Tile has dual position: desktop (`x`, `y`, `width`, `height`) and mobile (`mobileX`, `mobileY`, `mobileWidth`, `mobileHeight`)
 - Width/height always stored as strings: `"300px"` not `300`
 - All Mongoose models: use `models.X || model(...)` to prevent re-registration
 
 ### State
+
 - Two contexts exist intentionally: `globalContext` (legacy, Header.js) and `optimizedContext` (React Query–backed)
 - `optimizedContext.setBoards` / `setTiles` are deprecated no-ops — use `queryClient.invalidateQueries` instead
 - Query key factory: `dashboardKeys` in `src/hooks/useDashboard.js`
 
 ### Guest Mode
+
 - Unauthenticated users store boards in `localStorage` key `"Dasify"`
 - Always use `src/utils/safeLocalStorage.js` for localStorage access (never raw `localStorage`)
 
 ### API Routes
+
 - Call `connectDB()` from `src/lib/utils.js` at the top of each API route handler
 - Return `{ error: message }` with HTTP status codes on failure
 

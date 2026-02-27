@@ -6,13 +6,13 @@ export const useCreateTile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (tileData) => {
+    mutationFn: async tileData => {
       const response = await axios.post("/api/tile/tile", tileData);
       return response.data;
     },
     onSuccess: (newTile, variables) => {
       const dashboardId = variables.dashboardId;
-      queryClient.setQueryData(dashboardKeys.detail(dashboardId), (oldData) => {
+      queryClient.setQueryData(dashboardKeys.detail(dashboardId), oldData => {
         if (!oldData) return oldData;
         return {
           ...oldData,
@@ -41,12 +41,10 @@ export const useUpdateTile = () => {
         queryKey: dashboardKeys.all,
       });
 
-      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (oldData) => {
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, oldData => {
         if (!oldData || !oldData.tiles) return oldData;
 
-        const tileIndex = oldData.tiles.findIndex(
-          (tile) => tile._id === tileId,
-        );
+        const tileIndex = oldData.tiles.findIndex(tile => tile._id === tileId);
         if (tileIndex === -1) return oldData;
 
         const updatedTiles = [...oldData.tiles];
@@ -77,23 +75,23 @@ export const useDeleteTile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (tileId) => {
+    mutationFn: async tileId => {
       const response = await axios.delete(`/api/tile/${tileId}`);
       return response.data;
     },
-    onMutate: async (tileId) => {
+    onMutate: async tileId => {
       await queryClient.cancelQueries({ queryKey: dashboardKeys.all });
 
       const previousDashboards = queryClient.getQueriesData({
         queryKey: dashboardKeys.all,
       });
 
-      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, (oldData) => {
+      queryClient.setQueriesData({ queryKey: dashboardKeys.all }, oldData => {
         if (!oldData || !oldData.tiles) return oldData;
 
         return {
           ...oldData,
-          tiles: oldData.tiles.filter((tile) => tile._id !== tileId),
+          tiles: oldData.tiles.filter(tile => tile._id !== tileId),
         };
       });
 

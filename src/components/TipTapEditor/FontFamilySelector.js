@@ -25,7 +25,7 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
-  const handleSelectFont = (font) => {
+  const handleSelectFont = font => {
     if (font) {
       editor.chain().focus().setMark("textStyle", { fontFamily: font }).run();
     } else {
@@ -35,11 +35,8 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target)
-      ) {
+    const handleClickOutside = event => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -64,7 +61,7 @@ const FontFamilySelector = ({ editor, activeFontFamily }) => {
       {isOpen && (
         <ul className="font-selector-list">
           <li onClick={() => handleSelectFont(null)}>Default Font</li>
-          {fontOptions.map((font) => (
+          {fontOptions.map(font => (
             <li
               key={font}
               onClick={() => handleSelectFont(font)}

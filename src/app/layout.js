@@ -44,35 +44,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link
-          rel="preconnect"
-          href="https://res.cloudinary.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://images.unsplash.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://via.placeholder.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://via.placeholder.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        <link
-          rel="icon"
-          type="image/x-icon"
-          sizes="16x16"
-          href="/api/favicon"
-        />
-        <link
-          rel="icon"
-          type="image/x-icon"
-          sizes="32x32"
-          href="/api/favicon"
-        />
+        <link rel="icon" type="image/x-icon" sizes="16x16" href="/api/favicon" />
+        <link rel="icon" type="image/x-icon" sizes="32x32" href="/api/favicon" />
         <link rel="icon" type="image/x-icon" href="/api/favicon" />
         <link rel="shortcut icon" type="image/x-icon" href="/api/favicon" />
         <meta name="msapplication-TileColor" content="#63899e" />
@@ -129,10 +107,7 @@ export default function RootLayout({ children }) {
             gtag('js', new Date());
             gtag('config', 'G-8KMTMSNBKP');`}
               </Script>
-              <body
-                id="__next"
-                className={`${nunitoSans.className} ${roboto.className}`}
-              >
+              <body id="__next" className={`${nunitoSans.className} ${roboto.className}`}>
                 <ErrorBoundary>
                   {/* <IsMobilePrompt /> */}
                   <noscript>

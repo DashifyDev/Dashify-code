@@ -10,21 +10,21 @@ function WarningPrompt() {
       () => {
         setShowPopup(true);
       },
-      2 * 60 * 1000,
+      2 * 60 * 1000
     );
 
     const popupTimeout2 = setTimeout(
       () => {
         setShowPopup(true);
       },
-      5 * 60 * 1000,
+      5 * 60 * 1000
     );
 
     const popupTimeout3 = setTimeout(
       () => {
         setShowPopup(true);
       },
-      15 * 60 * 1000,
+      15 * 60 * 1000
     );
 
     return () => {

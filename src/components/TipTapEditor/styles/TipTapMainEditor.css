@@ -16,7 +16,7 @@
   min-height: 450px;
   padding: 10px;
   line-height: normal;
-  background-color: #f3f3f3f4
+  background-color: #f3f3f3f4;
 }
 .tiptap-editor-container .ProseMirror p {
   margin: 0;
@@ -97,8 +97,8 @@
 }
 
 .tiptap-editor-container .tiptap-scroll-area {
-  min-height: 420px; 
-  max-height: 420px; 
+  min-height: 420px;
+  max-height: 420px;
   overflow: auto;
 }
 @media (max-width: 768px) {

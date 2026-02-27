@@ -42,7 +42,8 @@ const handler = async (req, res) => {
           interval === "year"
             ? `${formatAmount(price.unit_amount, price.currency)}/yr`
             : `${formatAmount(price.unit_amount, price.currency)}/${price.recurring?.interval || "mo"}`;
-        const perMonthCents = interval === "year" && price.unit_amount ? Math.round(price.unit_amount / 12) : null;
+        const perMonthCents =
+          interval === "year" && price.unit_amount ? Math.round(price.unit_amount / 12) : null;
         const formattedPerMonth =
           perMonthCents != null ? `${formatAmount(perMonthCents, price.currency)}/mo` : null;
         result.annual = {

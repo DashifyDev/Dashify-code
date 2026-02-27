@@ -120,15 +120,12 @@ export default function SubscriptionPage() {
         {mounted && isPro && dbUser ? (
           <div className="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-200/60 p-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">
-                {PLAN_LABELS[dbUser.plan] || "Pro"}
-              </h2>
+              <h2 className="text-xl font-semibold">{PLAN_LABELS[dbUser.plan] || "Pro"}</h2>
               <SubscriptionStatusBadge status={dbUser.subscriptionStatus} />
             </div>
             {dbUser.subscriptionCurrentPeriodEnd && (
               <p className="text-gray-500 text-sm mb-4">
-                Next billing:{" "}
-                {new Date(dbUser.subscriptionCurrentPeriodEnd).toLocaleDateString()}
+                Next billing: {new Date(dbUser.subscriptionCurrentPeriodEnd).toLocaleDateString()}
               </p>
             )}
             {dbUser.subscriptionStatus === "past_due" && (
@@ -144,7 +141,9 @@ export default function SubscriptionPage() {
           <>
             <div className="flex flex-col items-center gap-2 mb-8">
               <div className="flex items-center gap-4 bg-white rounded-full pl-5 pr-5 py-2.5 border border-gray-200/60 shadow-sm min-w-[200px] justify-center">
-                <span className={`min-w-[52px] text-center ${!isAnnual ? "font-semibold text-gray-900" : "text-gray-400"}`}>
+                <span
+                  className={`min-w-[52px] text-center ${!isAnnual ? "font-semibold text-gray-900" : "text-gray-400"}`}
+                >
                   Monthly
                 </span>
                 <button
@@ -157,7 +156,9 @@ export default function SubscriptionPage() {
                     className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-sm transition-[left] duration-200 ease-out ${isAnnual ? "left-[calc(100%-1.25rem)]" : "left-1"}`}
                   />
                 </button>
-                <span className={`min-w-[44px] text-center ${isAnnual ? "font-semibold text-gray-900" : "text-gray-400"}`}>
+                <span
+                  className={`min-w-[44px] text-center ${isAnnual ? "font-semibold text-gray-900" : "text-gray-400"}`}
+                >
                   Annual
                 </span>
               </div>
@@ -188,9 +189,7 @@ export default function SubscriptionPage() {
                         : "Get Started"
                   }
                   onButtonClick={plan.ctaType === "get_started" ? handleGetStarted : undefined}
-                  buttonDisabled={
-                    plan.ctaType === "current_plan" ? true : loading
-                  }
+                  buttonDisabled={plan.ctaType === "current_plan" ? true : loading}
                   checkoutError={plan.id === "pro" ? checkoutError : null}
                 />
               ))}

@@ -12,8 +12,5 @@
       "Bash(npm install:*)"
     ]
   },
-  "enabledMcpjsonServers": [
-    "context7",
-    "playwright"
-  ]
+  "enabledMcpjsonServers": ["context7", "playwright"]
 }

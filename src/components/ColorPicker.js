@@ -16,8 +16,10 @@ const ColorPicker = ({ handleColorChange, colorBackground }) => {
   useEffect(() => {
     if (colorBackground) {
       // Check if it's rgba format
-      if (colorBackground.startsWith('rgba')) {
-        const rgbaMatch = colorBackground.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+      if (colorBackground.startsWith("rgba")) {
+        const rgbaMatch = colorBackground.match(
+          /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/
+        );
         if (rgbaMatch) {
           const r = parseInt(rgbaMatch[1]);
           const g = parseInt(rgbaMatch[2]);
@@ -46,7 +48,7 @@ const ColorPicker = ({ handleColorChange, colorBackground }) => {
     setDisplayColorPicker(false);
   };
 
-  const handleChange = (newColor) => {
+  const handleChange = newColor => {
     setColor(newColor.rgb);
     // Use rgba if alpha is less than 1, otherwise use hex
     if (newColor.rgb.a !== undefined && newColor.rgb.a < 1) {
@@ -68,9 +70,10 @@ const ColorPicker = ({ handleColorChange, colorBackground }) => {
           <div
             className="w-16 h-16 sm:w-12 sm:h-12  rounded-lg border-2 border-gray-300 shadow-inner"
             style={{
-              backgroundColor: color.a !== undefined && color.a < 1 
-                ? `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
-                : selectedHex,
+              backgroundColor:
+                color.a !== undefined && color.a < 1
+                  ? `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
+                  : selectedHex,
             }}
           />
           <div
@@ -91,16 +94,9 @@ const ColorPicker = ({ handleColorChange, colorBackground }) => {
       </div>
       {displayColorPicker && (
         <div className="absolute z-50 mt-2 left-0">
-          <div
-            className="fixed inset-0"
-            onClick={handleClose}
-          />
+          <div className="fixed inset-0" onClick={handleClose} />
           <div className="relative bg-white rounded-lg shadow-2xl border border-gray-200 p-3">
-            <ChromePicker
-              color={color}
-              onChange={handleChange}
-              disableAlpha={false}
-            />
+            <ChromePicker color={color} onChange={handleChange} disableAlpha={false} />
           </div>
         </div>
       )}

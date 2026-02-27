@@ -8,7 +8,7 @@ const assignDatatoNewUser = async (req, res) => {
     const data = req.body;
     let tiles = data.tiles;
 
-    tiles = tiles.map((tile) => {
+    tiles = tiles.map(tile => {
       const { _id, ...tileData } = tile;
       return tileData;
     });

@@ -9,15 +9,15 @@ const createPod = async (req, res) => {
     switch (req.method) {
       case "POST":
         const boardId = req.body.dashboardId;
-        const tilesIdArray = req.body.tiles.map((tile) => {
+        const tilesIdArray = req.body.tiles.map(tile => {
           return new mongoose.Types.ObjectId(tile._id);
         });
 
-        tilesIdArray.forEach(async (id) => {
+        tilesIdArray.forEach(async id => {
           const updateTile = await Tile.findOneAndUpdate(
             { _id: id },
             { $set: { isInsidePod: true } },
-            { new: true },
+            { new: true }
           );
         });
 
@@ -40,7 +40,7 @@ const createPod = async (req, res) => {
           { _id: boardId },
           {
             $set: { pods: dashboard.pods },
-          },
+          }
         );
         if (updatedDashBoard) {
           res.status(200).json(pod);

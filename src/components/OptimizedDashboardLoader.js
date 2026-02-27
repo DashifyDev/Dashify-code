@@ -23,7 +23,7 @@ const OptimizedDashboardLoader = ({
 
     // Extract from tiles
     if (dashboardData.tiles) {
-      dashboardData.tiles.forEach((tile) => {
+      dashboardData.tiles.forEach(tile => {
         if (tile.tileBackground) {
           urls.add(tile.tileBackground);
         }
@@ -35,7 +35,7 @@ const OptimizedDashboardLoader = ({
 
     // Extract from pods
     if (dashboardData.pods) {
-      dashboardData.pods.forEach((pod) => {
+      dashboardData.pods.forEach(pod => {
         if (pod.backgroundImage) {
           urls.add(pod.backgroundImage);
         }
@@ -46,17 +46,12 @@ const OptimizedDashboardLoader = ({
   }, [dashboardData]);
 
   // Use image optimization hook
-  const {
-    loadedImages,
-    failedImages,
-    loadingProgress,
-    isLoading,
-    allImagesLoaded,
-  } = useImageOptimization(allImageUrls, {
-    batchSize: 4,
-    delay: 100,
-    enablePreloading,
-  });
+  const { loadedImages, failedImages, loadingProgress, isLoading, allImagesLoaded } =
+    useImageOptimization(allImageUrls, {
+      batchSize: 4,
+      delay: 100,
+      enablePreloading,
+    });
 
   // Update loading progress
   useEffect(() => {
@@ -68,14 +63,7 @@ const OptimizedDashboardLoader = ({
       setProgress(100);
       onLoadComplete?.(loadedImages, failedImages);
     }
-  }, [
-    isLoading,
-    loadingProgress,
-    allImagesLoaded,
-    loadedImages,
-    failedImages,
-    onLoadComplete,
-  ]);
+  }, [isLoading, loadingProgress, allImagesLoaded, loadedImages, failedImages, onLoadComplete]);
 
   // Render loading overlay
   const renderLoadingOverlay = () => {
@@ -106,9 +94,7 @@ const OptimizedDashboardLoader = ({
             textAlign: "center",
           }}
         >
-          <h3 style={{ margin: "0 0 16px 0", color: "#333" }}>
-            Loading Dashboard...
-          </h3>
+          <h3 style={{ margin: "0 0 16px 0", color: "#333" }}>Loading Dashboard...</h3>
 
           <div
             style={{

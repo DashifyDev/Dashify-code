@@ -23,10 +23,7 @@ const addDashBoard = async (req, res) => {
               // leave as-is; Dashboard schema expects ObjectId, creation may fail and return an error
             }
           } catch (err) {
-            console.warn(
-              "addDashboard: failed to resolve userId from auth0Id",
-              err,
-            );
+            console.warn("addDashboard: failed to resolve userId from auth0Id", err);
           }
         }
 
@@ -65,10 +62,7 @@ const addDashBoard = async (req, res) => {
               id = resolved._id.toString();
             }
           } catch (err) {
-            console.warn(
-              "addDashboard GET: failed to resolve auth0 id to userId",
-              err,
-            );
+            console.warn("addDashboard GET: failed to resolve auth0 id to userId", err);
           }
         }
 
@@ -76,15 +70,14 @@ const addDashBoard = async (req, res) => {
         const user = session?.user;
 
         const roles = user?.["https://www.boardzy.app/roles"];
-        const isAdmin =
-          roles && Array.isArray(roles) && roles.includes("admin");
+        const isAdmin = roles && Array.isArray(roles) && roles.includes("admin");
 
         const boards = await getUserDashboards(id, sid, isAdmin);
 
         if (boards && boards.length > 0) {
           res.setHeader(
             "Cache-Control",
-            "public, s-maxage=300, stale-while-revalidate=900, max-age=120",
+            "public, s-maxage=300, stale-while-revalidate=900, max-age=120"
           );
           res.setHeader("ETag", `"boards-${id || sid}-${Date.now()}"`);
           res.setHeader("Vary", "Accept-Encoding");
@@ -103,10 +96,7 @@ const addDashBoard = async (req, res) => {
       case "PATCH":
         let updatedData = req.body;
         updatedData.forEach(async (item, index) => {
-          await Dashboard.updateOne(
-            { _id: item._id },
-            { position: item.position },
-          );
+          await Dashboard.updateOne({ _id: item._id }, { position: item.position });
         });
         return res.status(200).json({ message: "Position Updated" });
         break;

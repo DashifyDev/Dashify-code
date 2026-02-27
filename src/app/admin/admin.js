@@ -16,9 +16,7 @@ function Admin() {
           <Image src={logo} alt="logo" />
         </div>
         <div className="button">
-          <button onClick={() => router.push("/admin/board-library")}>
-            Board Library
-          </button>
+          <button onClick={() => router.push("/admin/board-library")}>Board Library</button>
         </div>
       </div>
     </div>

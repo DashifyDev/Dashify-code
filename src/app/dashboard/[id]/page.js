@@ -1,28 +1,29 @@
-'use client';
+"use client";
 
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { globalContext } from '@/context/globalContext';
-import { useDashboardData } from '@/context/optimizedContext';
-import useAdmin from '@/hooks/isAdmin';
-import { dashboardKeys } from '@/hooks/useDashboard';
-import useIsMobile from '@/hooks/useIsMobile';
-import { safeSetItem } from '@/utils/safeLocalStorage';
-import { useUser } from '@auth0/nextjs-auth0/client';
-import { useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import dynamic from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { globalContext } from "@/context/globalContext";
+import { useDashboardData } from "@/context/optimizedContext";
+import useAdmin from "@/hooks/isAdmin";
+import { dashboardKeys } from "@/hooks/useDashboard";
+import useIsMobile from "@/hooks/useIsMobile";
+import { ACTIVE_DASHBOARD_KEY } from "@/constants/plans";
+import { safeSetItem } from "@/utils/safeLocalStorage";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import dynamic from "next/dynamic";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-const GridTiles = dynamic(() => import('@/components/GridTiles'), {
+const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   ssr: false,
-  loading: () => <LoadingSpinner text={'Loading board...'} fullScreen={true} />
+  loading: () => <LoadingSpinner text={"Loading board..."} fullScreen={true} />,
 });
 
-const MobileGridTiles = dynamic(() => import('@/components/MobileGridTiles'), {
+const MobileGridTiles = dynamic(() => import("@/components/MobileGridTiles"), {
   ssr: false,
-  loading: () => <LoadingSpinner text={'Loading board...'} fullScreen={true} />
+  loading: () => <LoadingSpinner text={"Loading board..."} fullScreen={true} />,
 });
 
 function OptimizedDashboardPage() {
@@ -43,8 +44,8 @@ function OptimizedDashboardPage() {
       const isNotFoundError =
         error?.response?.status === 404 ||
         error?.status === 404 ||
-        error?.message?.toLowerCase().includes('not found') ||
-        error?.message?.toLowerCase().includes('404');
+        error?.message?.toLowerCase().includes("not found") ||
+        error?.message?.toLowerCase().includes("404");
 
       if (isNotFoundError) {
         // Find the nearest active board
@@ -63,7 +64,7 @@ function OptimizedDashboardPage() {
           router.push(`/dashboard/${targetBoard._id}`);
         } else {
           // If no boards available, redirect to dashboard list
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       }
     }
@@ -84,7 +85,7 @@ function OptimizedDashboardPage() {
       if (targetBoard) {
         router.push(`/dashboard/${targetBoard._id}`);
       } else {
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     }
   }, [dashboardData, isLoading, error, isBoardsLoaded, boards, id, router]);
@@ -99,7 +100,7 @@ function OptimizedDashboardPage() {
             const response = await fetch(`/api/dashboard/${boardId}`);
             return response.json();
           },
-          staleTime: 5 * 60 * 1000
+          staleTime: 5 * 60 * 1000,
         });
       });
     }
@@ -123,11 +124,11 @@ function OptimizedDashboardPage() {
       // Check if dashboardData has more tiles than current state
       // This indicates a new tile was added (e.g., from Header.js)
       const hasNewTiles = dashboardTiles.length > tiles.length;
-      const hasTempTiles = dashboardTiles.some(t => t._id && t._id.startsWith('temp_'));
+      const hasTempTiles = dashboardTiles.some(t => t._id && t._id.startsWith("temp_"));
 
       // Only skip update if we have local changes AND it's not a new tile addition
       // This allows updates when new tiles are added from Header.js
-      if ( 
+      if (
         hasLocalChangesRef.current &&
         !isInitialLoadRef.current &&
         !hasNewTiles &&
@@ -138,19 +139,19 @@ function OptimizedDashboardPage() {
       }
 
       // Ensure all tiles have mobile profile and order
-      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+      const windowWidth = typeof window !== "undefined" ? window.innerWidth : 375;
       const updatedTiles = dashboardTiles.map((tile, index) => {
         // Helper function to parse height value
         const parseHeight = heightStr => {
           if (!heightStr) return null;
-          const parsed = parseInt(String(heightStr).replace('px', ''), 10);
+          const parsed = parseInt(String(heightStr).replace("px", ""), 10);
           return isNaN(parsed) ? null : parsed;
         };
 
         // Helper function to parse width value
         const parseWidth = widthStr => {
           if (!widthStr) return null;
-          const parsed = parseInt(String(widthStr).replace('px', ''), 10);
+          const parsed = parseInt(String(widthStr).replace("px", ""), 10);
           return isNaN(parsed) ? null : parsed;
         };
 
@@ -164,17 +165,17 @@ function OptimizedDashboardPage() {
           // If desktop height > 200px, use it as mobileHeight
           // If desktop height <= 200px, leave mobileHeight undefined to use min-height
           const mobileHeight = desktopHeight && desktopHeight > 200 ? tile.height : undefined;
-          
+
           return {
             ...tile,
             mobileX: 0,
             mobileY: index * 166, // Approximate position
             mobileWidth: `${maxMobileWidth}px`, // Ensure width fits within screen
             ...(mobileHeight ? { mobileHeight } : {}), // Set if desktop height > 200px
-            order: tile.order || index + 1
+            order: tile.order || index + 1,
           };
         }
-        
+
         // If tile has mobileWidth but it's too large, fix it
         if (tile.mobileWidth) {
           const mobileWidthValue = parseWidth(tile.mobileWidth);
@@ -183,20 +184,20 @@ function OptimizedDashboardPage() {
             return {
               ...tile,
               mobileWidth: `${maxMobileWidth}px`,
-              order: tile.order || index + 1
+              order: tile.order || index + 1,
             };
           }
         }
-        
+
         // Keep mobileHeight if it exists - don't remove it even if > 200px
         // If user manually set mobileHeight, respect their choice
         // If mobileHeight was set from desktop height > 200px, keep it as well
-        
+
         // Ensure order is set
         if (tile.order === undefined || tile.order === null) {
           return {
             ...tile,
-            order: index + 1
+            order: index + 1,
           };
         }
         return tile;
@@ -229,19 +230,19 @@ function OptimizedDashboardPage() {
         payload = {
           name: data.name,
           userId: dbUser._id,
-          hasAdminAdded: true
+          hasAdminAdded: true,
         };
       } else {
         payload = {
           name: data.name,
-          userId: dbUser._id
+          userId: dbUser._id,
         };
       }
-      axios.post('/api/dashboard/addDashboard', payload).then(res => {
+      axios.post("/api/dashboard/addDashboard", payload).then(res => {
         const newBoard = res.data;
 
         // Assign order and mobile profile for copied tiles
-        const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+        const windowWidth = typeof window !== "undefined" ? window.innerWidth : 375;
         const boardTiles = data.tiles.map((el, index) => {
           const tileCopy = { ...el };
           delete tileCopy._id;
@@ -254,7 +255,7 @@ function OptimizedDashboardPage() {
             tileCopy.mobileWidth = `${windowWidth - 48}px`;
           }
           if (!tileCopy.mobileHeight) {
-            tileCopy.mobileHeight = tileCopy.height || '150px';
+            tileCopy.mobileHeight = tileCopy.height || "150px";
           }
           if (tileCopy.mobileY === undefined) {
             tileCopy.mobileY = index * 166; // Approximate position
@@ -266,9 +267,9 @@ function OptimizedDashboardPage() {
         });
 
         axios
-          .post('/api/tile/tiles', {
+          .post("/api/tile/tiles", {
             dashboardId: newBoard._id,
-            tiles: boardTiles
+            tiles: boardTiles,
           })
           .then(resp => {
             setTiles(resp.data.tiles);
@@ -277,18 +278,18 @@ function OptimizedDashboardPage() {
 
             try {
               queryClient.invalidateQueries({
-                queryKey: dashboardKeys.lists()
+                queryKey: dashboardKeys.lists(),
               });
               queryClient.setQueryData(dashboardKeys.detail(newBoard._id), newBoard);
             } catch (e) {
-              console.warn('Failed to update query cache after creating dashboard', e);
+              console.warn("Failed to update query cache after creating dashboard", e);
             }
             router.push(`/dashboard/${newBoard._id}`);
           });
       });
     } else {
       const boardId = uuidv4();
-      const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+      const windowWidth = typeof window !== "undefined" ? window.innerWidth : 375;
       const newTiles = data.tiles.map((tile, index) => {
         tile._id = uuidv4();
         tile.dashboardId = boardId;
@@ -300,7 +301,7 @@ function OptimizedDashboardPage() {
           tile.mobileWidth = `${windowWidth - 48}px`;
         }
         if (!tile.mobileHeight) {
-          tile.mobileHeight = tile.height || '150px';
+          tile.mobileHeight = tile.height || "150px";
         }
         if (tile.mobileY === undefined) {
           tile.mobileY = index * 166;
@@ -313,11 +314,11 @@ function OptimizedDashboardPage() {
       let payload = {
         _id: boardId,
         name: data.name,
-        tiles: newTiles
+        tiles: newTiles,
       };
       let items = boards;
       items = [payload, ...items];
-      safeSetItem('Dasify', JSON.stringify(items));
+      safeSetItem("Dasify", JSON.stringify(items));
       setBoards(items);
       setTiles(newTiles);
 
@@ -327,19 +328,19 @@ function OptimizedDashboardPage() {
           if (oldData) {
             return {
               ...oldData,
-              tiles: items.find(b => b._id === boardId)?.tiles || []
+              tiles: items.find(b => b._id === boardId)?.tiles || [],
             };
           }
           const board = items.find(b => b._id === boardId);
           return {
             _id: board?._id || boardId,
-            name: board?.name || '',
+            name: board?.name || "",
             tiles: board?.tiles || [],
-            pods: board?.pods || []
+            pods: board?.pods || [],
           };
         });
       } catch (e) {
-        console.warn('Failed to update query cache for local board', e);
+        console.warn("Failed to update query cache for local board", e);
       }
 
       router.push(`/dashboard/${boardId}`);
@@ -351,6 +352,20 @@ function OptimizedDashboardPage() {
       document.title = dashboardData.name;
     }
   }, [dashboardData?.name]);
+
+  // Persist guest active board for migration on signup (only this board is migrated, not the full list)
+  useEffect(() => {
+    if (!user && dashboardData?._id) {
+      const snapshot = {
+        _id: dashboardData._id,
+        name: dashboardData.name,
+        tiles: dashboardData.tiles || [],
+        pods: dashboardData.pods || [],
+        default: dashboardData.default,
+      };
+      safeSetItem(ACTIVE_DASHBOARD_KEY, JSON.stringify(snapshot));
+    }
+  }, [user, dashboardData]);
 
   const maxWidth = useMemo(() => {
     // Ensure tiles is always an array
@@ -383,7 +398,7 @@ function OptimizedDashboardPage() {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          tiles: updatedTiles
+          tiles: updatedTiles,
         };
       });
     },
@@ -393,15 +408,15 @@ function OptimizedDashboardPage() {
   const updateTilesInLocalstorage = useCallback(
     (tileArray, options = {}) => {
       if (!user) {
-        const existingBoards = JSON.parse(localStorage.getItem('Dasify') || '[]');
+        const existingBoards = JSON.parse(localStorage.getItem("Dasify") || "[]");
         const boardIndex = existingBoards.findIndex(board => board._id === activeBoard);
         if (boardIndex >= 0) {
           const updatedBoards = [...existingBoards];
           updatedBoards[boardIndex] = {
             ...updatedBoards[boardIndex],
-            tiles: tileArray
+            tiles: tileArray,
           };
-          safeSetItem('Dasify', JSON.stringify(updatedBoards), { showAlert: !!options.showAlert });
+          safeSetItem("Dasify", JSON.stringify(updatedBoards), { showAlert: !!options.showAlert });
           setBoards(updatedBoards);
         }
       }
@@ -420,8 +435,8 @@ function OptimizedDashboardPage() {
     const isNotFoundError =
       error?.response?.status === 404 ||
       error?.status === 404 ||
-      error?.message?.toLowerCase().includes('not found') ||
-      error?.message?.toLowerCase().includes('404');
+      error?.message?.toLowerCase().includes("not found") ||
+      error?.message?.toLowerCase().includes("404");
 
     // If it's a 404 and we have boards loaded, show loading while redirecting
     if (isNotFoundError && isBoardsLoaded && boards && boards.length > 0) {
@@ -432,25 +447,25 @@ function OptimizedDashboardPage() {
     return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          flexDirection: 'column',
-          gap: '16px'
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: "16px",
         }}
       >
-        <div style={{ color: '#e74c3c', fontSize: '18px' }}>Error loading dashboard</div>
-        <div style={{ color: '#666' }}>{error.message || 'Something went wrong'}</div>
+        <div style={{ color: "#e74c3c", fontSize: "18px" }}>Error loading dashboard</div>
+        <div style={{ color: "#666" }}>{error.message || "Something went wrong"}</div>
         <button
           onClick={() => window.location.reload()}
           style={{
-            padding: '8px 16px',
-            backgroundColor: '#63899e',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
+            padding: "8px 16px",
+            backgroundColor: "#63899e",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
           }}
         >
           Retry
@@ -465,20 +480,20 @@ function OptimizedDashboardPage() {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: "relative" }}>
       {}
       {isFetching && (
         <div
           style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            backgroundColor: '#63899e',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            zIndex: 1000
+            position: "fixed",
+            top: "10px",
+            right: "10px",
+            backgroundColor: "#63899e",
+            color: "white",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            zIndex: 1000,
           }}
         >
           Updating...
@@ -506,4 +521,3 @@ function OptimizedDashboardPage() {
 }
 
 export default OptimizedDashboardPage;
-

@@ -5,14 +5,14 @@
  * Receives Claude tool call JSON via stdin.
  * Uses execFileSync (no shell interpolation) to avoid command injection.
  */
-const { execFileSync } = require('child_process');
-const path = require('path');
+const { execFileSync } = require("child_process");
+const path = require("path");
 
-const SUPPORTED_EXTENSIONS = new Set(['.js', '.jsx', '.ts', '.tsx', '.css', '.json', '.md']);
+const SUPPORTED_EXTENSIONS = new Set([".js", ".jsx", ".ts", ".tsx", ".css", ".json", ".md"]);
 
 const chunks = [];
-process.stdin.on('data', chunk => chunks.push(chunk));
-process.stdin.on('end', () => {
+process.stdin.on("data", chunk => chunks.push(chunk));
+process.stdin.on("end", () => {
   let payload;
   try {
     payload = JSON.parse(Buffer.concat(chunks).toString());
@@ -20,7 +20,7 @@ process.stdin.on('end', () => {
     process.exit(0); // not valid JSON — skip silently
   }
 
-  const filePath = payload?.tool_input?.file_path || payload?.tool_input?.path || '';
+  const filePath = payload?.tool_input?.file_path || payload?.tool_input?.path || "";
   if (!filePath) process.exit(0);
 
   const ext = path.extname(filePath).toLowerCase();
@@ -28,10 +28,12 @@ process.stdin.on('end', () => {
 
   try {
     // execFileSync with array args — safe from shell injection, cross-platform
-    execFileSync('npx', ['prettier', '--write', filePath], { stdio: 'pipe' });
+    execFileSync("npx", ["prettier", "--write", filePath], { stdio: "pipe" });
   } catch (err) {
     // Don't block Claude if Prettier fails — just warn
-    process.stderr.write(`[format-file] Prettier warning for ${path.basename(filePath)}: ${err.message}\n`);
+    process.stderr.write(
+      `[format-file] Prettier warning for ${path.basename(filePath)}: ${err.message}\n`
+    );
   }
 
   process.exit(0);

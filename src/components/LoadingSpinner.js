@@ -3,12 +3,7 @@
 import React, { memo } from "react";
 
 const LoadingSpinner = memo(
-  ({
-    size = "medium",
-    color = "#63899e",
-    text = "Loading...",
-    fullScreen = false,
-  }) => {
+  ({ size = "medium", color = "#63899e", text = "Loading...", fullScreen = false }) => {
     const sizeMap = {
       small: "20px",
       medium: "40px",
@@ -75,7 +70,7 @@ const LoadingSpinner = memo(
         `}</style>
       </div>
     );
-  },
+  }
 );
 
 LoadingSpinner.displayName = "LoadingSpinner";

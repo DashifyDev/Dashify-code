@@ -33,7 +33,7 @@ function board_library() {
   const [selectedData, setSelectedData] = useState({});
   const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
-    onDrop: (acceptedFiles) => {
+    onDrop: acceptedFiles => {
       let file = acceptedFiles[0];
       setAddBoardData({ ...addBoardData, boardImage: file });
       let blobURL = URL.createObjectURL(file);
@@ -42,7 +42,7 @@ function board_library() {
   });
 
   useEffect(() => {
-    axios.get("/api/template/addTemplate").then((res) => {
+    axios.get("/api/template/addTemplate").then(res => {
       setBoards(res.data);
     });
   }, []);
@@ -57,14 +57,14 @@ function board_library() {
     }
     formData.append("formValue", JSON.stringify(payload));
 
-    axios.post("/api/template/addTemplate", formData).then((res) => {
+    axios.post("/api/template/addTemplate", formData).then(res => {
       setBoards([...boards, res.data]);
     });
     setOpenAddBoardModel(!openAddBoardModel);
     setImageData();
   };
 
-  const handleEditClick = (board) => {
+  const handleEditClick = board => {
     setSelectedId(board._id);
     setOpenAddBoardModel(true);
     setModalButtonState(true);
@@ -78,10 +78,10 @@ function board_library() {
   };
 
   const handleDelete = () => {
-    axios.delete(`/api/template/${selectedId}`).then((res) => {
+    axios.delete(`/api/template/${selectedId}`).then(res => {
       setOpneDeleteModel(false);
       if (res.data.acknowledged) {
-        let index = boards.findIndex((obj) => obj._id == selectedId);
+        let index = boards.findIndex(obj => obj._id == selectedId);
         let boardData = [...boards];
         boardData.splice(index, 1);
         setBoards(boardData);
@@ -105,9 +105,9 @@ function board_library() {
         delete payload.boardImage;
       }
       form.append("updatedFields", JSON.stringify(payload));
-      axios.patch(`/api/template/${selectedId}`, form).then((res) => {
+      axios.patch(`/api/template/${selectedId}`, form).then(res => {
         if (res.data) {
-          const index = boards.findIndex((obj) => obj._id == res.data._id);
+          const index = boards.findIndex(obj => obj._id == res.data._id);
           let items = [...boards];
           items[index] = res.data;
           setBoards(items);
@@ -141,9 +141,7 @@ function board_library() {
               {boards.map((board, index) => (
                 <TableRow key={board._id}>
                   <TableCell align="center">{board.boardName}</TableCell>
-                  <TableCell align="center">
-                    {board.keywords.join(", ")}
-                  </TableCell>
+                  <TableCell align="center">{board.keywords.join(", ")}</TableCell>
                   <TableCell align="center" className="image-cell">
                     <Image
                       src={board.boardImage}
@@ -196,7 +194,7 @@ function board_library() {
               className="modal-input-style"
               id="board-name"
               value={addBoardData.boardName}
-              onChange={(event) =>
+              onChange={event =>
                 setAddBoardData({
                   ...addBoardData,
                   boardName: event.target.value,
@@ -209,7 +207,7 @@ function board_library() {
             <input
               className="modal-input-style"
               value={addBoardData?.keywords}
-              onChange={(event) =>
+              onChange={event =>
                 setAddBoardData({
                   ...addBoardData,
                   keywords: event.target.value.split(","),
@@ -223,7 +221,7 @@ function board_library() {
               className="modal-input-style"
               id="board-name"
               value={addBoardData.boardLink}
-              onChange={(event) =>
+              onChange={event =>
                 setAddBoardData({
                   ...addBoardData,
                   boardLink: event.target.value,
@@ -237,7 +235,7 @@ function board_library() {
               className="modal-input-style"
               id="board-name"
               value={addBoardData.rating}
-              onChange={(event) =>
+              onChange={event =>
                 setAddBoardData({
                   ...addBoardData,
                   rating: event.target.value,
@@ -252,7 +250,7 @@ function board_library() {
               className="modal-input-style"
               id="board-name"
               value={addBoardData.date}
-              onChange={(event) => {
+              onChange={event => {
                 setAddBoardData({
                   ...addBoardData,
                   date: event.target.value,
@@ -265,7 +263,7 @@ function board_library() {
             <textarea
               className="modal-input-style"
               value={addBoardData.boardDescription}
-              onChange={(event) => {
+              onChange={event => {
                 setAddBoardData({
                   ...addBoardData,
                   boardDescription: event.target.value,
@@ -276,10 +274,7 @@ function board_library() {
           <div className="modal-label-style">
             <label>Image</label>
           </div>
-          <div
-            {...getRootProps({ className: "dropzone" })}
-            className="drop-zone"
-          >
+          <div {...getRootProps({ className: "dropzone" })} className="drop-zone">
             <input {...getInputProps()} />
 
             {imageData ? (
@@ -316,9 +311,7 @@ function board_library() {
 
       {/* Board Delete Model */}
       <Dialog open={openDeleteModel} className="model">
-        <DialogTitle sx={{ width: "270px" }}>
-          Are you sure you want to delete?
-        </DialogTitle>
+        <DialogTitle sx={{ width: "270px" }}>Are you sure you want to delete?</DialogTitle>
         <DialogActions>
           <Button
             className="button_cancel"

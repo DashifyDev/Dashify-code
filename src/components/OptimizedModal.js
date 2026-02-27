@@ -16,7 +16,7 @@ const OptimizedModal = memo(
     ...props
   }) => {
     useEffect(() => {
-      const handleEscape = (event) => {
+      const handleEscape = event => {
         if (event.key === "Escape" && open) {
           onClose();
         }
@@ -35,12 +35,12 @@ const OptimizedModal = memo(
     }, [open, onClose]);
 
     const handleBackdropClick = useCallback(
-      (event) => {
+      event => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       },
-      [onClose],
+      [onClose]
     );
 
     if (!open) return null;
@@ -98,11 +98,7 @@ const OptimizedModal = memo(
           )}
         </DialogContent>
 
-        {actions && (
-          <DialogActions style={{ padding: "8px 24px 16px" }}>
-            {actions}
-          </DialogActions>
-        )}
+        {actions && <DialogActions style={{ padding: "8px 24px 16px" }}>{actions}</DialogActions>}
 
         <style jsx>{`
           @keyframes spin {
@@ -116,7 +112,7 @@ const OptimizedModal = memo(
         `}</style>
       </Dialog>
     );
-  },
+  }
 );
 
 OptimizedModal.displayName = "OptimizedModal";

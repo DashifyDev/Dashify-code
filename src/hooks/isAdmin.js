@@ -8,16 +8,16 @@ export default function useAdmin() {
     if (user && !isLoading) {
       const roles = user["https://www.boardzy.app/roles"];
       if (roles && Array.isArray(roles) && roles.includes("admin")) {
-        setAdminState((prev) => {
+        setAdminState(prev => {
           return true;
         });
       } else {
-        setAdminState((prev) => {
+        setAdminState(prev => {
           return false;
         });
       }
     } else if (user === undefined && !isLoading) {
-      setAdminState((prev) => {
+      setAdminState(prev => {
         return false;
       });
     }

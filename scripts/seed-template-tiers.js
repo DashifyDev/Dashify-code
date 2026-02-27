@@ -94,12 +94,7 @@ async function main() {
   for (const t of templates) {
     const willBePremium = premiumSet.has(t.boardName);
     const changed = t.isPremium !== willBePremium ? " ← CHANGE" : "";
-    console.log(
-      t.boardName.padEnd(40),
-      String(t.isPremium).padEnd(17),
-      willBePremium,
-      changed
-    );
+    console.log(t.boardName.padEnd(40), String(t.isPremium).padEnd(17), willBePremium, changed);
   }
 
   if (!apply) {

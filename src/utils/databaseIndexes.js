@@ -37,7 +37,7 @@ export const createDatabaseIndexes = async () => {
   }
 };
 
-export const getDashboardMinimal = async (id) => {
+export const getDashboardMinimal = async id => {
   try {
     // Connection is auto-initialized on module import, but ensure it's ready
     if (mongoose.connection.readyState !== 1) {
@@ -59,7 +59,7 @@ export const getDashboardMinimal = async (id) => {
         sessionId: 1,
         createdAt: 1,
         position: 1,
-      },
+      }
     ).lean();
 
     if (!dashboard) {
@@ -90,7 +90,7 @@ export const getDashboardMinimal = async (id) => {
         mobileWidth: 1,
         mobileHeight: 1,
         createdAt: 1,
-      },
+      }
     )
       .sort({ order: 1, mobileY: 1 }) // Sort by order first, then by mobileY as fallback
       .lean();
@@ -104,11 +104,11 @@ export const getDashboardMinimal = async (id) => {
         x: 1,
         y: 1,
         tiles: 1,
-      },
+      }
     ).lean();
 
     if (pods.length > 0) {
-      const podTileIds = pods.flatMap((pod) => pod.tiles);
+      const podTileIds = pods.flatMap(pod => pod.tiles);
       const podTiles = await Tile.find(
         { _id: { $in: podTileIds } },
         {
@@ -127,11 +127,11 @@ export const getDashboardMinimal = async (id) => {
           editorHeading: 1,
           backgroundAction: 1,
           tileLink: 1,
-        },
+        }
       ).lean();
 
-      pods.forEach((pod) => {
-        pod.tiles = podTiles.filter((tile) => pod.tiles.includes(tile._id));
+      pods.forEach(pod => {
+        pod.tiles = podTiles.filter(tile => pod.tiles.includes(tile._id));
       });
     }
 
@@ -140,7 +140,7 @@ export const getDashboardMinimal = async (id) => {
     const sortedTiles = [...tiles].sort((a, b) => {
       const orderA = a.order ?? 0;
       const orderB = b.order ?? 0;
-      
+
       // If both have order, sort by order
       if (orderA > 0 && orderB > 0) {
         return orderA - orderB;
@@ -195,18 +195,14 @@ export const getUserDashboards = async (userId, sessionId, isAdmin = false) => {
 
     // Check if any dashboards are missing position field and assign them
     const needsPositionUpdate = dashboards.some(
-      (dashboard) =>
-        dashboard.position === undefined || dashboard.position === null,
+      dashboard => dashboard.position === undefined || dashboard.position === null
     );
 
     if (needsPositionUpdate) {
       // Update positions for dashboards that don't have them
       const updatePromises = dashboards.map((dashboard, index) => {
         if (dashboard.position === undefined || dashboard.position === null) {
-          return Dashboard.updateOne(
-            { _id: dashboard._id },
-            { position: index + 1 },
-          );
+          return Dashboard.updateOne({ _id: dashboard._id }, { position: index + 1 });
         }
         return Promise.resolve();
       });

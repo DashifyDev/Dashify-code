@@ -343,7 +343,8 @@ img.text-editor-image {
   35% {
     transform: translateY(0);
   }
-  40%, 100% {
+  40%,
+  100% {
     transform: translateY(0);
   }
 }
@@ -361,7 +362,8 @@ img.text-editor-image {
   35% {
     transform: translateY(0);
   }
-  40%, 100% {
+  40%,
+  100% {
     transform: translateY(0);
   }
 }

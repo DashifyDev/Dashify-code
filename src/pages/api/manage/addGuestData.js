@@ -18,7 +18,7 @@ const addGuestData = async (req, res) => {
         try {
           let tiles = dashboardObj.tiles;
 
-          tiles = tiles.map((tile) => {
+          tiles = tiles.map(tile => {
             const { _id, ...tileData } = tile;
             return tileData;
           });

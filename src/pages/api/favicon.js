@@ -16,7 +16,7 @@ export default function handler(req, res) {
     res.setHeader("Content-Length", stat.size);
 
     const stream = fs.createReadStream(faviconPath);
-    stream.on("error", (err) => {
+    stream.on("error", err => {
       console.error("Error streaming favicon:", err);
       if (!res.headersSent) res.status(500).end();
     });

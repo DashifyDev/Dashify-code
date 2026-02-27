@@ -23,7 +23,12 @@ if (typeof window === "undefined" && process.env.NODE_ENV === "development") {
   const envHint = isStripeTestMode
     ? "STRIPE_TEST_PREMIUM_MONTHLY_PRICE_ID and STRIPE_TEST_PREMIUM_ANNUAL_PRICE_ID"
     : "STRIPE_PREMIUM_MONTHLY_PRICE_ID and STRIPE_PREMIUM_ANNUAL_PRICE_ID";
-  if (!monthly || !annual || !String(monthly).startsWith("price_") || !String(annual).startsWith("price_")) {
+  if (
+    !monthly ||
+    !annual ||
+    !String(monthly).startsWith("price_") ||
+    !String(annual).startsWith("price_")
+  ) {
     console.warn(
       `plans.js: Stripe price IDs should be set and start with 'price_'. Check ${envHint}.`
     );
@@ -82,6 +87,9 @@ export const SUBSCRIPTION_PLANS = [
 ];
 
 export const DEFAULT_BOARD_NAMES = ["Welcome to Boardzy!", "More Boards"];
+
+/** localStorage key for guest active board snapshot (used for migration on signup). */
+export const ACTIVE_DASHBOARD_KEY = "activeDashboard";
 
 /** Returns true if dbUser object has an active Pro subscription. */
 export const isUserPro = dbUser => {

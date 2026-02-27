@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useEffect,
-  useContext,
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useEffect, useContext, useState, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { globalContext } from "@/context/globalContext";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -19,13 +13,10 @@ const GridTiles = dynamic(() => import("@/components/GridTiles"), {
   ssr: false,
 });
 
-const TipTapEditor = dynamic(
-  () => import("@/components/TipTapEditor/TipTapMainEditor"),
-  {
-    loading: () => <div>Loading editor...</div>,
-    ssr: false,
-  },
-);
+const TipTapEditor = dynamic(() => import("@/components/TipTapEditor/TipTapMainEditor"), {
+  loading: () => <div>Loading editor...</div>,
+  ssr: false,
+});
 
 const DashboardSkeleton = () => (
   <div className="animate-pulse p-4">
@@ -55,13 +46,13 @@ function OptimizedDashboard({ params }) {
   const { data: dashboardData, isLoading, error } = useDashboard(id);
 
   const assignDatatoUser = useCallback(
-    (data) => {
+    data => {
       if (data && data.tiles) {
         setTiles(data.tiles);
         setActiveBoard(data);
       }
     },
-    [setTiles, setActiveBoard],
+    [setTiles, setActiveBoard]
   );
 
   useEffect(() => {
@@ -78,9 +69,7 @@ function OptimizedDashboard({ params }) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">
-            Error Loading Dashboard
-          </h2>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Dashboard</h2>
           <p className="text-gray-600">{error.message}</p>
         </div>
       </div>
@@ -88,17 +77,11 @@ function OptimizedDashboard({ params }) {
   }
 
   // Show empty state
-  if (
-    !dashboardData ||
-    !dashboardData.tiles ||
-    dashboardData.tiles.length === 0
-  ) {
+  if (!dashboardData || !dashboardData.tiles || dashboardData.tiles.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-600 mb-2">
-            No Tiles Found
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-600 mb-2">No Tiles Found</h2>
           <p className="text-gray-500">This dashboard appears to be empty.</p>
         </div>
       </div>
@@ -111,9 +94,9 @@ function OptimizedDashboard({ params }) {
         tileCordinates={tiles}
         setTileCordinates={setTiles}
         activeBoard={activeBoard}
-        updateTilesInLocalstorage={(updatedTiles) => {
+        updateTilesInLocalstorage={updatedTiles => {
           // Update React Query cache
-          queryClient.setQueryData(dashboardKeys.detail(id), (oldData) => {
+          queryClient.setQueryData(dashboardKeys.detail(id), oldData => {
             if (!oldData) return oldData;
             return {
               ...oldData,

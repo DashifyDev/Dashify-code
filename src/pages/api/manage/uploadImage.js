@@ -8,8 +8,7 @@ export const config = {
 };
 
 const uploadImage = async (req, res) => {
-  if (req.method !== "POST")
-    return res.status(405).json({ message: "Method Not Allowed" });
+  if (req.method !== "POST") return res.status(405).json({ message: "Method Not Allowed" });
   try {
     const form = new IncomingForm();
     await form.parse(req, async (err, fields, files) => {

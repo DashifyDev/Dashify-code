@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { FixedSizeGrid as Grid } from "react-window";
 import ImageSkeleton from "./ImageSkeleton";
 import { useImageOptimization } from "@/hooks/useImageOptimization";
@@ -35,9 +29,7 @@ const VirtualizedGrid = ({
 
   // Extract image URLs for preloading
   const imageUrls = useMemo(() => {
-    return items
-      .map((item) => item.image || item.tileBackground || item.src)
-      .filter(Boolean);
+    return items.map(item => item.image || item.tileBackground || item.src).filter(Boolean);
   }, [items]);
 
   // Use image optimization hook
@@ -148,7 +140,7 @@ const VirtualizedGrid = ({
         </div>
       );
     },
-    [items, columnCount, getImageStatus, renderItem, onItemClick],
+    [items, columnCount, getImageStatus, renderItem, onItemClick]
   );
 
   if (items.length === 0) {

@@ -84,8 +84,7 @@ export async function ensureDefaultBoards(userId) {
  * Never creates duplicate boards (checked by name).
  */
 export async function migrateActiveDashboard({ userId, activeDashboard }) {
-  const isDefaultBoard =
-    !activeDashboard || DEFAULT_BOARD_NAMES.includes(activeDashboard.name);
+  const isDefaultBoard = !activeDashboard || DEFAULT_BOARD_NAMES.includes(activeDashboard.name);
 
   if (!isDefaultBoard) {
     const existing = await Dashboard.findOne({ userId, name: activeDashboard.name });

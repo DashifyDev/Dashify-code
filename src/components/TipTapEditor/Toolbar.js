@@ -47,8 +47,6 @@ const dividerOptions = [
   { variant: "dotted", className: "hr-dotted" },
 ];
 
-
-
 const Toolbar = ({ editor, activeStyles }) => {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkState, setLinkState] = useState({
@@ -85,15 +83,12 @@ const Toolbar = ({ editor, activeStyles }) => {
   const closeLinkModal = () => setIsLinkModalOpen(false);
 
   useEffect(() => {
-    const onOpenLinkModal = (e) => {
+    const onOpenLinkModal = e => {
       const detail = e.detail || {};
       const href = detail.href || "";
       setLinkState({
         url: href.startsWith(window.location.origin)
-          ? href.replace(
-              `${window.location.origin}${window.location.pathname}`,
-              "",
-            )
+          ? href.replace(`${window.location.origin}${window.location.pathname}`, "")
           : href,
         text: detail.text || "",
         openInNewWindow: detail.target === "_blank",
@@ -103,8 +98,7 @@ const Toolbar = ({ editor, activeStyles }) => {
       setIsLinkModalOpen(true);
     };
     window.addEventListener("tiptap:openLinkModal", onOpenLinkModal);
-    return () =>
-      window.removeEventListener("tiptap:openLinkModal", onOpenLinkModal);
+    return () => window.removeEventListener("tiptap:openLinkModal", onOpenLinkModal);
   }, []);
 
   const handleSetLink = () => {
@@ -134,10 +128,7 @@ const Toolbar = ({ editor, activeStyles }) => {
       download: download ? "" : null,
     };
 
-    if (
-      text &&
-      (from === to || editor.state.doc.textBetween(from, to, " ") !== text)
-    ) {
+    if (text && (from === to || editor.state.doc.textBetween(from, to, " ") !== text)) {
       editor
         .chain()
         .focus()
@@ -158,21 +149,21 @@ const Toolbar = ({ editor, activeStyles }) => {
     setIsImageModalOpen(true);
   }, [editor]);
 
-  const toggleDividerMenu = useCallback((e) => {
+  const toggleDividerMenu = useCallback(e => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDividerOpen((v) => !v);
+    setIsDividerOpen(v => !v);
   }, []);
 
-  const handleInsertDivider = (variant) => {
+  const handleInsertDivider = variant => {
     editor.chain().focus().insertDivider(variant).run();
     setIsDividerOpen(false);
   };
 
-  const toggleTableMenu = useCallback((e) => {
+  const toggleTableMenu = useCallback(e => {
     e.preventDefault();
     e.stopPropagation();
-    setIsTableOpen((v) => !v);
+    setIsTableOpen(v => !v);
   }, []);
 
   const handlePrint = useCallback(() => {
@@ -217,11 +208,8 @@ const Toolbar = ({ editor, activeStyles }) => {
   }, [editor]);
 
   React.useEffect(() => {
-    const onDocClick = (event) => {
-      if (
-        dividerMenuRef.current &&
-        !dividerMenuRef.current.contains(event.target)
-      ) {
+    const onDocClick = event => {
+      if (dividerMenuRef.current && !dividerMenuRef.current.contains(event.target)) {
         setIsDividerOpen(false);
       }
     };
@@ -236,11 +224,8 @@ const Toolbar = ({ editor, activeStyles }) => {
   }, [isDividerOpen]);
 
   React.useEffect(() => {
-    const onDocClick = (event) => {
-      if (
-        tableMenuRef.current &&
-        !tableMenuRef.current.contains(event.target)
-      ) {
+    const onDocClick = event => {
+      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target)) {
         setIsTableOpen(false);
       }
     };
@@ -260,16 +245,10 @@ const Toolbar = ({ editor, activeStyles }) => {
     <>
       <div className="toolbar">
         <div className="toolbar-group">
-          <button
-            onClick={() => editor.chain().focus().undo().run()}
-            title="Undo"
-          >
+          <button onClick={() => editor.chain().focus().undo().run()} title="Undo">
             <FaUndo />
           </button>
-          <button
-            onClick={() => editor.chain().focus().redo().run()}
-            title="Redo"
-          >
+          <button onClick={() => editor.chain().focus().redo().run()} title="Redo">
             <FaRedo />
           </button>
         </div>
@@ -303,7 +282,6 @@ const Toolbar = ({ editor, activeStyles }) => {
           >
             <FaStrikethrough />
           </button>
-          
         </div>
 
         <div className="toolbar-group">
@@ -322,14 +300,13 @@ const Toolbar = ({ editor, activeStyles }) => {
               <span
                 className="color-indicator"
                 style={{
-                  backgroundColor:
-                    rgbToHex(activeStyles.color) || "transparent",
+                  backgroundColor: rgbToHex(activeStyles.color) || "transparent",
                 }}
               ></span>
             </button>
             {showColorGrid && (
               <ColorGridPicker
-                onColorSelect={(color) => {
+                onColorSelect={color => {
                   editor.chain().focus().setMark("textStyle", { color }).run();
                   setShowColorGrid(false);
                 }}
@@ -358,7 +335,7 @@ const Toolbar = ({ editor, activeStyles }) => {
             </button>
             {showHighlightGrid && (
               <ColorGridPicker
-                onColorSelect={(color) => {
+                onColorSelect={color => {
                   editor.chain().focus().toggleHighlight({ color }).run();
                   setShowHighlightGrid(false);
                 }}
@@ -367,23 +344,12 @@ const Toolbar = ({ editor, activeStyles }) => {
             )}
           </div>
 
-          <FontFamilySelector
-            editor={editor}
-            activeFontFamily={activeStyles.fontFamily}
-          />
+          <FontFamilySelector editor={editor} activeFontFamily={activeStyles.fontFamily} />
           <select
-            onChange={(e) =>
+            onChange={e =>
               e.target.value
-                ? editor
-                    .chain()
-                    .focus()
-                    .setMark("textStyle", { fontSize: e.target.value })
-                    .run()
-                : editor
-                    .chain()
-                    .focus()
-                    .unsetMark("textStyle", { fontSize: null })
-                    .run()
+                ? editor.chain().focus().setMark("textStyle", { fontSize: e.target.value }).run()
+                : editor.chain().focus().unsetMark("textStyle", { fontSize: null }).run()
             }
             value={activeStyles.fontSize || ""}
             title="Font Size"
@@ -404,8 +370,8 @@ const Toolbar = ({ editor, activeStyles }) => {
               "32px",
               "36px",
               "40px",
-              "48px"
-            ].map((size) => (
+              "48px",
+            ].map(size => (
               <option key={size} value={size}>
                 {size}
               </option>
@@ -479,7 +445,7 @@ const Toolbar = ({ editor, activeStyles }) => {
             </button>
             <select
               className="lh-select"
-              onChange={(e) => {
+              onChange={e => {
                 const v = e.target.value;
                 if (!v) {
                   editor.chain().focus().unsetLineHeight().run();
@@ -498,19 +464,14 @@ const Toolbar = ({ editor, activeStyles }) => {
           </div>
         </div>
 
-
         <div className="toolbar-group">
           <div className="divider-wrap" title="Insert Divider">
-            <button
-              type="button"
-              className="icon-like-button"
-              onClick={toggleDividerMenu}
-            >
+            <button type="button" className="icon-like-button" onClick={toggleDividerMenu}>
               <FaMinus />
             </button>
             {isDividerOpen && (
               <div ref={dividerMenuRef} className="divider-menu">
-                {dividerOptions.map((option) => (
+                {dividerOptions.map(option => (
                   <button
                     key={option.variant}
                     type="button"
@@ -533,22 +494,14 @@ const Toolbar = ({ editor, activeStyles }) => {
             <FaImage />
           </button>
           <div className="table-picker-wrap" title="Insert Table">
-            <button
-              type="button"
-              className="icon-like-button"
-              onClick={toggleTableMenu}
-            >
+            <button type="button" className="icon-like-button" onClick={toggleTableMenu}>
               <FaTable />
             </button>
             {isTableOpen && (
               <div ref={tableMenuRef} className="table-picker-menu">
                 <TableSizePicker
                   onSelect={(rows, cols) => {
-                    editor
-                      .chain()
-                      .focus()
-                      .insertTable({ rows, cols, withHeaderRow: true })
-                      .run();
+                    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
                     setIsTableOpen(false);
                   }}
                 />
@@ -556,7 +509,7 @@ const Toolbar = ({ editor, activeStyles }) => {
             )}
           </div>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               editor.chain().focus().toggleBlockquote().run();
             }}
@@ -569,14 +522,11 @@ const Toolbar = ({ editor, activeStyles }) => {
 
         <div className="toolbar-group">
           <button
-            onClick={() =>
-              editor.chain().focus().unsetAllMarks().clearNodes().run()
-            }
+            onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
             title="Clear Format"
           >
             <FaRemoveFormat />
           </button>
-
         </div>
       </div>
 
@@ -596,13 +546,9 @@ const Toolbar = ({ editor, activeStyles }) => {
             <input
               id="linkUrl"
               type="text"
-              placeholder={
-                linkState.anchorMode ? "#anchor" : "https://example.com"
-              }
+              placeholder={linkState.anchorMode ? "#anchor" : "https://example.com"}
               value={linkState.url}
-              onChange={(e) =>
-                setLinkState((prev) => ({ ...prev, url: e.target.value }))
-              }
+              onChange={e => setLinkState(prev => ({ ...prev, url: e.target.value }))}
               autoFocus
               style={{ flex: 1 }}
             />
@@ -611,7 +557,7 @@ const Toolbar = ({ editor, activeStyles }) => {
               className="icon-like-button"
               title="Anchor mode"
               onClick={() =>
-                setLinkState((prev) => ({
+                setLinkState(prev => ({
                   ...prev,
                   anchorMode: !prev.anchorMode,
                 }))
@@ -635,9 +581,7 @@ const Toolbar = ({ editor, activeStyles }) => {
             type="text"
             placeholder="Enter text"
             value={linkState.text}
-            onChange={(e) =>
-              setLinkState((prev) => ({ ...prev, text: e.target.value }))
-            }
+            onChange={e => setLinkState(prev => ({ ...prev, text: e.target.value }))}
           />
         </div>
 
@@ -659,12 +603,9 @@ const Toolbar = ({ editor, activeStyles }) => {
           if (width) attrs.width = width;
           if (height) attrs.height = height;
           editor.chain().focus().setImage(attrs).run();
-          if (align === "left")
-            editor.chain().focus().setTextAlign("left").run();
-          if (align === "center")
-            editor.chain().focus().setTextAlign("center").run();
-          if (align === "right")
-            editor.chain().focus().setTextAlign("right").run();
+          if (align === "left") editor.chain().focus().setTextAlign("left").run();
+          if (align === "center") editor.chain().focus().setTextAlign("center").run();
+          if (align === "right") editor.chain().focus().setTextAlign("right").run();
         }}
       />
     </>

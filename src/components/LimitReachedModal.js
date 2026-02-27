@@ -18,7 +18,10 @@ export default function LimitReachedModal({ type, limit, open, onClose }) {
 
   if (!open) return null;
 
-  const noun = type === "board" ? "boards" : "tiles per board";
+  const message =
+    type === "board"
+      ? `Free accounts can only have ${limit} boards. To create a new board, delete an existing board or upgrade for unlimited.`
+      : `Free accounts can only have ${limit} tiles per board. Delete one or upgrade for unlimited.`;
 
   const handleUpgrade = () => {
     onClose();
@@ -40,9 +43,7 @@ export default function LimitReachedModal({ type, limit, open, onClose }) {
         <h3 id="limit-reached-title" className="text-lg font-semibold mb-2">
           Limit Reached
         </h3>
-        <p className="text-gray-600 mb-6">
-          Free accounts can only have {limit} {noun}. Delete one or upgrade for unlimited.
-        </p>
+        <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={onClose}>
             Close
@@ -53,7 +54,5 @@ export default function LimitReachedModal({ type, limit, open, onClose }) {
     </div>
   );
 
-  return typeof document !== "undefined"
-    ? createPortal(modal, document.body)
-    : null;
+  return typeof document !== "undefined" ? createPortal(modal, document.body) : null;
 }

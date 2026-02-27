@@ -11,7 +11,6 @@ export const config = {
 
 const addTemplate = async (req, res) => {
   try {
-
     switch (req.method) {
       case "POST":
         let form = new IncomingForm();
@@ -42,9 +41,11 @@ const addTemplate = async (req, res) => {
         const filter = req.query.filter;
         const type = req.query.type; // 'community' | 'premium' | 'all' (default)
         const typeQuery =
-          type === "community" ? { isPremium: { $ne: true } } :
-          type === "premium"   ? { isPremium: true } :
-          {};
+          type === "community"
+            ? { isPremium: { $ne: true } }
+            : type === "premium"
+              ? { isPremium: true }
+              : {};
         let getData;
         if (filter === "mostPopular") {
           getData = await Template.find(typeQuery).sort({ rating: -1 }).exec();

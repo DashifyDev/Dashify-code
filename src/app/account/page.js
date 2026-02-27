@@ -89,9 +89,11 @@ export default function AccountPage() {
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-600">Plan:</span>
             <span className="font-medium text-gray-900">{planLabel}</span>
-            {dbUser && dbUser.subscriptionStatus && (isPro || dbUser.subscriptionStatus === 'past_due') && (
-              <SubscriptionStatusBadge status={dbUser.subscriptionStatus} />
-            )}
+            {dbUser &&
+              dbUser.subscriptionStatus &&
+              (isPro || dbUser.subscriptionStatus === "past_due") && (
+                <SubscriptionStatusBadge status={dbUser.subscriptionStatus} />
+              )}
           </div>
           {periodEnd && (
             <p className="text-sm text-gray-500">
@@ -130,8 +132,7 @@ export default function AccountPage() {
         {!isPro ? (
           <div className="space-y-2 text-sm text-gray-700">
             <p>
-              Boards:{" "}
-              <span className="font-medium">{boards.length}</span> / {FREE_PLAN_MAX_BOARDS}
+              Boards: <span className="font-medium">{boards.length}</span> / {FREE_PLAN_MAX_BOARDS}
             </p>
             <p>
               Tiles per board: up to{" "}

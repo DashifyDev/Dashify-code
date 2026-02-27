@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/dasify";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/dasify";
 
 async function createDatabaseIndexes() {
   try {
@@ -18,9 +17,7 @@ async function createDatabaseIndexes() {
 
     await db.collection("dashboards").createIndex({ userId: 1, position: 1 });
 
-    await db
-      .collection("dashboards")
-      .createIndex({ sessionId: 1, createdAt: 1 });
+    await db.collection("dashboards").createIndex({ sessionId: 1, createdAt: 1 });
 
     await db.collection("tiles").createIndex({ isInsidePod: 1 });
     await db.collection("tiles").createIndex({ x: 1, y: 1 });

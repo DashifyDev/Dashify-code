@@ -23,7 +23,9 @@ const handler = async (req, res) => {
       if (process.env.NODE_ENV === "development") {
         console.warn("create-checkout-session: STRIPE price ID missing or invalid for", planKey);
       }
-      return res.status(400).json({ message: "Checkout is not configured for this plan. Please try again later." });
+      return res
+        .status(400)
+        .json({ message: "Checkout is not configured for this plan. Please try again later." });
     }
 
     const userEmail = session.user.email;
