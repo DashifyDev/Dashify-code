@@ -1,6 +1,6 @@
 "use client";
 import { globalContext } from "@/context/globalContext";
-import { FREE_PLAN_MAX_BOARDS, isUserPro } from "@/constants/plans";
+import { FREE_PLAN_MAX_BOARDS, FREE_PLAN_MAX_TILES_PER_BOARD, isUserPro } from "@/constants/plans";
 import useAdmin from "@/hooks/isAdmin";
 import isDblTouchTap from "@/hooks/isDblTouchTap";
 import { dashboardKeys } from "@/hooks/useDashboard";
@@ -54,6 +54,7 @@ function Header() {
   const [boardMenuAnchor, setBoardMenuAnchor] = useState(null);
   const [addTilesMenuAnchor, setAddTilesMenuAnchor] = useState(null);
   const [showBoardLimitModal, setShowBoardLimitModal] = useState(false);
+  const [showTileLimitModal, setShowTileLimitModal] = useState(false);
 
   const currentActiveBoard = id || activeBoard;
 
@@ -166,6 +167,11 @@ function Header() {
         }
       }
       safeSetItem("Dasify", JSON.stringify(res.data));
+      if (!isBoardsLoaded) setIsBoardsLoaded(true);
+    }).catch(err => {
+      console.warn("Failed to load default dashboards", err);
+      setBoards([]);
+      if (!isBoardsLoaded) setIsBoardsLoaded(true);
     });
   };
 
@@ -187,6 +193,16 @@ function Header() {
     const detailKey = dashboardKeys.detail(currentActiveBoard);
     const cachedDashboardData = queryClient.getQueryData(detailKey);
     const currentTiles = cachedDashboardData?.tiles || tiles || [];
+
+    if (
+      dbUser &&
+      !isAdmin &&
+      !isUserPro(dbUser) &&
+      currentTiles.length >= FREE_PLAN_MAX_TILES_PER_BOARD
+    ) {
+      setShowTileLimitModal(true);
+      return;
+    }
 
     // Count only tiles that are user-created (not the default welcome tile)
     // Filter out tiles with width > 200px (default welcome tile is 600px)
@@ -299,7 +315,11 @@ function Header() {
             });
           })
           .catch(error => {
-            console.error("Error adding tile:", error);
+            if (error?.response?.status === 403) {
+              setShowTileLimitModal(true);
+            } else {
+              console.error("Error adding tile:", error);
+            }
             // Remove temporary block on error and revert tile positions
             setTiles(currentTiles);
 
@@ -1678,6 +1698,12 @@ function Header() {
         limit={FREE_PLAN_MAX_BOARDS}
         open={showBoardLimitModal}
         onClose={() => setShowBoardLimitModal(false)}
+      />
+      <LimitReachedModal
+        type="tile"
+        limit={FREE_PLAN_MAX_TILES_PER_BOARD}
+        open={showTileLimitModal}
+        onClose={() => setShowTileLimitModal(false)}
       />
     </header>
   );
