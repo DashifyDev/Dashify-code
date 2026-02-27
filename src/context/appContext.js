@@ -17,6 +17,17 @@ function getActiveDashboardFromStorage() {
   }
 }
 
+function getGuestBoardsFromStorage() {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("Dasify") : null;
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((b) => b && typeof b === "object" && b.name) : [];
+  } catch {
+    return [];
+  }
+}
+
 function clearGuestStorage() {
   try {
     if (typeof window !== "undefined") {
@@ -64,9 +75,10 @@ const AppContextProvider = ({ children }) => {
 
         const userId = res.data._id;
         const activeDashboard = getActiveDashboardFromStorage();
+        const guestBoards = getGuestBoardsFromStorage();
 
         let migrationSucceeded = true;
-        if (activeDashboard) {
+        if (activeDashboard || guestBoards.length > 0) {
           migrationSucceeded = false;
 
           // Auth session cookie can lag right after signup/login.
@@ -76,6 +88,7 @@ const AppContextProvider = ({ children }) => {
               await axios.post("/api/manage/migrateGuestActiveBoard", {
                 userId,
                 activeDashboard,
+                guestBoards,
               });
               migrationSucceeded = true;
               break;

@@ -3,6 +3,13 @@ import User from "@/models/user";
 import stripe from "@/utils/stripe";
 import { PLANS, STRIPE_PRICES } from "@/constants/plans";
 
+function requireStripeClient() {
+  if (!stripe) {
+    throw new Error("Stripe is not configured");
+  }
+  return stripe;
+}
+
 function priceIdToPlan(priceId) {
   if (priceId === STRIPE_PRICES.annual) return PLANS.pro_annual;
   if (priceId === STRIPE_PRICES.monthly) return PLANS.pro_monthly;
@@ -33,6 +40,7 @@ export async function getUserPlan(userId) {
 
 /** Creates a Stripe Checkout Session and returns it. */
 export async function createCheckoutSession({ priceId, userEmail, userId, successUrl, cancelUrl }) {
+  const stripeClient = requireStripeClient();
   const params = {
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
@@ -43,12 +51,13 @@ export async function createCheckoutSession({ priceId, userEmail, userId, succes
   if (userEmail) params.customer_email = userEmail;
   if (userId) params.metadata = { user_id: String(userId) };
 
-  return stripe.checkout.sessions.create(params);
+  return stripeClient.checkout.sessions.create(params);
 }
 
 /** Creates a Stripe Customer Portal Session and returns it. */
 export async function createPortalSession({ stripeCustomerId, returnUrl }) {
-  return stripe.billingPortal.sessions.create({
+  const stripeClient = requireStripeClient();
+  return stripeClient.billingPortal.sessions.create({
     customer: stripeCustomerId,
     return_url: returnUrl,
   });
@@ -56,10 +65,11 @@ export async function createPortalSession({ stripeCustomerId, returnUrl }) {
 
 /** Handles checkout.session.completed — activates subscription on User. */
 export async function activateSubscription(session) {
+  const stripeClient = requireStripeClient();
   const userId = session.metadata?.user_id;
   if (!userId) return;
 
-  const subscription = await stripe.subscriptions.retrieve(session.subscription);
+  const subscription = await stripeClient.subscriptions.retrieve(session.subscription);
   const priceId = subscription.items.data[0]?.price?.id;
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
@@ -106,11 +116,12 @@ export async function cancelSubscription(subscription) {
 
 /** Handles invoice.payment_succeeded */
 export async function handlePaymentSucceeded(invoice) {
+  const stripeClient = requireStripeClient();
   if (!invoice.subscription) return;
   const user = await User.findOne({ stripeSubscriptionId: invoice.subscription });
   if (!user) return;
 
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+  const subscription = await stripeClient.subscriptions.retrieve(invoice.subscription);
   const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
 
   await User.findByIdAndUpdate(user._id, {

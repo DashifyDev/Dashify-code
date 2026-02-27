@@ -190,72 +190,99 @@ async function removeDuplicateBoardsByGuestSource(userId, guestSourceId) {
   }
 }
 
+async function migrateSingleGuestBoard(userId, guestBoard) {
+  if (!guestBoard || !guestBoard.name) return;
+  const guestSourceId = guestBoard?._id ? String(guestBoard._id) : null;
+  const normalizedName = normalizeBoardName(guestBoard.name);
+  if (NORMALIZED_DEFAULT_BOARD_NAMES.has(normalizedName)) return;
+
+  await removeDuplicateBoardsByGuestSource(userId, guestSourceId);
+
+  const existing = guestSourceId
+    ? await Dashboard.findOne({ userId, guestSourceId })
+    : await Dashboard.findOne({ userId, name: guestBoard.name });
+  if (existing) return;
+
+  const tiles = (guestBoard.tiles || []).map(t => {
+    const { _id, ...rest } = t;
+    return rest;
+  });
+  const createdTiles = tiles.length > 0 ? await Tile.insertMany(tiles) : [];
+
+  const pods = (guestBoard.pods || []).map(p => {
+    const { _id, ...rest } = p;
+    return rest;
+  });
+  const createdPods = pods.length > 0 ? await Pod.insertMany(pods) : [];
+
+  const userBoards = await Dashboard.find({ userId }).select("position").lean();
+  const maxPosition = userBoards.reduce((max, b) => {
+    const pos = Number(b.position) || 0;
+    return pos > max ? pos : max;
+  }, 0);
+  try {
+    await Dashboard.create({
+      userId,
+      name: guestBoard.name,
+      tiles: createdTiles.map(t => t._id),
+      pods: createdPods.map(p => p._id),
+      default: guestBoard.default || false,
+      position: maxPosition + 1,
+      ...(guestSourceId ? { guestSourceId } : {}),
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      if (createdTiles.length) {
+        await Tile.deleteMany({ _id: { $in: createdTiles.map(t => t._id) } });
+      }
+      if (createdPods.length) {
+        await Pod.deleteMany({ _id: { $in: createdPods.map(p => p._id) } });
+      }
+    } else {
+      throw err;
+    }
+  }
+}
+
+export async function migrateGuestDashboards({ userId, activeDashboard, guestBoards = [] }) {
+  await removeDuplicateDefaultBoardsForUser(userId);
+
+  const normalizedActiveId = activeDashboard?._id ? String(activeDashboard._id) : null;
+  const mergedBoards = [];
+  const seenSources = new Set();
+
+  const pushBoard = (board) => {
+    if (!board || !board.name) return;
+    const sourceId = board?._id ? String(board._id) : "";
+    const nameKey = normalizeBoardName(board.name);
+    const key = sourceId ? `id:${sourceId}` : `name:${nameKey}`;
+    if (seenSources.has(key)) return;
+    seenSources.add(key);
+    mergedBoards.push(board);
+  };
+
+  // Active board first so it stays closest to previous guest context.
+  if (activeDashboard) pushBoard(activeDashboard);
+  for (const board of Array.isArray(guestBoards) ? guestBoards : []) {
+    pushBoard(board);
+  }
+
+  for (const board of mergedBoards) {
+    await migrateSingleGuestBoard(userId, board);
+  }
+
+  await ensureDefaultBoards(userId);
+  await removeDuplicateDefaultBoardsForUser(userId);
+  if (normalizedActiveId) {
+    await removeDuplicateBoardsByGuestSource(userId, normalizedActiveId);
+  }
+}
+
 /**
  * Migrates a single guest activeDashboard to the DB for the given userId.
  * If activeDashboard is null or is a default board, only ensures default boards exist.
  * Never creates duplicate boards (checked by name).
  */
 export async function migrateActiveDashboard({ userId, activeDashboard }) {
-  await removeDuplicateDefaultBoardsForUser(userId);
-
-  const isDefaultBoard =
-    !activeDashboard || NORMALIZED_DEFAULT_BOARD_NAMES.has(normalizeBoardName(activeDashboard.name));
-  const guestSourceId = activeDashboard?._id ? String(activeDashboard._id) : null;
-  await removeDuplicateBoardsByGuestSource(userId, guestSourceId);
-
-  if (!isDefaultBoard) {
-    const existing = guestSourceId
-      ? await Dashboard.findOne({ userId, guestSourceId })
-      : await Dashboard.findOne({ userId, name: activeDashboard.name });
-
-    if (!existing) {
-      // Strip guest _ids from tiles
-      const tiles = (activeDashboard.tiles || []).map(t => {
-        const { _id, ...rest } = t;
-        return rest;
-      });
-      const createdTiles = tiles.length > 0 ? await Tile.insertMany(tiles) : [];
-
-      // Strip guest _ids from pods
-      const pods = (activeDashboard.pods || []).map(p => {
-        const { _id, ...rest } = p;
-        return rest;
-      });
-      const createdPods = pods.length > 0 ? await Pod.insertMany(pods) : [];
-
-      const userBoards = await Dashboard.find({ userId }).select("position").lean();
-      const maxPosition = userBoards.reduce((max, b) => {
-        const pos = Number(b.position) || 0;
-        return pos > max ? pos : max;
-      }, 0);
-      try {
-        await Dashboard.create({
-          userId,
-          name: activeDashboard.name,
-          tiles: createdTiles.map(t => t._id),
-          pods: createdPods.map(p => p._id),
-          default: activeDashboard.default || false,
-          position: maxPosition + 1,
-          ...(guestSourceId ? { guestSourceId } : {}),
-        });
-      } catch (err) {
-        // E11000 = duplicate key; another request already created this board
-        if (err.code === 11000) {
-          if (createdTiles.length) {
-            await Tile.deleteMany({ _id: { $in: createdTiles.map(t => t._id) } });
-          }
-          if (createdPods.length) {
-            await Pod.deleteMany({ _id: { $in: createdPods.map(p => p._id) } });
-          }
-        } else {
-          throw err;
-        }
-      }
-    }
-  }
-
-  await ensureDefaultBoards(userId);
-  // Final cleanup guarantees one copy of each default board even when migration runs twice in parallel.
-  await removeDuplicateDefaultBoardsForUser(userId);
-  await removeDuplicateBoardsByGuestSource(userId, guestSourceId);
+  await migrateGuestDashboards({ userId, activeDashboard, guestBoards: activeDashboard ? [activeDashboard] : [] });
 }

@@ -1,5 +1,5 @@
 import "@/utils/db";
-import { migrateActiveDashboard } from "@/services/dashboardService";
+import { migrateGuestDashboards } from "@/services/dashboardService";
 import { getSession } from "@auth0/nextjs-auth0";
 import User from "@/models/user";
 import Dashboard from "@/models/dashboard";
@@ -12,7 +12,7 @@ const handler = async (req, res) => {
   }
 
   try {
-    const { userId, activeDashboard } = req.body;
+    const { userId, activeDashboard, guestBoards } = req.body;
     if (!userId) {
       return res.status(400).json({ message: "userId is required" });
     }
@@ -32,11 +32,16 @@ const handler = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    const boardIds = Array.isArray(guestBoards)
+      ? guestBoards.map((b) => String(b?._id || "")).filter(Boolean).sort()
+      : [];
     const activeBoardId = activeDashboard?._id ? String(activeDashboard._id) : "";
     const activeBoardName = normalizeBoardName(activeDashboard?.name);
-    const migrationKey = activeBoardId
-      ? `active:${activeBoardId}`
-      : `default:${activeBoardName || "none"}`;
+    const migrationKey = boardIds.length
+      ? `boards:${boardIds.join("|")}`
+      : activeBoardId
+        ? `active:${activeBoardId}`
+        : `default:${activeBoardName || "none"}`;
 
     // Atomic gate: same migration key for the same user is processed only once.
     const gateResult = await User.updateOne(
@@ -50,7 +55,11 @@ const handler = async (req, res) => {
 
     if (gateMatched) {
       try {
-        await migrateActiveDashboard({ userId, activeDashboard: activeDashboard || null });
+        await migrateGuestDashboards({
+          userId,
+          activeDashboard: activeDashboard || null,
+          guestBoards: Array.isArray(guestBoards) ? guestBoards : [],
+        });
       } catch (migrationError) {
         await User.updateOne(
           { _id: dbUser._id, lastGuestMigrationKey: migrationKey },

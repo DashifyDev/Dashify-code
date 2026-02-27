@@ -34,6 +34,21 @@ const userSchema = new Schema({
   lastGuestMigrationAt: {
     type: Date,
   },
+  stripeCustomerId: {
+    type: String,
+  },
+  stripeSubscriptionId: {
+    type: String,
+  },
+  subscriptionStatus: {
+    type: String,
+  },
+  subscriptionCurrentPeriodEnd: {
+    type: Date,
+  },
+  plan: {
+    type: String,
+  },
 });
 
 const User = models.User || model("User", userSchema);
