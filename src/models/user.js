@@ -28,6 +28,12 @@ const userSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  lastGuestMigrationKey: {
+    type: String,
+  },
+  lastGuestMigrationAt: {
+    type: Date,
+  },
 });
 
 const User = models.User || model("User", userSchema);
