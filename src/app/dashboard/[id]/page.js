@@ -12,6 +12,7 @@ import { useUser } from "@auth0/nextjs-auth0/client";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -424,8 +425,69 @@ function OptimizedDashboardPage() {
     [user, activeBoard, setBoards]
   );
 
+  const hasNoBoards =
+    isBoardsLoaded &&
+    !isLoading &&
+    !isFetching &&
+    !dashboardData &&
+    Array.isArray(boards) &&
+    boards.length === 0;
+
+  const renderNoBoardsState = () => (
+    <div
+      style={{
+        minHeight: "calc(100vh - 96px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}
+    >
+      <div style={{ textAlign: "center", maxWidth: "560px" }}>
+        <h1 style={{ fontSize: "28px", color: "#2f4e5d", marginBottom: "10px" }}>No boards yet</h1>
+        <p style={{ color: "#5f7380", marginBottom: "18px" }}>
+          You do not have any dashboards right now. Create one from the library to get started.
+        </p>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+          <Link
+            href="/library"
+            style={{
+              display: "inline-block",
+              backgroundColor: "#63899e",
+              color: "#fff",
+              textDecoration: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              fontWeight: 600,
+            }}
+          >
+            Open Library
+          </Link>
+          <Link
+            href="/subscription"
+            style={{
+              display: "inline-block",
+              border: "1px solid #63899e",
+              color: "#63899e",
+              textDecoration: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              fontWeight: 600,
+            }}
+          >
+            View Plans
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
   // Show loader when initially loading or when data is not ready yet
   // Don't show loader on background refetch (isFetching) if we already have data
+  if (hasNoBoards) {
+    return renderNoBoardsState();
+  }
+
   if (isLoading || (!dashboardData && !error)) {
     return <LoadingSpinner text="Loading dashboard..." fullScreen={true} />;
   }
@@ -441,6 +503,9 @@ function OptimizedDashboardPage() {
     // If it's a 404 and we have boards loaded, show loading while redirecting
     if (isNotFoundError && isBoardsLoaded && boards && boards.length > 0) {
       return <LoadingSpinner text="Redirecting to available board..." fullScreen={true} />;
+    }
+    if (isNotFoundError && hasNoBoards) {
+      return renderNoBoardsState();
     }
 
     // Show error for other cases
