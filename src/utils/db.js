@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
 
 // Global cached connection promise to prevent multiple simultaneous connections
 let cachedConnection = null;
@@ -19,10 +20,21 @@ let isConnecting = false;
  * - Auto-closes idle connections after 20 seconds
  */
 const connectMongo = async () => {
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI or MONGO_URI must be set in the environment");
+  }
+
   // If already connected, return immediately
   if (mongoose.connection.readyState === 1) {
     return mongoose.connection;
   }
+
+  if (typeof window === "undefined" && uri.startsWith("mongodb+srv://")) {
+    dns.setServers(["8.8.8.8", "8.8.4.4"]);
+    if (dns.setDefaultResultOrder) dns.setDefaultResultOrder("ipv4first");
+  }
+  
 
   // If connection is in progress, wait for the existing promise
   if (isConnecting && cachedConnection) {
@@ -44,7 +56,7 @@ const connectMongo = async () => {
   // Create new connection promise
   isConnecting = true;
   cachedConnection = mongoose
-    .connect(process.env.MONGO_URI, {
+    .connect(uri, {
       maxPoolSize: 2, // Aggressive limit for MongoDB Atlas M0 (reduced from 5)
       minPoolSize: 0, // Allow connections to drop to zero after inactivity
       maxIdleTimeMS: 20000, // Close idle connections after 20 seconds
@@ -95,7 +107,7 @@ if (typeof window === 'undefined') {
 // Initialize connection on module import (for server-side)
 // This ensures connection is ready before any queries run
 // Mongoose maintains a global connection state, so this is safe for Next.js serverless
-if (typeof window === 'undefined' && process.env.MONGO_URI) {
+if (typeof window === 'undefined' && (process.env.MONGODB_URI || process.env.MONGO_URI)) {
   // Only initialize if not already connected or connecting
   if (mongoose.connection.readyState === 0 && !isConnecting) {
     // Start connection in background (non-blocking)
