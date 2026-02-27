@@ -1,6 +1,7 @@
 import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
+import { enforceTileLimit, TileLimitError } from "@/services/tileService";
 
 const tiles = async (req, res) => {
   try {
@@ -11,6 +12,18 @@ const tiles = async (req, res) => {
 
         if (!dashboardId || !Array.isArray(tiles)) {
           return res.status(400).json({ message: "Invalid input data" });
+        }
+
+        const dashboard = await Dashboard.findById(dashboardId).select("userId").lean();
+        if (dashboard?.userId) {
+          try {
+            await enforceTileLimit(dashboard.userId, dashboardId, tiles.length);
+          } catch (err) {
+            if (err instanceof TileLimitError) {
+              return res.status(403).json({ message: "Tile limit reached" });
+            }
+            throw err;
+          }
         }
 
         const sanitizedTiles = tiles.map((tile) => {
