@@ -1,13 +1,13 @@
 {
   "mcpServers": {
     "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"],
       "description": "Live documentation lookup for TipTap, TanStack Query, Auth0, MUI, and other dependencies"
     },
     "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest"],
       "description": "Browser automation for testing tile drag-and-resize, mobile layout, and TipTap editor interactions"
     }
   }
