@@ -1,6 +1,7 @@
 "use client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { globalContext } from "@/context/globalContext";
@@ -450,21 +451,17 @@ function Library() {
             <h3 className="text-lg font-semibold mb-2">Premium Template</h3>
             <p className="text-gray-600 mb-6">Upgrade to Pro to use premium templates.</p>
             <div className="flex gap-3 justify-end">
-              <button
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-                onClick={() => setShowPremiumModal(false)}
-              >
+              <Button variant="outline" onClick={() => setShowPremiumModal(false)}>
                 Close
-              </button>
-              <button
-                className="px-4 py-2 bg-[#63899e] text-white rounded-lg text-sm hover:bg-[#4a6d7e]"
+              </Button>
+              <Button
                 onClick={() => {
                   setShowPremiumModal(false);
                   router.push("/subscription");
                 }}
               >
                 View Plans
-              </button>
+              </Button>
             </div>
           </div>
         </div>
