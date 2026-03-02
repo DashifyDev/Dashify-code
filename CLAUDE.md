@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow Rules
+
+- **Never run any git commands.** Do not commit, stage, branch, push, or run any `git` CLI commands. Leave all version control operations to the user.
+
 ## Commands
 
 ```bash
