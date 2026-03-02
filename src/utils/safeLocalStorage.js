@@ -169,6 +169,22 @@ function showStorageFullModal() {
   document.body.appendChild(overlay);
 }
 
+export const safeGetItem = key => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+export const safeRemoveItem = key => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+};
+
 /**
  * Safely sets an item in localStorage with QuotaExceededError handling.
  * By default silently fails on quota errors. Pass { showAlert: true } to show a modal.
