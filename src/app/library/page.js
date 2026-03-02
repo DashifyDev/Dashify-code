@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { globalContext } from "@/context/globalContext";
 import useAdmin from "@/hooks/isAdmin";
 import { dashboardKeys } from "@/hooks/useDashboard";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,6 @@ import LimitReachedModal from "@/components/LimitReachedModal";
 
 function Library() {
   const [library, setLibrary] = useState([]);
-  const [originalLibrary, setOriginalLibrary] = useState([]);
   const [noSearchResult, setNoSearchResult] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("mostPopular");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -45,13 +44,23 @@ function Library() {
     { id: "premium", label: "Premium" },
   ];
 
+  const { data: fetchedTemplates = [], isLoading: libraryLoading } = useQuery({
+    queryKey: ["templates", selectedFilter, typeFilter],
+    queryFn: async () => {
+      const res = await axios.get(
+        `/api/template/addTemplate?filter=${selectedFilter}&type=${typeFilter}`
+      );
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Sync local search-filtered list whenever server data changes (filter/type switch)
   useEffect(() => {
-    axios.get(`/api/template/addTemplate?filter=${selectedFilter}&type=${typeFilter}`).then(res => {
-      setOriginalLibrary(res.data);
-      setLibrary(res.data);
-      setNoSearchResult(false);
-    });
-  }, [selectedFilter, typeFilter]);
+    setLibrary(fetchedTemplates);
+    setNoSearchResult(false);
+  }, [fetchedTemplates]);
 
   // useEffect(() => {
   //   (async () => {
@@ -88,13 +97,13 @@ function Library() {
   var handleSearch = event => {
     let searchValue = event.target.value.toLowerCase();
     if (searchValue == "") {
-      setLibrary(originalLibrary);
+      setLibrary(fetchedTemplates);
       setNoSearchResult(false);
     } else {
-      const result = originalLibrary.filter(item =>
+      const result = fetchedTemplates.filter(item =>
         item.boardName.toLowerCase().includes(searchValue)
       );
-      const keywordsSearch = originalLibrary
+      const keywordsSearch = fetchedTemplates
         .map(item => ({
           ...item,
           keywords: item.keywords.filter(item => item.toLowerCase().includes(searchValue)),
@@ -112,6 +121,18 @@ function Library() {
 
   const redirectToUser = link => {
     window.open(link, "_blank");
+  };
+
+  const handleCardHover = data => {
+    const boardId = data.boardLink.split("/").pop();
+    queryClient.prefetchQuery({
+      queryKey: dashboardKeys.detail(boardId),
+      queryFn: async () => {
+        const res = await axios.get(`/api/dashboard/${boardId}`);
+        return res.data;
+      },
+      staleTime: 5 * 60 * 1000,
+    });
   };
 
   const handleBoardClick = async data => {
@@ -321,7 +342,27 @@ function Library() {
         </div>
 
         {/* Board Cards Grid */}
-        {noSearchResult ? (
+        {libraryLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-12">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-gray-100 bg-white overflow-hidden animate-pulse"
+              >
+                <div className="h-6 bg-gray-100 mx-4 mt-4 rounded w-3/4" />
+                <div className="h-48 sm:h-56 bg-gray-200 mt-2" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-100 rounded w-full" />
+                  <div className="h-4 bg-gray-100 rounded w-2/3" />
+                  <div className="flex gap-2 mt-3">
+                    <div className="h-5 bg-gray-100 rounded-full w-16" />
+                    <div className="h-5 bg-gray-100 rounded-full w-20" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : noSearchResult ? (
           <div className="flex flex-col items-center justify-center py-16 sm:py-24">
             <div className="text-center">
               <NoResultsIcon className="mx-auto h-16 w-16 sm:h-24 sm:w-24 text-gray-400 mb-4" />
@@ -344,6 +385,7 @@ function Library() {
                   key={index}
                   className="group cursor-pointer overflow-hidden relative transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 bg-white/95 backdrop-blur-sm"
                   style={{ border: "1px solid #e5e7eb" }}
+                  onMouseEnter={() => handleCardHover(data)}
                   onClick={() => handleBoardClick(data)}
                 >
                   {/* Loading Overlay */}
