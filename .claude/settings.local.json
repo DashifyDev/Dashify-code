@@ -9,8 +9,13 @@
       "Bash(cd \"D:/work/Dashify-code\" && node --input-type=module --eval \"import config from './eslint.config.mjs'; console.log\\('Config loaded OK, rules sections:', config.length\\)\" 2>&1)",
       "Bash(head:*)",
       "Bash(npm run:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx next:*)"
     ]
   },
-  "enabledMcpjsonServers": ["context7", "playwright"]
+  "enabledMcpjsonServers": [
+    "context7",
+    "playwright"
+  ]
 }
