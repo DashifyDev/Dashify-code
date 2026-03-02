@@ -32,19 +32,6 @@ export const optimizedAxios = axios.create({
   },
 });
 
-optimizedAxios.interceptors.request.use(
-  config => {
-    config.params = {
-      ...config.params,
-      _t: Date.now(),
-    };
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  }
-);
-
 optimizedAxios.interceptors.response.use(
   response => {
     return response;
