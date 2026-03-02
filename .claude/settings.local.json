@@ -11,7 +11,10 @@
       "Bash(npm run:*)",
       "Bash(npm install:*)",
       "Bash(npx eslint:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(git stage:*)"
     ]
   },
   "enabledMcpjsonServers": [
