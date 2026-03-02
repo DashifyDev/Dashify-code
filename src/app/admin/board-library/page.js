@@ -31,6 +31,7 @@ function board_library() {
   const [imageData, setImageData] = useState();
   const [modalButtonState, setModalButtonState] = useState(false);
   const [selectedData, setSelectedData] = useState({});
+  const [isTableLoading, setIsTableLoading] = useState(true);
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
     onDrop: acceptedFiles => {
@@ -48,9 +49,10 @@ function board_library() {
   };
 
   useEffect(() => {
-    axios.get("/api/template/addTemplate").then(res => {
-      setBoards(res.data);
-    });
+    axios
+      .get("/api/template/addTemplate")
+      .then(res => setBoards(res.data))
+      .finally(() => setIsTableLoading(false));
   }, []);
 
   const handleSaveData = () => {
@@ -145,7 +147,18 @@ function board_library() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {boards.map((board, index) => (
+              {isTableLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 9 }).map((_, j) => (
+                        <TableCell key={j}>
+                          <div className="h-4 rounded bg-gray-100 animate-pulse" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : null}
+              {!isTableLoading && boards.map((board, index) => (
                 <TableRow key={board._id}>
                   <TableCell align="center">{board.boardName}</TableCell>
                   <TableCell align="center">{board.keywords.join(", ")}</TableCell>
