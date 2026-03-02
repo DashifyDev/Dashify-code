@@ -17,7 +17,7 @@ import DeleteBoardModal from "./DeleteBoardModal";
 import ShareLinkModal from "./ShareLinkModal";
 import BoardTabsNav from "./BoardTabsNav";
 import MobileBoardMenu from "./MobileBoardMenu";
-import UserMenu from "./UserMenu";
+import UserMenu from "@/components/UserMenu";
 import useAdmin from "@/hooks/isAdmin";
 
 function Header() {
