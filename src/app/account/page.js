@@ -1,5 +1,6 @@
 "use client";
 import SubscriptionStatusBadge from "@/components/SubscriptionStatusBadge";
+import { Button } from "@/components/ui/button";
 import { globalContext } from "@/context/globalContext";
 import {
   FREE_PLAN_MAX_BOARDS,
@@ -53,7 +54,7 @@ export default function AccountPage() {
   if (!dbUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Loading account…</p>
+        <p className="text-gray-500">Loading account...</p>
       </div>
     );
   }
@@ -106,22 +107,22 @@ export default function AccountPage() {
         <div className="pt-2">
           {isPro ? (
             <div className="space-y-2">
-              <button
+              <Button
                 onClick={handleManageSubscription}
                 disabled={portalLoading}
-                className="px-4 py-2 bg-[#63899e] text-white text-sm rounded-lg disabled:opacity-50"
+                className="text-sm border-0 shadow-none hover:shadow-none"
               >
                 {portalLoading ? "Opening\u2026" : "Manage Subscription"}
-              </button>
+              </Button>
               {portalError && <p className="text-sm text-red-600">{portalError}</p>}
             </div>
           ) : (
-            <button
+            <Button
               onClick={() => router.push("/subscription")}
-              className="px-4 py-2 bg-[#63899e] text-white text-sm rounded-lg"
+              className="text-sm border-0 shadow-none hover:shadow-none"
             >
               Upgrade to Pro
-            </button>
+            </Button>
           )}
         </div>
       </section>
@@ -146,3 +147,4 @@ export default function AccountPage() {
     </div>
   );
 }
+
