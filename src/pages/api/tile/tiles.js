@@ -1,10 +1,10 @@
 import "@/utils/db"; // Initialize MongoDB connection
 import Tile from "@/models/tile";
 import Dashboard from "@/models/dashboard";
+import { enforceTileLimit, TileLimitError } from "@/services/tileService";
 
 const tiles = async (req, res) => {
   try {
-
     switch (req.method) {
       case "POST":
         const { dashboardId, tiles } = req.body;
@@ -13,7 +13,19 @@ const tiles = async (req, res) => {
           return res.status(400).json({ message: "Invalid input data" });
         }
 
-        const sanitizedTiles = tiles.map((tile) => {
+        const dashboard = await Dashboard.findById(dashboardId).select("userId").lean();
+        if (dashboard?.userId) {
+          try {
+            await enforceTileLimit(dashboard.userId, dashboardId, tiles.length);
+          } catch (err) {
+            if (err instanceof TileLimitError) {
+              return res.status(403).json({ message: "Tile limit reached" });
+            }
+            throw err;
+          }
+        }
+
+        const sanitizedTiles = tiles.map(tile => {
           const { _id, ...rest } = tile;
           // Set createdAt only for new tiles (not copies that already have it)
           if (!rest.createdAt) {
@@ -24,21 +36,17 @@ const tiles = async (req, res) => {
 
         const createdTiles = await Tile.insertMany(sanitizedTiles);
 
-        const tileIds = createdTiles.map((tile) => tile._id);
+        const tileIds = createdTiles.map(tile => tile._id);
 
         const updatedDashboard = await Dashboard.updateOne(
           { _id: dashboardId },
-          { $push: { tiles: { $each: tileIds } } },
+          { $push: { tiles: { $each: tileIds } } }
         );
 
         if (updatedDashboard.modifiedCount > 0) {
-          res
-            .status(200)
-            .json({ message: "Tiles added successfully", tiles: createdTiles });
+          res.status(200).json({ message: "Tiles added successfully", tiles: createdTiles });
         } else {
-          res
-            .status(400)
-            .json({ message: "Failed to update dashboard with tile IDs" });
+          res.status(400).json({ message: "Failed to update dashboard with tile IDs" });
         }
         break;
 

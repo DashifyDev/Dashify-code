@@ -31,6 +31,10 @@ const templateSchema = new Schema({
   boardDescription: {
     type: String,
   },
+  isPremium: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Template = models.Template || model("Template", templateSchema);

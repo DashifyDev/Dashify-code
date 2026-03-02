@@ -14,21 +14,17 @@ export const CustomTable = Table.extend({
       ...this.parent?.(),
       layout: {
         default: "default",
-        parseHTML: (element) =>
-          element.style.width === "100%" ? "full-width" : "default",
+        parseHTML: element => (element.style.width === "100%" ? "full-width" : "default"),
       },
       layoutMode: {
         default: "fixed",
-        parseHTML: (element) => element.style.tableLayout || "fixed",
+        parseHTML: element => element.style.tableLayout || "fixed",
       },
     };
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const finalAttributes = mergeAttributes(
-      this.options.HTMLAttributes,
-      HTMLAttributes,
-    );
+    const finalAttributes = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes);
 
     let style = finalAttributes.style || "";
     style = style
@@ -46,11 +42,7 @@ export const CustomTable = Table.extend({
 
     finalAttributes.style = style;
 
-    return [
-      "div",
-      { class: "tableWrapper" },
-      ["table", finalAttributes, ["tbody", 0]],
-    ];
+    return ["div", { class: "tableWrapper" }, ["table", finalAttributes, ["tbody", 0]]];
   },
 
   addCommands() {
@@ -59,13 +51,10 @@ export const CustomTable = Table.extend({
       toggleTableLayout:
         () =>
         ({ state, dispatch }) => {
-          const table = findParentNode((node) => node.type.name === "table")(
-            state.selection,
-          );
+          const table = findParentNode(node => node.type.name === "table")(state.selection);
           if (!table) return false;
 
-          const newLayout =
-            table.node.attrs.layout === "full-width" ? "default" : "full-width";
+          const newLayout = table.node.attrs.layout === "full-width" ? "default" : "full-width";
           const tr = state.tr.setNodeMarkup(table.pos, undefined, {
             ...table.node.attrs,
             layout: newLayout,
@@ -77,13 +66,10 @@ export const CustomTable = Table.extend({
       toggleLayoutMode:
         () =>
         ({ state, dispatch }) => {
-          const table = findParentNode((node) => node.type.name === "table")(
-            state.selection,
-          );
+          const table = findParentNode(node => node.type.name === "table")(state.selection);
           if (!table) return false;
 
-          const newMode =
-            table.node.attrs.layoutMode === "fixed" ? "auto" : "fixed";
+          const newMode = table.node.attrs.layoutMode === "fixed" ? "auto" : "fixed";
 
           const tr = state.tr.setNodeMarkup(table.pos, undefined, {
             ...table.node.attrs,

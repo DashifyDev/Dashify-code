@@ -7,10 +7,7 @@ const duplicateDashBoard = async (req, res) => {
     switch (req.method) {
       case "POST":
         const data = req.body;
-        let tileData = await Tile.find(
-          { _id: { $in: data.tiles } },
-          { _id: 0 },
-        );
+        let tileData = await Tile.find({ _id: { $in: data.tiles } }, { _id: 0 });
         let insert = await Tile.insertMany(tileData, { rawResult: true });
         let tileIds = Object.values(insert.insertedIds);
         const duplicateBoard = new Dashboard({

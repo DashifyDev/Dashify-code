@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useEffect, useRef, useState } from 'react';
-import TipTapMainEditor from './TipTapMainEditor';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useEffect, useRef, useState } from "react";
+import TipTapMainEditor from "./TipTapMainEditor";
 
 const TipTapTextEditorDialog = ({
   open,
@@ -12,10 +12,10 @@ const TipTapTextEditorDialog = ({
   onSave,
   label,
   tileDetails = [],
-  selectedTileIndex = 0
+  selectedTileIndex = 0,
 }) => {
-  const [editorContent, setEditorContent] = useState(content || '');
-  const [textBoxHeading, setTextBoxHeading] = useState('');
+  const [editorContent, setEditorContent] = useState(content || "");
+  const [textBoxHeading, setTextBoxHeading] = useState("");
   const [indexValue, setIndexValue] = useState(selectedTileIndex);
   const [isContentReady, setIsContentReady] = useState(false);
   const editorContainerRef = useRef(null);
@@ -26,37 +26,36 @@ const TipTapTextEditorDialog = ({
       setIsContentReady(false);
       return;
     }
-    
+
     const nextHeading =
       tileDetails[selectedTileIndex] && tileDetails[selectedTileIndex].editorHeading
         ? tileDetails[selectedTileIndex].editorHeading
-        : 'Title';
+        : "Title";
     setTextBoxHeading(nextHeading);
     setIndexValue(selectedTileIndex);
-    
+
     // Get content from tileDetails if content prop is not provided
-    const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || '';
+    const tileContent = tileDetails[selectedTileIndex]?.tileContent || content || "";
     setEditorContent(tileContent);
-    
+
     // Set content ready after a small delay to ensure content is set
     setIsContentReady(false);
     const timeoutId = setTimeout(() => {
       setIsContentReady(true);
     }, 100);
-    
+
     return () => {
       clearTimeout(timeoutId);
     };
   }, [open, selectedTileIndex, content, tileDetails]);
-
 
   // Prevent auto-focus on mobile devices
   useEffect(() => {
     if (!open) return;
 
     // Prevent focus on editor when modal opens
-      const preventFocus = (e) => {
-      const proseMirror = editorContainerRef.current?.querySelector('.ProseMirror');
+    const preventFocus = e => {
+      const proseMirror = editorContainerRef.current?.querySelector(".ProseMirror");
       if (proseMirror) {
         // Prevent focus events
         if (e && (e.target === proseMirror || proseMirror.contains(e.target))) {
@@ -74,7 +73,7 @@ const TipTapTextEditorDialog = ({
     preventFocus();
 
     // Add event listeners to prevent focus
-    const events = ['focusin', 'focus', 'mousedown', 'touchstart'];
+    const events = ["focusin", "focus", "mousedown", "touchstart"];
     events.forEach(eventType => {
       document.addEventListener(eventType, preventFocus, true);
     });
@@ -88,17 +87,16 @@ const TipTapTextEditorDialog = ({
         events.forEach(eventType => {
           document.removeEventListener(eventType, preventFocus, true);
         });
-      }, 500)
+      }, 500),
     ];
 
-      return () => {
+    return () => {
       timeoutIds.forEach(id => clearTimeout(id));
       events.forEach(eventType => {
         document.removeEventListener(eventType, preventFocus, true);
       });
     };
   }, [open]);
-
 
   const handleClose = () => {
     onClose && onClose(editorContent);
@@ -117,8 +115,8 @@ const TipTapTextEditorDialog = ({
     const nextIndex = indexValue - 1;
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
-    setTextBoxHeading(td.editorHeading || 'Title');
-    const newContent = td.tileContent || '';
+    setTextBoxHeading(td.editorHeading || "Title");
+    const newContent = td.tileContent || "";
     setIsContentReady(false);
     setEditorContent(newContent);
     setTimeout(() => setIsContentReady(true), 50);
@@ -129,8 +127,8 @@ const TipTapTextEditorDialog = ({
     const nextIndex = indexValue + 1;
     setIndexValue(nextIndex);
     const td = tileDetails[nextIndex] || {};
-    setTextBoxHeading(td.editorHeading || 'Title');
-    const newContent = td.tileContent || '';
+    setTextBoxHeading(td.editorHeading || "Title");
+    const newContent = td.tileContent || "";
     setIsContentReady(false);
     setEditorContent(newContent);
     setTimeout(() => setIsContentReady(true), 50);
@@ -142,93 +140,88 @@ const TipTapTextEditorDialog = ({
     <>
       {/* Backdrop */}
       <div
-        className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out"
         onClick={handleClose}
       />
 
       {/* Modal - Desktop: centered, Mobile: bottom sheet */}
-      <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <div
-          className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out'
+          className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-            <div className='flex-1 min-w-0 mr-4'>
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0">
+            <div className="flex-1 min-w-0 mr-4">
               <Input
                 ref={inputRef}
-                type='text'
+                type="text"
                 value={textBoxHeading}
                 onChange={e => setTextBoxHeading(e.target.value)}
-                placeholder='Enter title...'
-                className='text-lg font-semibold border border-gray-300 bg-white rounded-lg focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:border-[#63899e] px-4 h-11 transition-all duration-200'
+                placeholder="Enter title..."
+                className="text-lg font-semibold border border-gray-300 bg-white rounded-lg focus-visible:ring-2 focus-visible:ring-[#63899e] focus-visible:border-[#63899e] px-4 h-11 transition-all duration-200"
                 autoFocus={false}
               />
             </div>
             <button
               onClick={handleClose}
-              className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
-              aria-label='Close dialog'
+              className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer"
+              aria-label="Close dialog"
             >
               <svg
-                className='h-5 w-5'
-                fill='none'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2.5'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
+                className="h-5 w-5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <path d='M6 18L18 6M6 6l12 12' />
+                <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          
-
           {/* Editor Content */}
-          <div className='flex-1 overflow-hidden flex items-stretch min-h-0'>
+          <div className="flex-1 overflow-hidden flex items-stretch min-h-0">
             {/* Editor */}
-            <div 
-              ref={editorContainerRef}
-              className='flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6'
-            >
+            <div ref={editorContainerRef} className="flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6">
               {isContentReady && (
                 <TipTapMainEditor
-                  key={`editor-${indexValue}-${editorContent ? 'has-content' : 'empty'}`}
+                  key={`editor-${indexValue}-${editorContent ? "has-content" : "empty"}`}
                   initialContent={editorContent}
                   onContentChange={html => setEditorContent(html)}
                 />
               )}
             </div>
           </div>
-{/* Navigation Indicator */} 
-      {hasMultipleTiles && (
-            <div className='flex items-center justify-center gap-2 px-4 py-3 border-b border-gray-200 '>
+          {/* Navigation Indicator */}
+          {hasMultipleTiles && (
+            <div className="flex items-center justify-center gap-2 px-4 py-3 border-b border-gray-200 ">
               <button
                 onClick={goPrev}
                 disabled={!canGoPrev}
                 className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
                   canGoPrev
-                    ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
-                    : 'text-gray-300 cursor-not-allowed'
+                    ? "text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer"
+                    : "text-gray-300 cursor-not-allowed"
                 }`}
-                aria-label='Previous tile'
+                aria-label="Previous tile"
               >
                 <svg
-                  className='h-5 w-5'
-                  fill='none'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2.5'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
+                  className="h-5 w-5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <path d='M15 19l-7-7 7-7' />
+                  <path d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div className='flex items-center gap-1 px-3'>
-                <span className='text-sm text-gray-600 font-medium'>
+              <div className="flex items-center gap-1 px-3">
+                <span className="text-sm text-gray-600 font-medium">
                   {indexValue + 1} / {tileDetails.length}
                 </span>
               </div>
@@ -237,21 +230,21 @@ const TipTapTextEditorDialog = ({
                 disabled={!canGoNext}
                 className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
                   canGoNext
-                    ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
-                    : 'text-gray-300 cursor-not-allowed'
+                    ? "text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer"
+                    : "text-gray-300 cursor-not-allowed"
                 }`}
-                aria-label='Next tile'
+                aria-label="Next tile"
               >
                 <svg
-                  className='h-5 w-5'
-                  fill='none'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2.5'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
+                  className="h-5 w-5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <path d='M9 5l7 7-7 7' />
+                  <path d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -259,13 +252,9 @@ const TipTapTextEditorDialog = ({
           {/* Footer Actions */}
           <div
             className="flex items-center gap-3 p-4 sm:p-6 bg-gray-50/50 flex-shrink-0 sm:justify-end"
-            style={{ borderTop: '1px solid #e5e7eb' }} // inline style for border
+            style={{ borderTop: "1px solid #e5e7eb" }} // inline style for border
           >
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              className="cursor-pointer w-1/2"
-            >
+            <Button variant="outline" onClick={handleClose} className="cursor-pointer w-1/2">
               Cancel
             </Button>
             <Button

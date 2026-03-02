@@ -1,0 +1,41 @@
+---
+description: Directory layout, file naming conventions, and component placement
+globs: src/**/*
+alwaysApply: false
+---
+
+# Project Structure & Naming
+
+## Directory Layout
+
+```
+src/
+├── app/           # Next.js App Router pages/layouts ONLY
+├── pages/api/     # ALL API routes (Pages Router)
+├── components/    # Shared React components
+├── context/       # React contexts (globalContext, optimizedContext)
+├── hooks/         # Custom hooks (useDashboard, useIsMobile, useTile, etc.)
+├── models/        # Mongoose models (Dashboard, Tile, Pod, User, Template)
+├── utils/         # Pure helpers (safeLocalStorage, imageOptimization, etc.)
+├── lib/           # Server utilities (db connection via utils.js)
+├── constants/     # Shared constants
+├── styles/        # Global styles
+└── assets/        # Static assets
+```
+
+## Naming Conventions
+
+| Type        | Convention | Example |
+|-------------|------------|---------|
+| Components  | PascalCase | `GridTiles.js`, `SideDrawer.js` |
+| Hooks       | camelCase + `use` prefix | `useDashboard.js`, `useIsMobile.js` |
+| API routes  | camelCase or `[param].js` | `addDashboard.js`, `[id].js` |
+| Models      | PascalCase | `dashboard.js` (exports `Dashboard`) |
+| Utils       | camelCase  | `safeLocalStorage.js`, `imageUpload.js` |
+| Contexts    | camelCase  | `appContext.js`, `globalContext.js` |
+
+## Component Patterns
+
+- Use `dynamic()` with `ssr: false` for heavy client components (GridTiles, MobileGridTiles, TipTap editor)
+- All page components in `src/app/` must be Client Components (`'use client'`) if they use hooks, state, or browser APIs
+- API utility components (LazyModal, LazyTipTapEditor) use dynamic imports for code splitting

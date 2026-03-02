@@ -58,10 +58,7 @@ export const OptimizedImageExtension = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return [
-      "img",
-      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
-    ];
+    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
   },
 
   addNodeView() {
@@ -153,7 +150,7 @@ export const OptimizedImageExtension = Node.create({
   addCommands() {
     return {
       setImage:
-        (options) =>
+        options =>
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,

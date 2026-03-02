@@ -11,7 +11,7 @@ const clearSession = async (req, res) => {
     let dashBoardIds = [];
     let dashboards = await Dashboard.find({ sessionId: sid });
 
-    dashboards.forEach((board) => {
+    dashboards.forEach(board => {
       dashBoardIds = [...dashBoardIds, board._id];
       totalTiles = [...totalTiles, ...board.tiles];
       totalPods = [...totalPods, ...board.pods];

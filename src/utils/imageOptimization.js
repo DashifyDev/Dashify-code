@@ -97,7 +97,7 @@ export const optimizeImage = async (imageBuffer, options = {}) => {
  */
 export const generateResponsiveImages = async (
   imageBuffer,
-  sizes = [640, 750, 828, 1080, 1200, 1920],
+  sizes = [640, 750, 828, 1080, 1200, 1920]
 ) => {
   const optimizedImages = [];
 
@@ -127,7 +127,7 @@ export const generateResponsiveImages = async (
  * @param {Buffer} imageBuffer - Image buffer
  * @returns {Promise<string>} Base64 blur placeholder
  */
-export const generateBlurPlaceholder = async (imageBuffer) => {
+export const generateBlurPlaceholder = async imageBuffer => {
   try {
     const blurBuffer = await sharp(imageBuffer)
       .resize(10, 10, { fit: "inside" })

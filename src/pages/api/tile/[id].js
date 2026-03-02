@@ -37,7 +37,7 @@ const tileData = async (req, res) => {
           const updated = await Tile.findByIdAndUpdate(
             { _id: id },
             { $set: updatedData },
-            { new: true },
+            { new: true }
           );
           if (updated) {
             res.status(200).json(updated);
@@ -54,7 +54,7 @@ const tileData = async (req, res) => {
           const deletefromBoard = await Dashboard.findOneAndUpdate(
             { tiles: { $in: [id] } },
             { $pull: { tiles: id } },
-            { new: true },
+            { new: true }
           );
           res.status(200).json(isDelete);
         } else {

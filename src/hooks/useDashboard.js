@@ -4,12 +4,12 @@ import { useOptimizedQuery, optimizedAxios } from "./useOptimizedQuery";
 export const dashboardKeys = {
   all: ["dashboards"],
   lists: () => [...dashboardKeys.all, "list"],
-  list: (filters) => [...dashboardKeys.lists(), { filters }],
+  list: filters => [...dashboardKeys.lists(), { filters }],
   details: () => [...dashboardKeys.all, "detail"],
-  detail: (id) => [...dashboardKeys.details(), id],
+  detail: id => [...dashboardKeys.details(), id],
 };
 
-export const useDashboard = (id) => {
+export const useDashboard = id => {
   return useOptimizedQuery(
     dashboardKeys.detail(id),
     async () => {
@@ -17,10 +17,8 @@ export const useDashboard = (id) => {
       // return it directly to avoid calling the API which expects ObjectId _id.
       if (typeof window !== "undefined") {
         try {
-          const localBoards = JSON.parse(
-            localStorage.getItem("Dasify") || "[]",
-          );
-          const localBoard = localBoards.find((b) => b._id === id);
+          const localBoards = JSON.parse(localStorage.getItem("Dasify") || "[]");
+          const localBoard = localBoards.find(b => b._id === id);
           if (localBoard) {
             return localBoard;
           }
@@ -35,12 +33,12 @@ export const useDashboard = (id) => {
     },
     {
       enabled: !!id,
-      select: (data) => ({
+      select: data => ({
         ...data,
         tiles: data.tiles || [],
         pods: data.pods || [],
       }),
-    },
+    }
   );
 };
 
@@ -64,9 +62,7 @@ export const useAdminDashboards = () => {
   return useQuery({
     queryKey: dashboardKeys.list({ admin: true }),
     queryFn: async () => {
-      const response = await optimizedAxios.get(
-        "/api/dashboard/defaultDashboard",
-      );
+      const response = await optimizedAxios.get("/api/dashboard/defaultDashboard");
       return response.data;
     },
     staleTime: 10 * 60 * 1000,
@@ -78,19 +74,13 @@ export const useCreateDashboard = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (dashboardData) => {
-      const response = await optimizedAxios.post(
-        "/api/dashboard/addDashboard",
-        dashboardData,
-      );
+    mutationFn: async dashboardData => {
+      const response = await optimizedAxios.post("/api/dashboard/addDashboard", dashboardData);
       return response.data;
     },
-    onSuccess: (newDashboard) => {
+    onSuccess: newDashboard => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
-      queryClient.setQueryData(
-        dashboardKeys.detail(newDashboard._id),
-        newDashboard,
-      );
+      queryClient.setQueryData(dashboardKeys.detail(newDashboard._id), newDashboard);
     },
   });
 };
@@ -103,11 +93,8 @@ export const useUpdateDashboard = () => {
       const response = await optimizedAxios.patch(`/api/dashboard/${id}`, data);
       return response.data;
     },
-    onSuccess: (updatedDashboard) => {
-      queryClient.setQueryData(
-        dashboardKeys.detail(updatedDashboard._id),
-        updatedDashboard,
-      );
+    onSuccess: updatedDashboard => {
+      queryClient.setQueryData(dashboardKeys.detail(updatedDashboard._id), updatedDashboard);
       queryClient.invalidateQueries({ queryKey: dashboardKeys.lists() });
     },
   });
@@ -117,7 +104,7 @@ export const useDeleteDashboard = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async id => {
       const response = await optimizedAxios.delete(`/api/dashboard/${id}`);
       return response.data;
     },

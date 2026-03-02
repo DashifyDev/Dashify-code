@@ -35,14 +35,9 @@ const LinkBubble = ({ editor }) => {
   };
 
   return (
-    <div style={containerStyle} onMouseDown={(e) => e.preventDefault()}>
+    <div style={containerStyle} onMouseDown={e => e.preventDefault()}>
       {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={linkStyle}
-        >
+        <a href={href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
           <FaExternalLinkAlt />
           <span
             style={{
@@ -62,7 +57,7 @@ const LinkBubble = ({ editor }) => {
         <button
           style={btnStyle}
           title="Edit link"
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             editor.chain().focus().extendMarkRange("link").run();
             const { from, to } = editor.state.selection;
@@ -75,9 +70,7 @@ const LinkBubble = ({ editor }) => {
               download: current.download || null,
             };
             if (typeof window !== "undefined") {
-              window.dispatchEvent(
-                new CustomEvent("tiptap:openLinkModal", { detail }),
-              );
+              window.dispatchEvent(new CustomEvent("tiptap:openLinkModal", { detail }));
             }
           }}
         >
@@ -86,7 +79,7 @@ const LinkBubble = ({ editor }) => {
         <button
           style={btnStyle}
           title="Unlink"
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             editor.chain().focus().extendMarkRange("link").unsetLink().run();
           }}
@@ -96,14 +89,9 @@ const LinkBubble = ({ editor }) => {
         <button
           style={btnStyle}
           title="Delete"
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
-            editor
-              .chain()
-              .focus()
-              .extendMarkRange("link")
-              .deleteSelection()
-              .run();
+            editor.chain().focus().extendMarkRange("link").deleteSelection().run();
           }}
         >
           <FaTrash />

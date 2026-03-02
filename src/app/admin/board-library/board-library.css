@@ -79,14 +79,16 @@ form span {
 }
 
 .drop-zone {
-  height: 100px;
+  height: 140px;
   width: 300px;
   border: 1px grey dashed;
   border-radius: 5px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  overflow: hidden;
   color: #bdbdbd;
-  padding: 1rem;
+  cursor: pointer;
 }
 
 .image-cell {
@@ -123,4 +125,50 @@ form span {
 
 .modal-label-style {
   margin: 0.9rem 0rem;
+}
+
+.type-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.type-toggle-btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  background: #fff;
+  color: #495057;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.type-toggle-btn:first-child {
+  border-right: 1px solid #ced4da;
+}
+
+.type-toggle-btn.active {
+  background: #63899e;
+  color: #fff;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.type-badge.premium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.type-badge.community {
+  background: #d1ecf1;
+  color: #0c5460;
 }

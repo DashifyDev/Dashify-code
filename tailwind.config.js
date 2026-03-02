@@ -13,24 +13,24 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#63899e',
-          dark: '#4a6d7e',
-          light: '#7fa3b8',
+          DEFAULT: "#63899e",
+          dark: "#4a6d7e",
+          light: "#7fa3b8",
         },
       },
     },
   },
   plugins: [
-    function({ addUtilities }) {
+    function ({ addUtilities }) {
       addUtilities({
-        '.scrollbar-hide': {
-          '-ms-overflow-style': 'none',
-          'scrollbar-width': 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none'
-          }
-        }
-      })
-    }
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        },
+      });
+    },
   ],
 };

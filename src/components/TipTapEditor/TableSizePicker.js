@@ -7,10 +7,7 @@ const TableSizePicker = ({ maxRows = 10, maxCols = 10, onSelect }) => {
 
   return (
     <div className="table-picker">
-      <div
-        className="table-grid"
-        style={{ gridTemplateColumns: `repeat(${maxCols}, 20px)` }}
-      >
+      <div className="table-grid" style={{ gridTemplateColumns: `repeat(${maxCols}, 20px)` }}>
         {Array.from({ length: maxRows }).map((_, rIdx) =>
           Array.from({ length: maxCols }).map((__, cIdx) => {
             const r = rIdx + 1;
@@ -24,7 +21,7 @@ const TableSizePicker = ({ maxRows = 10, maxCols = 10, onSelect }) => {
                 onClick={() => onSelect(r, c)}
               />
             );
-          }),
+          })
         )}
       </div>
       <div className="table-dimension">

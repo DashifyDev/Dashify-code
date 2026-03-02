@@ -7,7 +7,7 @@ const sampleDirtyHTML = `<p><span style="font-family: Verdana; font-size: 18px; 
 const TestEditorPage = () => {
   const [content, setContent] = React.useState(sampleDirtyHTML);
 
-  const handleContentChange = (newContent) => {
+  const handleContentChange = newContent => {
     console.log("Content updated:", newContent);
     setContent(newContent);
   };
@@ -17,10 +17,7 @@ const TestEditorPage = () => {
       <h1>TipTap Editor Test Page</h1>
       <p>This page exists only for testing the new editor.</p>
 
-      <TipTapMainEditor
-        initialContent={content}
-        onContentChange={handleContentChange}
-      />
+      <TipTapMainEditor initialContent={content} onContentChange={handleContentChange} />
 
       <hr style={{ margin: "20px 0" }} />
 

@@ -5,7 +5,7 @@ import "./ColorGridPicker.css";
 const ColorGridPicker = ({ onColorSelect, currentColor }) => {
   const [selectedColor, setSelectedColor] = useState(currentColor);
 
-  const handleColorClick = (color) => {
+  const handleColorClick = color => {
     setSelectedColor(color);
     onColorSelect(color);
   };

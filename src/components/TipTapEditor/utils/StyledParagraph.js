@@ -8,17 +8,15 @@ export const StyledParagraph = Paragraph.extend({
       ...this.parent?.(),
       isSpaced: {
         default: false,
-        parseHTML: (element) =>
-          element.getAttribute("data-is-spaced") === "true",
+        parseHTML: element => element.getAttribute("data-is-spaced") === "true",
       },
       isBordered: {
         default: false,
-        parseHTML: (element) =>
-          element.getAttribute("data-is-bordered") === "true",
+        parseHTML: element => element.getAttribute("data-is-bordered") === "true",
       },
       isNeon: {
         default: false,
-        parseHTML: (element) => element.getAttribute("data-is-neon") === "true",
+        parseHTML: element => element.getAttribute("data-is-neon") === "true",
       },
     };
   },

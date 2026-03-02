@@ -41,7 +41,7 @@ const getTemplateData = async (req, res) => {
           const newBoard = await Template.findByIdAndUpdate(
             { _id: id },
             { $set: newData },
-            { new: true },
+            { new: true }
           );
           if (newBoard) {
             res.status(200).send(newBoard);

@@ -1,32 +1,36 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/dasify';
+const MONGODB_URI =
+  process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb://localhost:27017/dasify";
 
-const tileSchema = new mongoose.Schema({
-  tileLink: String,
-  tileText: String,
-  tileContent: String,
-  tileBackground: String,
-  action: String,
-  width: { type: String, required: true },
-  height: { type: String, required: true },
-  x: { type: Number, required: true },
-  y: { type: Number, required: true },
-  isInsidePod: { type: Boolean, default: false },
-  displayTitle: Boolean,
-  titleX: Number,
-  titleY: Number,
-  editorHeading: String,
-  backgroundAction: String,
-  order: Number,
-  mobileX: Number,
-  mobileY: Number,
-  mobileWidth: String,
-  mobileHeight: String,
-  createdAt: Date
-}, { strict: false });
+const tileSchema = new mongoose.Schema(
+  {
+    tileLink: String,
+    tileText: String,
+    tileContent: String,
+    tileBackground: String,
+    action: String,
+    width: { type: String, required: true },
+    height: { type: String, required: true },
+    x: { type: Number, required: true },
+    y: { type: Number, required: true },
+    isInsidePod: { type: Boolean, default: false },
+    displayTitle: Boolean,
+    titleX: Number,
+    titleY: Number,
+    editorHeading: String,
+    backgroundAction: String,
+    order: Number,
+    mobileX: Number,
+    mobileY: Number,
+    mobileWidth: String,
+    mobileHeight: String,
+    createdAt: Date,
+  },
+  { strict: false }
+);
 
-const Tile = mongoose.models.Tile || mongoose.model('Tile', tileSchema);
+const Tile = mongoose.models.Tile || mongoose.model("Tile", tileSchema);
 
 const BATCH_SIZE = 500;
 
@@ -40,15 +44,12 @@ const BATCH_SIZE = 500;
 async function migrateTilesCreatedAt() {
   try {
     await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
+    console.log("Connected to MongoDB");
 
     // Get all tiles without createdAt
     const tiles = await Tile.find(
       {
-        $or: [
-          { createdAt: { $exists: false } },
-          { createdAt: null }
-        ]
+        $or: [{ createdAt: { $exists: false } }, { createdAt: null }],
       },
       { _id: 1 }
     ).lean();
@@ -56,7 +57,7 @@ async function migrateTilesCreatedAt() {
     console.log(`Found ${tiles.length} tiles without createdAt`);
 
     if (tiles.length === 0) {
-      console.log('All tiles already have createdAt');
+      console.log("All tiles already have createdAt");
       await mongoose.disconnect();
       return;
     }
@@ -83,8 +84,8 @@ async function migrateTilesCreatedAt() {
       bulkOps.push({
         updateOne: {
           filter: { _id: tile._id },
-          update: { $set: { createdAt } }
-        }
+          update: { $set: { createdAt } },
+        },
       });
 
       if (bulkOps.length >= BATCH_SIZE) {
@@ -99,25 +100,24 @@ async function migrateTilesCreatedAt() {
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`\nSuccessfully updated ${updatedCount} tiles with createdAt in ${totalTime}s`);
-    console.log('Migration completed!');
-
+    console.log("Migration completed!");
   } catch (error) {
-    console.error('Error during migration:', error);
+    console.error("Error during migration:", error);
     throw error;
   } finally {
     await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    console.log("Disconnected from MongoDB");
   }
 }
 
 async function main() {
   try {
-    console.log('Starting createdAt migration for tiles...');
+    console.log("Starting createdAt migration for tiles...");
     await migrateTilesCreatedAt();
-    console.log('Migration completed successfully!');
+    console.log("Migration completed successfully!");
     process.exit(0);
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error("Migration failed:", error);
     process.exit(1);
   }
 }

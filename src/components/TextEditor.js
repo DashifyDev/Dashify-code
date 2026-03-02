@@ -1,16 +1,16 @@
-import { colors, fonts } from '@/constants/textEditorConstant';
-import CloseSharpIcon from '@mui/icons-material/CloseSharp';
-import EditIcon from '@mui/icons-material/Edit';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import dynamic from 'next/dynamic';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import 'suneditor/dist/css/suneditor.min.css';
-import leftArrow from '../assets/leftArrow1.svg';
-import rightArrow from '../assets/rightArrow.svg';
-import '../styles/styles.css';
-const SunEditor = dynamic(() => import('suneditor-react'), {
-  ssr: false
+import { colors, fonts } from "@/constants/textEditorConstant";
+import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import EditIcon from "@mui/icons-material/Edit";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import "suneditor/dist/css/suneditor.min.css";
+import leftArrow from "../assets/leftArrow1.svg";
+import rightArrow from "../assets/rightArrow.svg";
+import "../styles/styles.css";
+const SunEditor = dynamic(() => import("suneditor-react"), {
+  ssr: false,
 });
 
 const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, selectedTileIndex }) => {
@@ -31,15 +31,15 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
   }, [selectedTileIndex]);
 
   useEffect(() => {
-    setEditorContent(content || '');
+    setEditorContent(content || "");
     setNewIndexValue(selectedTileIndex);
-    setNewEditorContent(content || '');
+    setNewEditorContent(content || "");
   }, [content, selectedTileIndex]);
 
   const labelChange = () => {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(label, 'text/html');
-    let content = doc.getElementsByTagName('div')[0].innerText;
+    const doc = parser.parseFromString(label, "text/html");
+    let content = doc.getElementsByTagName("div")[0].innerText;
     return content;
   };
 
@@ -49,7 +49,7 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
 
   const handleClose = () => {
     onClose(editorContent);
-    setTextBoxHeading('');
+    setTextBoxHeading("");
     setEditBoxHeading(false);
   };
 
@@ -68,10 +68,10 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
         setRightArrowButtonState(true);
         setLeftArrowButtonState(true);
         if (
-          tileDetails[updatedIndex].backgroundAction === 'image' ||
-          !tileDetails[updatedIndex].hasOwnProperty('editorHeading')
+          tileDetails[updatedIndex].backgroundAction === "image" ||
+          !tileDetails[updatedIndex].hasOwnProperty("editorHeading")
         ) {
-          setTextBoxHeading('Title');
+          setTextBoxHeading("Title");
         } else {
           setTextBoxHeading(tileDetails[updatedIndex].editorHeading);
         }
@@ -93,10 +93,10 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
         setLeftArrowButtonState(true);
         setRightArrowButtonState(true);
         if (
-          tileDetails[updatedIndex].backgroundAction === 'image' ||
-          !tileDetails[updatedIndex].hasOwnProperty('editorHeading')
+          tileDetails[updatedIndex].backgroundAction === "image" ||
+          !tileDetails[updatedIndex].hasOwnProperty("editorHeading")
         ) {
-          setTextBoxHeading('Title');
+          setTextBoxHeading("Title");
         } else {
           setTextBoxHeading(tileDetails[updatedIndex].editorHeading);
         }
@@ -115,20 +115,20 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
         <div>
           {editBoxHeading ? (
             <input
-              type='text'
+              type="text"
               value={textBoxHeading}
               onBlur={() => setEditBoxHeading(false)}
               onChange={e => {
                 handleHeadingChange(e.target.value);
               }}
-              style={{ padding: '5px' }}
+              style={{ padding: "5px" }}
             />
           ) : (
-            <span>{textBoxHeading ? textBoxHeading : 'Title'}</span>
+            <span>{textBoxHeading ? textBoxHeading : "Title"}</span>
           )}
           <span>
             <EditIcon
-              sx={{ fontSize: 'medium', cursor: 'pointer', marginLeft: '6px' }}
+              sx={{ fontSize: "medium", cursor: "pointer", marginLeft: "6px" }}
               onClick={() => {
                 setEditBoxHeading(true);
               }}
@@ -136,26 +136,26 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
           </span>
         </div>
       </DialogTitle>
-      <span className='absolute top-4 right-7 cursor-pointer' onClick={handleClose}>
+      <span className="absolute top-4 right-7 cursor-pointer" onClick={handleClose}>
         <CloseSharpIcon />
       </span>
       <DialogContent
         sx={{
-          width: '600px',
-          height: '540px',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.8rem'
+          width: "600px",
+          height: "540px",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.8rem",
         }}
       >
         {leftArrowButtonState && (
           <div>
             <Image
               src={leftArrow}
-              style={{ width: '32px', height: '32px', cursor: 'pointer' }}
+              style={{ width: "32px", height: "32px", cursor: "pointer" }}
               onClick={handlePreviousTileContent}
-              alt='left-arrow'
+              alt="left-arrow"
             />
           </div>
         )}
@@ -165,31 +165,31 @@ const TextEditor = ({ open, onClose, content, onSave, label, tileDetails, select
           onChange={handleEditorChange}
           setOptions={{
             buttonList: [
-              ['undo', 'redo'],
-              ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'],
-              ['font', 'fontSize'],
-              ['removeFormat'],
-              ['fontColor', 'hiliteColor'],
-              ['align', 'list', 'lineHeight'],
-              ['outdent', 'indent'],
+              ["undo", "redo"],
+              ["bold", "underline", "italic", "strike", "subscript", "superscript"],
+              ["font", "fontSize"],
+              ["removeFormat"],
+              ["fontColor", "hiliteColor"],
+              ["align", "list", "lineHeight"],
+              ["outdent", "indent"],
 
-              ['table', 'horizontalRule', 'link', 'image', 'video'],
-              ['preview', 'print']
+              ["table", "horizontalRule", "link", "image", "video"],
+              ["preview", "print"],
             ],
             colorList: colors,
-            minHeight: '370px',
-            maxHeight: '370px',
+            minHeight: "370px",
+            maxHeight: "370px",
             showPathLabel: false,
-            font: fonts
+            font: fonts,
           }}
         />
         {rightArrowButtonState && (
           <div>
             <Image
               src={rightArrow}
-              style={{ width: '32px', height: '32px', cursor: 'pointer' }}
+              style={{ width: "32px", height: "32px", cursor: "pointer" }}
               onClick={handleNextTileContent}
-              alt='right-arrow'
+              alt="right-arrow"
             />
           </div>
         )}

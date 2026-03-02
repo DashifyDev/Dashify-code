@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import { v2 as cloudinary } from "cloudinary";
 
-const imageUpload = async (files) => {
+const imageUpload = async files => {
   let path = files.tileImage["path"];
 
   cloudinary.config({

@@ -23,7 +23,7 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
     setAlign("basic");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
       let finalUrl = url;
@@ -40,10 +40,8 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
       }
       if (!finalUrl) return;
 
-      const numericWidth =
-        width && !isNaN(Number(width)) ? Number(width) : undefined;
-      const numericHeight =
-        height && !isNaN(Number(height)) ? Number(height) : undefined;
+      const numericWidth = width && !isNaN(Number(width)) ? Number(width) : undefined;
+      const numericHeight = height && !isNaN(Number(height)) ? Number(height) : undefined;
 
       onSubmit({
         src: finalUrl,
@@ -79,7 +77,7 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={e => setFile(e.target.files?.[0] || null)}
             />
             {file && (
               <button type="button" onClick={() => setFile(null)}>
@@ -94,18 +92,14 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
           <input
             type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={e => setUrl(e.target.value)}
             placeholder="https://..."
           />
         </div>
 
         <div style={{ marginTop: 12 }}>
           <label>Alternative text</label>
-          <input
-            type="text"
-            value={alt}
-            onChange={(e) => setAlt(e.target.value)}
-          />
+          <input type="text" value={alt} onChange={e => setAlt(e.target.value)} />
         </div>
 
         <div
@@ -122,7 +116,7 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
               type="text"
               placeholder="auto"
               value={width}
-              onChange={(e) => setWidth(e.target.value)}
+              onChange={e => setWidth(e.target.value)}
             />
           </div>
           <span>x</span>
@@ -132,14 +126,14 @@ const ImageInsertModal = ({ isOpen, onRequestClose, onSubmit }) => {
               type="text"
               placeholder="auto"
               value={height}
-              onChange={(e) => setHeight(e.target.value)}
+              onChange={e => setHeight(e.target.value)}
             />
           </div>
           <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="checkbox"
               checked={lockRatio}
-              onChange={(e) => setLockRatio(e.target.checked)}
+              onChange={e => setLockRatio(e.target.checked)}
             />
             Constrain proportions
           </label>

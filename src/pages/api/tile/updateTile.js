@@ -12,7 +12,6 @@ export const config = {
 
 const updateTile = async (req, res) => {
   try {
-
     const form = new IncomingForm();
     let updatedData;
     form.parse(req, async (err, fields, files) => {

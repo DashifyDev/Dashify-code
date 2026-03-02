@@ -45,7 +45,7 @@ export const TopTableMenu = ({ editor }) => {
   const isFixedLayout = editor.getAttributes("table").layoutMode === "fixed";
 
   return (
-    <div style={commonStyles.container} onMouseDown={(e) => e.preventDefault()}>
+    <div style={commonStyles.container} onMouseDown={e => e.preventDefault()}>
       <button
         style={commonStyles.btn}
         title={isFullWidth ? "Compact width" : "Full width"}
@@ -60,11 +60,7 @@ export const TopTableMenu = ({ editor }) => {
           ...commonStyles.btn,
           backgroundColor: isFixedLayout ? "#e0e0e0" : "transparent",
         }}
-        title={
-          isFixedLayout
-            ? "Switch to Auto Column Width"
-            : "Switch to Fixed Column Width"
-        }
+        title={isFixedLayout ? "Switch to Auto Column Width" : "Switch to Fixed Column Width"}
         data-tippy-content={isFixedLayout ? "Auto Width" : "Fixed Width"}
         onClick={() => editor.chain().focus().toggleLayoutMode().run()}
       >
@@ -95,7 +91,7 @@ export const BottomTableMenu = ({ editor }) => {
   return (
     <div
       style={{ ...commonStyles.container, flexDirection: "column", gap: 8 }}
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={e => e.preventDefault()}
     >
       <div style={{ display: "flex", gap: 8 }}>
         <button

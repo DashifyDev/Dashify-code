@@ -10,7 +10,7 @@ export const useOptimizedQuery = (queryKey, queryFn, options = {}) => {
 
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -32,25 +32,12 @@ export const optimizedAxios = axios.create({
   },
 });
 
-optimizedAxios.interceptors.request.use(
-  (config) => {
-    config.params = {
-      ...config.params,
-      _t: Date.now(),
-    };
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
-
 optimizedAxios.interceptors.response.use(
-  (response) => {
+  response => {
     return response;
   },
-  (error) => {
+  error => {
     console.error("API Error:", error);
     return Promise.reject(error);
-  },
+  }
 );

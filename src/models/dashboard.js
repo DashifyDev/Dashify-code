@@ -40,7 +40,12 @@ const dashboardSchema = new Schema({
   hasAdminAdded: {
     type: Boolean,
   },
+  guestSourceId: {
+    type: String,
+  },
 });
+
+dashboardSchema.index({ userId: 1, guestSourceId: 1 }, { unique: true, sparse: true });
 
 const Dashboard = models.Dashboard || model("Dashboard", dashboardSchema);
 

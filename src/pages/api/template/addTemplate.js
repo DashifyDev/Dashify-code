@@ -11,7 +11,6 @@ export const config = {
 
 const addTemplate = async (req, res) => {
   try {
-
     switch (req.method) {
       case "POST":
         let form = new IncomingForm();
@@ -38,23 +37,32 @@ const addTemplate = async (req, res) => {
         });
         break;
 
-      case "GET":
-        let filter = req.query.filter;
+      case "GET": {
+        const filter = req.query.filter;
+        const type = req.query.type; // 'community' | 'premium' | 'all' (default)
+        const typeQuery =
+          type === "community"
+            ? { isPremium: { $ne: true } }
+            : type === "premium"
+              ? { isPremium: true }
+              : {};
         let getData;
         if (filter === "mostPopular") {
-          getData = await Template.find().sort({ rating: -1 }).exec();
+          getData = await Template.find(typeQuery).sort({ rating: -1 }).exec();
         } else if (filter === "newest") {
-          getData = await Template.find().sort({ date: -1 }).exec();
+          getData = await Template.find(typeQuery).sort({ date: -1 }).exec();
         } else if (filter === "aToz") {
-          getData = await Template.find().sort({ boardName: 1 }).exec();
+          getData = await Template.find(typeQuery).sort({ boardName: 1 }).exec();
         } else {
-          getData = await Template.find();
+          getData = await Template.find(typeQuery);
         }
         if (getData) {
           res.status(200).json(getData);
         } else {
           res.status(400).send("Data not found");
         }
+        break;
+      }
     }
   } catch (error) {
     console.log(error);

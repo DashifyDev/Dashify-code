@@ -11,9 +11,8 @@ export const IndentBlock = Node.create({
     return {
       indent: {
         default: 1,
-        parseHTML: (element) =>
-          parseInt(element.getAttribute("data-indent"), 10),
-        renderHTML: (attributes) => ({ "data-indent": attributes.indent }),
+        parseHTML: element => parseInt(element.getAttribute("data-indent"), 10),
+        renderHTML: attributes => ({ "data-indent": attributes.indent }),
       },
     };
   },
@@ -21,7 +20,7 @@ export const IndentBlock = Node.create({
     return [
       {
         tag: "div[data-indent]",
-        getAttrs: (dom) => ({
+        getAttrs: dom => ({
           indent: parseInt(dom.getAttribute("data-indent"), 10),
         }),
       },
@@ -29,11 +28,7 @@ export const IndentBlock = Node.create({
   },
   renderHTML({ HTMLAttributes }) {
     const indent = HTMLAttributes["data-indent"];
-    return [
-      "div",
-      { ...HTMLAttributes, style: `margin-left: ${indent * 24}px` },
-      0,
-    ];
+    return ["div", { ...HTMLAttributes, style: `margin-left: ${indent * 24}px` }, 0];
   },
 });
 
@@ -85,25 +80,20 @@ export const ExtendedTextStyle = TextStyle.extend({
       ...this.parent?.(),
       fontFamily: {
         default: null,
-        parseHTML: (element) => element.style.fontFamily,
-        renderHTML: (attributes) =>
-          attributes.fontFamily
-            ? { style: `font-family: ${attributes.fontFamily}` }
-            : {},
+        parseHTML: element => element.style.fontFamily,
+        renderHTML: attributes =>
+          attributes.fontFamily ? { style: `font-family: ${attributes.fontFamily}` } : {},
       },
       color: {
         default: null,
-        parseHTML: (element) => element.style.color,
-        renderHTML: (attributes) =>
-          attributes.color ? { style: `color: ${attributes.color}` } : {},
+        parseHTML: element => element.style.color,
+        renderHTML: attributes => (attributes.color ? { style: `color: ${attributes.color}` } : {}),
       },
       fontSize: {
         default: null,
-        parseHTML: (element) => element.style.fontSize,
-        renderHTML: (attributes) =>
-          attributes.fontSize
-            ? { style: `font-size: ${attributes.fontSize}` }
-            : {},
+        parseHTML: element => element.style.fontSize,
+        renderHTML: attributes =>
+          attributes.fontSize ? { style: `font-size: ${attributes.fontSize}` } : {},
       },
     };
   },
@@ -123,8 +113,8 @@ export const LineHeight = Extension.create({
         attributes: {
           lineHeight: {
             default: null,
-            parseHTML: (element) => element.style.lineHeight || null,
-            renderHTML: (attributes) => {
+            parseHTML: element => element.style.lineHeight || null,
+            renderHTML: attributes => {
               if (!attributes.lineHeight) return {};
               return { style: `line-height: ${attributes.lineHeight}` };
             },
@@ -136,7 +126,7 @@ export const LineHeight = Extension.create({
   addCommands() {
     return {
       setLineHeight:
-        (value) =>
+        value =>
         ({ chain }) => {
           if (!value) return false;
           return chain()
@@ -161,10 +151,7 @@ export const LineHeight = Extension.create({
             .command(({ tr, state }) => {
               const { from, to } = state.selection;
               state.doc.nodesBetween(from, to, (node, pos) => {
-                if (
-                  this.options.types.includes(node.type.name) &&
-                  node.attrs.lineHeight
-                ) {
+                if (this.options.types.includes(node.type.name) && node.attrs.lineHeight) {
                   const { lineHeight, ...rest } = node.attrs;
                   tr.setNodeMarkup(pos, undefined, {
                     ...rest,
@@ -200,8 +187,8 @@ export const CustomHorizontalRule = HorizontalRule.extend({
     return {
       variant: {
         default: "solid",
-        parseHTML: (element) => element.getAttribute("data-variant") || "solid",
-        renderHTML: (attributes) => ({ "data-variant": attributes.variant }),
+        parseHTML: element => element.getAttribute("data-variant") || "solid",
+        renderHTML: attributes => ({ "data-variant": attributes.variant }),
       },
     };
   },
@@ -227,9 +214,7 @@ export const CustomHorizontalRule = HorizontalRule.extend({
       insertDivider:
         (variant = "solid") =>
         ({ chain }) => {
-          return chain()
-            .insertContent({ type: this.name, attrs: { variant } })
-            .run();
+          return chain().insertContent({ type: this.name, attrs: { variant } }).run();
         },
     };
   },

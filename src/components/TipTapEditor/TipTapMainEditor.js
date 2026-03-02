@@ -69,8 +69,8 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
         isUnderline: editor.isActive("underline"),
         isStrike: editor.isActive("strike"),
         textAlign:
-          ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align }),
+          ["left", "center", "right", "justify"].find(align =>
+            editor.isActive({ textAlign: align })
           ) || "left",
         isBulletList: editor.isActive("bulletList"),
         isOrderedList: editor.isActive("orderedList"),
@@ -89,8 +89,8 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
         isUnderline: editor.isActive("underline"),
         isStrike: editor.isActive("strike"),
         textAlign:
-          ["left", "center", "right", "justify"].find((align) =>
-            editor.isActive({ textAlign: align }),
+          ["left", "center", "right", "justify"].find(align =>
+            editor.isActive({ textAlign: align })
           ) || "left",
         isBulletList: editor.isActive("bulletList"),
         isOrderedList: editor.isActive("orderedList"),
@@ -140,7 +140,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
       zIndex: 99999,
     })[0];
 
-    const captureClick = (ev) => {
+    const captureClick = ev => {
       const target = ev.target;
       if (!(target instanceof HTMLElement)) return;
       const anchor = target.closest("a");
@@ -249,8 +249,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
         }
       }
 
-      const tableRect =
-        tableDom?.getBoundingClientRect() || new DOMRect(0, 0, 0, 0);
+      const tableRect = tableDom?.getBoundingClientRect() || new DOMRect(0, 0, 0, 0);
 
       return {
         width: 0,
@@ -277,9 +276,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
       if (!cellDom) {
         const tableReference = getTopMenuReference();
         if (tableReference.top > 0) {
-          const tableRect = editor.view.dom
-            .querySelector(".tableWrapper")
-            ?.getBoundingClientRect();
+          const tableRect = editor.view.dom.querySelector(".tableWrapper")?.getBoundingClientRect();
           if (tableRect) {
             return {
               width: tableRect.width,
@@ -310,8 +307,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
 
       topTip.setProps({ getReferenceClientRect: getTopMenuReference });
       const bottomRef = getBottomMenuReference();
-      const isCellSelection =
-        bottomRef && bottomRef.width > 0 && bottomRef.height > 0;
+      const isCellSelection = bottomRef && bottomRef.width > 0 && bottomRef.height > 0;
       bottomTip.setProps({
         getReferenceClientRect: () => bottomRef,
         placement: isCellSelection ? "bottom" : "bottom-start",
@@ -347,7 +343,7 @@ const TipTapMainEditor = ({ initialContent, onContentChange, editable = true }) 
       <EditorContent
         editor={editor}
         className="tiptap-scroll-area"
-        onClick={(e) => {
+        onClick={e => {
           const target = e.target;
           if (!(target instanceof HTMLElement)) return;
           const anchor = target.closest("a");

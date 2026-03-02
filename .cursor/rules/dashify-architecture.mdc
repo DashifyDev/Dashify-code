@@ -1,0 +1,70 @@
+---
+description: Dashify (Boardzy) architecture — routing, data model, state, and API patterns
+globs: src/**/*.{js,jsx}
+alwaysApply: true
+---
+
+# Dashify Architecture
+
+## Routing Split (Critical)
+
+- `src/app/` — **App Router only**: pages and layouts. NO API routes here.
+- `src/pages/api/` — **All API routes** (Pages Router). Never put API routes in `src/app/`.
+- `src/pages/404.js` — Custom 404 page.
+
+## Data Model
+
+```
+User → Dashboard (board) → Tile[]  (positioned content boxes)
+                         → Pod[]   (container grouping Tiles)
+```
+
+- **Tile** has dual position: desktop (`x`, `y`, `width`, `height`) + mobile (`mobileX`, `mobileY`, `mobileWidth`, `mobileHeight`) + `order`
+- **Pod** has its own position/size and contains Tile ObjectId refs
+- Width/height values are stored as strings with `px` suffix (e.g. `"300px"`)
+- All Mongoose models in `src/models/` use `models.X || model(...)` pattern to avoid re-registration
+
+## State Management — Two Contexts
+
+**Do not consolidate without understanding the dependency chain.**
+
+| Context | File | Purpose |
+|---------|------|---------|
+| `globalContext` | `src/context/appContext.js` | Legacy: `dbUser`, `boards`, `tiles`, `activeBoard` — used by Header.js |
+| `optimizedContext` | `src/context/optimizedContext.js` | React Query–backed board lists; `setBoards`/`setTiles`/`setActiveBoard` are deprecated no-ops |
+
+- Both are mounted in `src/app/layout.js`
+- Dashboard page reads from `optimizedContext` via `useDashboardData(id)`
+- `setBoards`/`setTiles` on `optimizedContext` log warnings — use query invalidation instead
+
+## React Query Patterns
+
+- Query key factory: `dashboardKeys` in `src/hooks/useDashboard.js`
+- Optimized axios instance: `optimizedAxios` from `src/hooks/useOptimizedQuery.js`
+- Use `queryClient.invalidateQueries` / `queryClient.setQueryData` for cache updates
+- Stale time: 2 min for user dashboards, 10 min for admin/guest dashboards
+
+## Auth & Guest Mode
+
+- Auth0 (`@auth0/nextjs-auth0`) for authentication
+- Guests use `localStorage` key `"Dasify"` for board persistence
+- Always use `safeSetItem`/`safeGetItem` from `src/utils/safeLocalStorage.js` for localStorage access
+- On login, guest data migrates via `POST /api/manage/addGuestData`
+- Admin-seeded boards (`hasAdminAdded: true` on Dashboard model) shown to guests
+
+## API Route Conventions
+
+- Connect to MongoDB via `src/lib/utils.js` (call `connectDB()` at top of each route)
+- Return `{ error: message }` with proper HTTP status on failure
+- Tile width/height always stored as strings: `"300px"` not `300`
+
+## Mobile vs Desktop
+
+- `useIsMobile` hook determines layout
+- `GridTiles.js` (desktop) uses `react-rnd` for drag-and-resize
+- `MobileGridTiles.js` (mobile) uses stacked layout sorted by `tile.order`
+- Mobile tile width = `window.innerWidth - 48px` (24px margin each side)
+
+## Import Alias
+
+`@/*` → `src/*` (configured in `jsconfig.json`)

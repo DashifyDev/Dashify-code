@@ -1,55 +1,55 @@
-'use client';
-'use strict';
-import dynamic from 'next/dynamic';
-import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Rnd } from 'react-rnd';
-import '../styles/styles.css';
+"use client";
+"use strict";
+import dynamic from "next/dynamic";
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Rnd } from "react-rnd";
+import "../styles/styles.css";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { globalContext } from '@/context/globalContext';
-import isDblTouchTap from '@/hooks/isDblTouchTap';
-import { dashboardKeys } from '@/hooks/useDashboard';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import DifferenceOutlinedIcon from '@mui/icons-material/DifferenceOutlined';
-import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import Image from 'next/image';
-import 'suneditor/dist/css/suneditor.min.css';
-import imageUpload from '../assets/imageUpload.jpg';
-import text from '../assets/text.png';
-import ColorPicker from './ColorPicker';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { globalContext } from "@/context/globalContext";
+import isDblTouchTap from "@/hooks/isDblTouchTap";
+import { dashboardKeys } from "@/hooks/useDashboard";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DifferenceOutlinedIcon from "@mui/icons-material/DifferenceOutlined";
+import MoreHorizSharpIcon from "@mui/icons-material/MoreHorizSharp";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import Image from "next/image";
+import "suneditor/dist/css/suneditor.min.css";
+import imageUpload from "../assets/imageUpload.jpg";
+import text from "../assets/text.png";
+import ColorPicker from "./ColorPicker";
 
-const TipTapMainEditor = dynamic(() => import('./TipTapEditor/TipTapMainEditor'), {
+const TipTapMainEditor = dynamic(() => import("./TipTapEditor/TipTapMainEditor"), {
   loading: () => <div>Loading editor...</div>,
-  ssr: false
+  ssr: false,
 });
 
-const TipTapTextEditorDialog = dynamic(() => import('./TipTapEditor/TipTapTextEditorDialog'), {
+const TipTapTextEditorDialog = dynamic(() => import("./TipTapEditor/TipTapTextEditorDialog"), {
   loading: () => <div>Loading dialog...</div>,
-  ssr: false
+  ssr: false,
 });
 
-const SunEditor = dynamic(() => import('suneditor-react'), {
-  ssr: false
+const SunEditor = dynamic(() => import("suneditor-react"), {
+  ssr: false,
 });
 
-console.log('[GridTiles] Module loaded');
+console.log("[GridTiles] Module loaded");
 
 const GridTiles = memo(function GridTiles({
   tileCordinates,
   setTileCordinates,
   activeBoard,
-  updateTilesInLocalstorage 
+  updateTilesInLocalstorage,
 }) {
-  console.log('[GridTiles] Render, tiles count:', tileCordinates?.length);
+  console.log("[GridTiles] Render, tiles count:", tileCordinates?.length);
   const [showOption, setShowOption] = useState(null);
   const [showModel, setShowModel] = useState(false);
   const [selectedTile, setSelectedTile] = useState(null);
   const [selectedPod, setSelectedPod] = useState(null);
-  const [colorImage, setColorImage] = useState('color');
-  const [textLink, setTextLink] = useState('text');
+  const [colorImage, setColorImage] = useState("color");
+  const [textLink, setTextLink] = useState("text");
   const [imageFileName, setImageFileName] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [formValue, setFormValue] = useState({});
@@ -67,13 +67,13 @@ const GridTiles = memo(function GridTiles({
     background: true, // Only first section open by default
     textDisplay: true,
     action: true,
-    order: true
+    order: true,
   });
   const { dbUser, setHeaderWidth, headerwidth } = useContext(globalContext);
   const queryClient = useQueryClient();
   const cloneMutation = useMutation(
     async tileToCreate => {
-      const response = await axios.post('/api/tile/tile', tileToCreate);
+      const response = await axios.post("/api/tile/tile", tileToCreate);
       return response.data;
     },
     {
@@ -89,7 +89,7 @@ const GridTiles = memo(function GridTiles({
         queryClient.setQueryData(detailKey, old => {
           return {
             ...(old || {}),
-            tiles: [...((old && old.tiles) || []), tempTile]
+            tiles: [...((old && old.tiles) || []), tempTile],
           };
         });
 
@@ -116,9 +116,9 @@ const GridTiles = memo(function GridTiles({
       },
       onSettled: () => {
         queryClient.invalidateQueries({
-          queryKey: dashboardKeys.detail(activeBoard)
+          queryKey: dashboardKeys.detail(activeBoard),
         });
-      }
+      },
     }
   );
   const hiddenFileInput = useRef(null);
@@ -136,7 +136,7 @@ const GridTiles = memo(function GridTiles({
       if (selectedTile >= 0 && selectedTile < tileCordinates.length) {
         const currentTile = tileCordinates[selectedTile];
         setSelectedTileDetail(currentTile);
-        setFormValue({ tileText: currentTile.tileText || '' });
+        setFormValue({ tileText: currentTile.tileText || "" });
       }
     }
   }, [editorOpen, selectedTile, tileCordinates]);
@@ -149,7 +149,7 @@ const GridTiles = memo(function GridTiles({
         // Only update if tile data is different to avoid unnecessary re-renders
         if (!selectedTileDetail._id || selectedTileDetail._id !== currentTile._id) {
           setSelectedTileDetail(currentTile);
-          setFormValue({ tileText: currentTile.tileText || '' });
+          setFormValue({ tileText: currentTile.tileText || "" });
         }
       }
     }
@@ -159,7 +159,7 @@ const GridTiles = memo(function GridTiles({
     e => {
       setSelectedTileDetail({
         ...selectedTileDetail,
-        backgroundAction: e.target.value
+        backgroundAction: e.target.value,
       });
       const values = formValue;
       values.backgroundAction = e.target.value;
@@ -191,24 +191,24 @@ const GridTiles = memo(function GridTiles({
       background: true, // Only first section open by default
       textDisplay: true,
       action: true,
-      order: true
+      order: true,
     });
   };
 
   const toggleSection = section => {
     setCollapsedSections(prev => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
   const enterText = value => {
     let items = tileCordinates;
     if (firstNewLine && selectedTile !== null && selectedTile !== undefined) {
-      const newLineIndex = value.indexOf('<div><br></div>');
+      const newLineIndex = value.indexOf("<div><br></div>");
       if (newLineIndex !== -1) {
         const enteredText = value.substring(0, newLineIndex);
-        const enteredUserText = enteredText.replace(/<[^>]*>/g, '');
+        const enteredUserText = enteredText.replace(/<[^>]*>/g, "");
         items[selectedTile].editorHeading = enteredUserText;
         firstNewLine = false;
       }
@@ -228,7 +228,7 @@ const GridTiles = memo(function GridTiles({
   const displayTitle = e => {
     setSelectedTileDetail({
       ...selectedTileDetail,
-      displayTitle: e.target.checked
+      displayTitle: e.target.checked,
     });
     let value = formValue;
     setFormValue({ ...value, displayTitle: e.target.checked });
@@ -252,11 +252,11 @@ const GridTiles = memo(function GridTiles({
     let formData = new FormData();
     let payload = { ...formValue };
     if (payload.tileBackground instanceof File) {
-      payload.backgroundAction = 'image';
-      formData.append('tileImage', payload.tileBackground);
+      payload.backgroundAction = "image";
+      formData.append("tileImage", payload.tileBackground);
       delete payload.tileBackground;
     }
-    formData.append('formValue', JSON.stringify(payload));
+    formData.append("formValue", JSON.stringify(payload));
 
     if (selectedPod) {
       let podIndex = selectedPod.podIndex;
@@ -287,18 +287,18 @@ const GridTiles = memo(function GridTiles({
 
     let items = [...tileCordinates];
     let tileId = items[selectedTile]._id;
-    
+
     // Store original tile data to check if text content changed
     const originalTile = items[selectedTile];
-    const originalTileText = originalTile.tileText || '';
-    const originalTileContent = originalTile.tileContent || '';
+    const originalTileText = originalTile.tileText || "";
+    const originalTileContent = originalTile.tileContent || "";
     const originalHeight = originalTile.height;
-    
+
     // Check if text content changed (only resize if text changed)
-    const textChanged = 
+    const textChanged =
       (payload.tileText !== undefined && payload.tileText !== originalTileText) ||
       (payload.tileContent !== undefined && payload.tileContent !== originalTileContent);
-    
+
     setFormValue({});
     setImageFileName(null);
     setColorBackground(null);
@@ -324,7 +324,7 @@ const GridTiles = memo(function GridTiles({
             ...oldData,
             tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
               tile._id === tileId ? res.data : tile
-            )
+            ),
           };
         });
 
@@ -334,50 +334,50 @@ const GridTiles = memo(function GridTiles({
 
         // Auto-resize tile after save ONLY if text content changed
         if (textChanged) {
-        setTimeout(() => {
-          // Try different selectors for tiles
-          let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
-            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-            const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-          }
-
-          // Fallback: try to find by index
-          if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
-            textOverlay = allTextOverlays[currentSelectedTile];
-          }
-
-          if (textOverlay && currentSelectedTile !== null) {
-            const contentHeight = textOverlay.scrollHeight;
-              // Use original height if it exists, otherwise use 150 as fallback
-              const currentHeight = originalHeight 
-                ? parseInt(originalHeight) 
-                : (parseInt(items[currentSelectedTile].height) || 150);
-            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-
-            if (desiredHeight > currentHeight + 5) {
-              const updatedItems = [...items];
-              updatedItems[currentSelectedTile] = {
-                ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
-              };
-              setTileCordinates(updatedItems);
-
-              // Update React Query cache
-              queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-                if (!oldData) return oldData;
-                return {
-                  ...oldData,
-                  tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
-                    tile._id === tileId ? updatedItems[currentSelectedTile] : tile
-                  )
-                };
-              });
+          setTimeout(() => {
+            // Try different selectors for tiles
+            let textOverlay = null;
+            if (tileId && !tileId.startsWith("temp_")) {
+              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+              const escapedTileId = CSS.escape(tileId);
+              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
             }
-          }
-        }, 100);
+
+            // Fallback: try to find by index
+            if (!textOverlay) {
+              const allTextOverlays = document.querySelectorAll(".text_overlay");
+              textOverlay = allTextOverlays[currentSelectedTile];
+            }
+
+            if (textOverlay && currentSelectedTile !== null) {
+              const contentHeight = textOverlay.scrollHeight;
+              // Use original height if it exists, otherwise use 150 as fallback
+              const currentHeight = originalHeight
+                ? parseInt(originalHeight)
+                : parseInt(items[currentSelectedTile].height) || 150;
+              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+              if (desiredHeight > currentHeight + 5) {
+                const updatedItems = [...items];
+                updatedItems[currentSelectedTile] = {
+                  ...updatedItems[currentSelectedTile],
+                  height: `${desiredHeight}px`,
+                };
+                setTileCordinates(updatedItems);
+
+                // Update React Query cache
+                queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
+                      tile._id === tileId ? updatedItems[currentSelectedTile] : tile
+                    ),
+                  };
+                });
+              }
+            }
+          }, 100);
         }
       });
     } else {
@@ -392,7 +392,7 @@ const GridTiles = memo(function GridTiles({
           ) {
             return;
           }
-          let updatedData = JSON.parse(formData.get('formValue'));
+          let updatedData = JSON.parse(formData.get("formValue"));
           updatedData.tileBackground = e.target.result;
           let item = { ...items[selectedTile], ...updatedData };
           items[selectedTile] = item;
@@ -402,7 +402,7 @@ const GridTiles = memo(function GridTiles({
         };
         reader.readAsDataURL(formValue.tileBackground);
       } else {
-        let updatedData = JSON.parse(formData.get('formValue'));
+        let updatedData = JSON.parse(formData.get("formValue"));
         let item = { ...items[selectedTile], ...updatedData };
         items[selectedTile] = item;
         setTileCordinates(items);
@@ -414,42 +414,42 @@ const GridTiles = memo(function GridTiles({
 
         // Auto-resize tile after save ONLY if text content changed
         if (textChanged) {
-        setTimeout(() => {
-          const tileId = items[currentSelectedTile]._id;
+          setTimeout(() => {
+            const tileId = items[currentSelectedTile]._id;
 
-          // Try different selectors for guest tiles
-          let textOverlay = null;
-          if (tileId && !tileId.startsWith('temp_')) {
-            // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
-            const escapedTileId = CSS.escape(tileId);
-            textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
-          }
-
-          // Fallback: try to find by index
-          if (!textOverlay) {
-            const allTextOverlays = document.querySelectorAll('.text_overlay');
-            textOverlay = allTextOverlays[currentSelectedTile];
-          }
-
-          if (textOverlay && currentSelectedTile !== null) {
-            const contentHeight = textOverlay.scrollHeight;
-              // Use original height if it exists, otherwise use 150 as fallback
-              const currentHeight = originalHeight 
-                ? parseInt(originalHeight) 
-                : (parseInt(items[currentSelectedTile].height) || 150);
-            const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
-
-            if (desiredHeight > currentHeight + 5) {
-              const updatedItems = [...items];
-              updatedItems[currentSelectedTile] = {
-                ...updatedItems[currentSelectedTile],
-                height: `${desiredHeight}px`
-              };
-              setTileCordinates(updatedItems);
-              updateTilesInLocalstorage(updatedItems);
+            // Try different selectors for guest tiles
+            let textOverlay = null;
+            if (tileId && !tileId.startsWith("temp_")) {
+              // Escape the tileId for CSS selector (MongoDB ObjectIds start with numbers)
+              const escapedTileId = CSS.escape(tileId);
+              textOverlay = document.querySelector(`#${escapedTileId} .text_overlay`);
             }
-          }
-        }, 100);
+
+            // Fallback: try to find by index
+            if (!textOverlay) {
+              const allTextOverlays = document.querySelectorAll(".text_overlay");
+              textOverlay = allTextOverlays[currentSelectedTile];
+            }
+
+            if (textOverlay && currentSelectedTile !== null) {
+              const contentHeight = textOverlay.scrollHeight;
+              // Use original height if it exists, otherwise use 150 as fallback
+              const currentHeight = originalHeight
+                ? parseInt(originalHeight)
+                : parseInt(items[currentSelectedTile].height) || 150;
+              const desiredHeight = Math.max(contentHeight + 30, 150); // 30px for padding
+
+              if (desiredHeight > currentHeight + 5) {
+                const updatedItems = [...items];
+                updatedItems[currentSelectedTile] = {
+                  ...updatedItems[currentSelectedTile],
+                  height: `${desiredHeight}px`,
+                };
+                setTileCordinates(updatedItems);
+                updateTilesInLocalstorage(updatedItems);
+              }
+            }
+          }, 100);
         }
       }
     }
@@ -512,22 +512,22 @@ const GridTiles = memo(function GridTiles({
           if (tilesToUpdate.length > 0) {
             const orderUpdates = tilesToUpdate.map(tile => ({
               tileId: tile._id,
-              data: { order: tile.order }
+              data: { order: tile.order },
             }));
 
             axios
-              .post('/api/tile/batch-update', { updates: orderUpdates })
+              .post("/api/tile/batch-update", { updates: orderUpdates })
               .then(() => {
                 // Orders updated successfully
               })
               .catch(err => {
-                console.error('Error updating tile orders:', err);
+                console.error("Error updating tile orders:", err);
               });
           }
           // React Query cache already updated by handleTileUpdate via setTileCordinates
         })
         .catch(error => {
-          console.error('Error deleting tile:', error);
+          console.error("Error deleting tile:", error);
           // Revert optimistic update on error
           setTileCordinates(tileCordinates);
           queryClient.invalidateQueries({ queryKey: dashboardKeys.detail(activeBoard) });
@@ -591,14 +591,14 @@ const GridTiles = memo(function GridTiles({
     }
 
     const stylevalue = {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: 'solid 1px #ddd',
-      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : '#deedf0ff',
-      color: 'black',
-      overflowWrap: 'anywhere',
-      borderRadius: '10px'
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "solid 1px #ddd",
+      background: tile.tileBackground && !isImageBackground ? tile.tileBackground : "#deedf0ff",
+      color: "black",
+      overflowWrap: "anywhere",
+      borderRadius: "10px",
     };
 
     return stylevalue;
@@ -611,74 +611,78 @@ const GridTiles = memo(function GridTiles({
 
     if (tileText) {
       // Only check for empty divs, not strip all HTML
-      if (tileText === '<div><br></div>' || tileText === '<div></div>') {
-        content = '';
+      if (tileText === "<div><br></div>" || tileText === "<div></div>") {
+        content = "";
       }
     }
 
     const titleVal =
-      content && tile.displayTitle ? tileText : !content && tile.displayTitle ? ' <div style="font-size: 18px;">New Box</div>' : '';
+      content && tile.displayTitle
+        ? tileText
+        : !content && tile.displayTitle
+          ? ' <div style="font-size: 18px;">New Box</div>'
+          : "";
     return titleVal;
   };
 
   const onDoubleTap = (e, action, editorHtml, tile, index, isPod) => {
-    if ((e.type === 'touchstart' || e.detail == 2) && action == 'link') {
+    if ((e.type === "touchstart" || e.detail == 2) && action == "link") {
       if (tile.tileLink) {
-        window.open(tile.tileLink, '_blank');
+        window.open(tile.tileLink, "_blank");
       }
-    } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textEditor') {
+    } else if ((e.type === "touchstart" || e.detail == 2) && action == "textEditor") {
       setEditorLabel(tile.editorHeading);
       setOpenTextEdior(true);
-      setTextEditorContent(editorHtml || '');
+      setTextEditorContent(editorHtml || "");
       if (isPod) {
         setSelectedPod(isPod);
       } else {
         setSelectedTile(index);
       }
-    } else if ((e.type === 'touchstart' || e.detail == 2) && action == 'textDisplay') {
+    } else if ((e.type === "touchstart" || e.detail == 2) && action == "textDisplay") {
       // Open Text Display editor directly
       const currentTile = tileCordinates[index];
       setCurrentTileIndex(index);
       setSelectedTile(index);
       setSelectedTileDetail(currentTile);
-      setFormValue({ tileText: currentTile.tileText || '' });
+      setFormValue({ tileText: currentTile.tileText || "" });
       setEditorOpen(true);
     }
   };
   const podStyle = index => {
     const stylevalue = {
-      display: 'flex',
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      padding: '10px',
-      border: 'dashed 1px black',
-      borderRadius: '20px',
-      margin: '10px 20px'
+      display: "flex",
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-around",
+      padding: "10px",
+      border: "dashed 1px black",
+      borderRadius: "20px",
+      margin: "10px 20px",
     };
 
     return stylevalue;
   };
   const innerTileStyle = tile => {
     const stylevalue = {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: tile.tileColor ? tile.tileColor : 'pink',
-      flex: '1 1 100%',
-      border: '1px solid #bbb',
-      borderRadius: '20px',
-      height: '100%',
-      margin: ' 0 5px',
-      cursor: 'grabbing',
-      position: 'relative',
-      minHeight: '120px',
-      minWidth: '120px'
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: tile.tileColor ? tile.tileColor : "pink",
+      flex: "1 1 100%",
+      border: "1px solid #bbb",
+      borderRadius: "20px",
+      height: "100%",
+      margin: " 0 5px",
+      cursor: "grabbing",
+      position: "relative",
+      minHeight: "120px",
+      minWidth: "120px",
     };
     return stylevalue;
   };
   const createPods = (dragTile, dropTile, direction) => {
-    console.log('=====>>>..', direction);
+    console.log("=====>>>..", direction);
     let tiles = tileCordinates;
     let removableTileIds = [dragTile._id, dropTile._id];
     const filteredArray = tiles.filter(obj => !removableTileIds.includes(obj._id));
@@ -691,9 +695,9 @@ const GridTiles = memo(function GridTiles({
       height: 185,
       width: 325,
       tiles: [dropTile, dragTile],
-      dashboardId: activeBoard
+      dashboardId: activeBoard,
     };
-    axios.post('api/pod/createPod', newPod).then(res => {
+    axios.post("api/pod/createPod", newPod).then(res => {
       let data = res.data;
       data.tiles = [dropTile, dragTile];
       setPods([...pods, data]);
@@ -715,9 +719,9 @@ const GridTiles = memo(function GridTiles({
     var payload = {
       isAdd: true,
       tileId: dragtile._id,
-      podId: droppablePod._id
+      podId: droppablePod._id,
     };
-    axios.post('api/pod/addTile', payload).then(res => {
+    axios.post("api/pod/addTile", payload).then(res => {
       if (res.data) {
         console.log(res.data);
       }
@@ -737,7 +741,7 @@ const GridTiles = memo(function GridTiles({
     }
     let toUpdate = {
       x: x,
-      y: y
+      y: y,
     };
     if (tile.x === x && tile.y === y) {
       return;
@@ -755,7 +759,7 @@ const GridTiles = memo(function GridTiles({
               ...oldData,
               tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
                 tile._id === tileId ? { ...tile, ...res.data } : tile
-              )
+              ),
             };
           });
         }
@@ -772,12 +776,15 @@ const GridTiles = memo(function GridTiles({
     const currentTile = items[index];
 
     // Debug: log resize info
-    console.log('[Resize Debug] direction:', direction);
-    console.log('[Resize Debug] delta:', delta);
-    console.log('[Resize Debug] new position:', position);
-    console.log('[Resize Debug] old position:', { x: currentTile.x, y: currentTile.y });
-    console.log('[Resize Debug] new size:', { width: ref.style.width, height: ref.style.height });
-    console.log('[Resize Debug] old size:', { width: currentTile.width, height: currentTile.height });
+    console.log("[Resize Debug] direction:", direction);
+    console.log("[Resize Debug] delta:", delta);
+    console.log("[Resize Debug] new position:", position);
+    console.log("[Resize Debug] old position:", { x: currentTile.x, y: currentTile.y });
+    console.log("[Resize Debug] new size:", { width: ref.style.width, height: ref.style.height });
+    console.log("[Resize Debug] old size:", {
+      width: currentTile.width,
+      height: currentTile.height,
+    });
 
     // When resizing from left or top edges, position changes too
     // We need to save both size AND position to prevent jumping
@@ -785,10 +792,10 @@ const GridTiles = memo(function GridTiles({
       width: ref.style.width,
       height: ref.style.height,
       x: position.x,
-      y: position.y
+      y: position.y,
     };
 
-    console.log('[Resize Debug] toUpdate:', toUpdate);
+    console.log("[Resize Debug] toUpdate:", toUpdate);
 
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
@@ -796,7 +803,7 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       axios.patch(`/api/tile/${tileId}`, toUpdate).then(res => {
         if (res.data) {
-          console.log('[Resize Debug] Server response:', res.data);
+          console.log("[Resize Debug] Server response:", res.data);
           // Update React Query cache
           queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
             if (!oldData) return oldData;
@@ -804,7 +811,7 @@ const GridTiles = memo(function GridTiles({
               ...oldData,
               tiles: (Array.isArray(oldData.tiles) ? oldData.tiles : []).map(tile =>
                 tile._id === tileId ? { ...tile, ...res.data } : tile
-              )
+              ),
             };
           });
         }
@@ -820,14 +827,14 @@ const GridTiles = memo(function GridTiles({
     let podId = pods[index]._id;
     let toUpdate = {
       x: x,
-      y: y
+      y: y,
     };
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setPods(items);
     axios.patch(`/api/pod/${podId}`, toUpdate).then(res => {
       if (res.data) {
-        console.log('update Drag Coordinate');
+        console.log("update Drag Coordinate");
       }
     });
   };
@@ -837,14 +844,14 @@ const GridTiles = memo(function GridTiles({
     let podId = pods[index]._id;
     let toUpdate = {
       width: ref.style.width,
-      height: ref.style.height
+      height: ref.style.height,
     };
     let item = { ...items[index], ...toUpdate };
     items[index] = item;
     setPods([...items]);
     axios.patch(`/api/pod/${podId}`, toUpdate).then(res => {
       if (res.data) {
-        console.log('update resize');
+        console.log("update resize");
       }
     });
   };
@@ -870,7 +877,7 @@ const GridTiles = memo(function GridTiles({
       setTextEditorContent(null);
       const form = new FormData();
       const payload = { tileContent: content, editorHeading: editorTitle };
-      form.append('formValue', JSON.stringify(payload));
+      form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then(res => {
         if (res.data) {
           items[podIndex].tiles[tileIndex] = res.data;
@@ -896,7 +903,7 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       const form = new FormData();
       const payload = { tileContent: content, editorHeading: editorTitle };
-      form.append('formValue', JSON.stringify(payload));
+      form.append("formValue", JSON.stringify(payload));
       axios.patch(`/api/tile/${tileId}`, form).then(res => {
         if (
           selectedTile === null ||
@@ -915,7 +922,7 @@ const GridTiles = memo(function GridTiles({
           if (!oldData) return oldData;
           return {
             ...oldData,
-            tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile))
+            tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile)),
           };
         });
 
@@ -926,7 +933,7 @@ const GridTiles = memo(function GridTiles({
       let item = {
         ...items[selectedTile],
         tileContent: content,
-        editorHeading: editorTitle
+        editorHeading: editorTitle,
       };
       items[selectedTile] = item;
       setTileCordinates(items);
@@ -944,13 +951,13 @@ const GridTiles = memo(function GridTiles({
     const tileListIdArray = tileList.map(tile => {
       return tile._id;
     });
-    pod['tiles'] = tileList;
+    pod["tiles"] = tileList;
     let podsArray = [...pods];
     podsArray[podIndex] = pod;
     setPods(podsArray);
     if (pod._id && pod.tiles.length == tileListIdArray.length) {
       axios.patch(`api/pod/${pod._id}`, { tiles: tileListIdArray }).then(res => {
-        console.log('update indexing success');
+        console.log("update indexing success");
       });
     }
   };
@@ -961,7 +968,7 @@ const GridTiles = memo(function GridTiles({
     podsArray.splice(index, 1);
     setPods(podsArray);
     axios.delete(`/api/pod/${podId}`).then(res => {
-      console.log('===>>', res.data);
+      console.log("===>>", res.data);
     });
   };
 
@@ -969,7 +976,7 @@ const GridTiles = memo(function GridTiles({
     const { oldIndex, newIndex, originalEvent } = event;
     let dragType = originalEvent.type;
     let tile = pod.tiles[newIndex];
-    if (dragType === 'dragend') {
+    if (dragType === "dragend") {
       if (pod.tiles.length === 2) {
         let tiles = pod.tiles;
         deletePod(podIndex);
@@ -985,9 +992,9 @@ const GridTiles = memo(function GridTiles({
         let payload = {
           isAdd: false,
           tileId: tile._id,
-          podId: pod._id
+          podId: pod._id,
         };
-        axios.post('api/pod/addTile', payload).then(res => {
+        axios.post("api/pod/addTile", payload).then(res => {
           if (res.data) {
             console.log(res.data);
           }
@@ -1011,7 +1018,7 @@ const GridTiles = memo(function GridTiles({
     // Count only tiles that are user-created (not the default welcome tile)
     // Filter out tiles with width > 200px (default welcome tile is 600px)
     const userCreatedTiles = tileCordinates.filter(tile => {
-      const tileWidth = parseInt(tile.width || '0', 10);
+      const tileWidth = parseInt(tile.width || "0", 10);
       return tileWidth <= 200; // Only count small tiles, not the default welcome tile
     });
 
@@ -1024,7 +1031,7 @@ const GridTiles = memo(function GridTiles({
     const newY = START_Y + rowIndex * ROW_HEIGHT;
 
     // Calculate mobile profile defaults
-    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+    const windowWidth = typeof window !== "undefined" ? window.innerWidth : 375;
     const mobileWidth = `${windowWidth - 48}px`;
     const mobileY = userCreatedTiles.length * 166; // Position based on user-created tiles count
 
@@ -1068,20 +1075,20 @@ const GridTiles = memo(function GridTiles({
         .filter(tile => tile.order && tile.order > originalOrder)
         .map(tile => ({
           tileId: tile._id,
-          data: { order: tile.order + 1 }
+          data: { order: tile.order + 1 },
         }));
 
       // Update orders on server, then add the new tile
       if (tilesToUpdate.length > 0) {
         axios
-          .post('/api/tile/batch-update', { updates: tilesToUpdate })
+          .post("/api/tile/batch-update", { updates: tilesToUpdate })
           .then(() => {
             // After orders are updated, add the new tile
             newTile.dashboardId = activeBoard;
             cloneMutation.mutate(newTile);
           })
           .catch(err => {
-            console.error('Error updating tile orders:', err);
+            console.error("Error updating tile orders:", err);
             // Revert local state on error
             setTileCordinates(tileCordinates);
             // Still try to add the tile
@@ -1112,7 +1119,7 @@ const GridTiles = memo(function GridTiles({
   const onResize = (index, e, direction, ref, delta, position) => {
     const tile = tileCordinates[index];
     if (tile && ref) {
-      const contentElement = ref.querySelector('.text_overlay');
+      const contentElement = ref.querySelector(".text_overlay");
       if (contentElement) {
         const contentWidth = contentElement.scrollWidth;
         const contentHeight = contentElement.scrollHeight;
@@ -1135,18 +1142,18 @@ const GridTiles = memo(function GridTiles({
 
   const TitlePositionStyle = tile => {
     let style = {
-      top: tile.titleY == 1 ? 0 : 'auto',
-      bottom: tile.titleY == 3 ? 0 : 'auto',
-      left: tile.titleX == 1 ? 0 : 'auto',
-      right: tile.titleX == 3 ? 0 : 'auto',
-      textAlign: tile.titleX == 3 ? 'right' : tile.titleX == 2 ? 'center' : 'left'
+      top: tile.titleY == 1 ? 0 : "auto",
+      bottom: tile.titleY == 3 ? 0 : "auto",
+      left: tile.titleX == 1 ? 0 : "auto",
+      right: tile.titleX == 3 ? 0 : "auto",
+      textAlign: tile.titleX == 3 ? "right" : tile.titleX == 2 ? "center" : "left",
     };
     return style;
   };
 
   const isBackgroundImage = useCallback(url => {
     if (url) {
-      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
       let isImage = imageExtensions.some(ext => url.toLowerCase().includes(ext));
       return isImage;
     }
@@ -1157,14 +1164,14 @@ const GridTiles = memo(function GridTiles({
   const tileDepsKey = useMemo(() => {
     return tileCordinates
       .map(t => `${t._id}|${t.x}|${t.y}|${t.width}|${t.height}|${t.tileBackground}`)
-      .join(',');
+      .join(",");
   }, [tileCordinates]);
 
   const tileStyles = useMemo(() => {
     return tileCordinates.map((tile, index) => ({
       index,
       style: style(index, tile),
-      isImageBackground: tile.tileBackground ? isBackgroundImage(tile.tileBackground) : false
+      isImageBackground: tile.tileBackground ? isBackgroundImage(tile.tileBackground) : false,
     }));
   }, [tileDepsKey, style, isBackgroundImage]);
 
@@ -1181,20 +1188,20 @@ const GridTiles = memo(function GridTiles({
       if (dateA) return -1;
       if (dateB) return 1;
       // Fallback to _id for tiles without createdAt
-      const idA = a.tile._id ? String(a.tile._id) : '';
-      const idB = b.tile._id ? String(b.tile._id) : '';
+      const idA = a.tile._id ? String(a.tile._id) : "";
+      const idB = b.tile._id ? String(b.tile._id) : "";
       return idA.localeCompare(idB);
     });
 
-  console.log('sortedTilesWithIndex', sortedTilesWithIndex); 
+  console.log("sortedTilesWithIndex", sortedTilesWithIndex);
   const currentBackground = tile => {
-    if (tile.tileBackground) { 
+    if (tile.tileBackground) {
       if (isBackgroundImage(tile.tileBackground)) {
-        if (tile.tileBackground.startsWith('data:image/')) {
-          setImageFileName('uploaded-image.png');
+        if (tile.tileBackground.startsWith("data:image/")) {
+          setImageFileName("uploaded-image.png");
           setImagePreview(tile.tileBackground);
         } else {
-          const segments = tile.tileBackground.split('/');
+          const segments = tile.tileBackground.split("/");
           const imageName = segments[segments.length - 1];
           setImageFileName(imageName);
           setImagePreview(tile.tileBackground);
@@ -1204,7 +1211,7 @@ const GridTiles = memo(function GridTiles({
         setImagePreview(null);
       }
     } else {
-      setColorBackground('#deedf0ff');
+      setColorBackground("#deedf0ff");
       setImagePreview(null);
     }
   };
@@ -1217,7 +1224,7 @@ const GridTiles = memo(function GridTiles({
       currentTileIndex < 0 ||
       currentTileIndex >= tileCordinates.length
     ) {
-    setEditorOpen(false);
+      setEditorOpen(false);
       return;
     }
 
@@ -1228,12 +1235,12 @@ const GridTiles = memo(function GridTiles({
     }
 
     // Get the updated tileText from formValue
-    const updatedTileText = formValue.tileText || selectedTileDetail.tileText || '';
+    const updatedTileText = formValue.tileText || selectedTileDetail.tileText || "";
 
     // Find the tile in tileCordinates by _id
     const items = [...tileCordinates];
     const tileIndex = items.findIndex(t => String(t._id) === String(currentTile._id));
-    
+
     if (tileIndex < 0) {
       setEditorOpen(false);
       return;
@@ -1244,11 +1251,11 @@ const GridTiles = memo(function GridTiles({
     // Update tile locally first
     const updatedTile = {
       ...items[tileIndex],
-      tileText: updatedTileText
+      tileText: updatedTileText,
     };
     items[tileIndex] = updatedTile;
     setTileCordinates(items);
-    
+
     // Update selectedTileDetail to reflect changes
     setSelectedTileDetail(updatedTile);
 
@@ -1256,30 +1263,33 @@ const GridTiles = memo(function GridTiles({
     if (dbUser) {
       const formData = new FormData();
       const payload = { tileText: updatedTileText };
-      formData.append('formValue', JSON.stringify(payload));
+      formData.append("formValue", JSON.stringify(payload));
 
-      axios.patch(`/api/tile/${tileId}`, formData).then(res => {
-        if (res.data) {
-          // Update tile with server response
-          const serverUpdatedTile = { ...items[tileIndex], ...res.data };
-          items[tileIndex] = serverUpdatedTile;
-          setTileCordinates(items);
-          
-          // Update selectedTileDetail with server response
-          setSelectedTileDetail(serverUpdatedTile);
+      axios
+        .patch(`/api/tile/${tileId}`, formData)
+        .then(res => {
+          if (res.data) {
+            // Update tile with server response
+            const serverUpdatedTile = { ...items[tileIndex], ...res.data };
+            items[tileIndex] = serverUpdatedTile;
+            setTileCordinates(items);
 
-          // Update React Query cache
-          queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile))
-            };
-          });
-        }
-      }).catch(err => {
-        console.error('Error saving tile text:', err);
-      });
+            // Update selectedTileDetail with server response
+            setSelectedTileDetail(serverUpdatedTile);
+
+            // Update React Query cache
+            queryClient.setQueryData(dashboardKeys.detail(activeBoard), oldData => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                tiles: oldData.tiles.map(tile => (tile._id === tileId ? res.data : tile)),
+              };
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Error saving tile text:", err);
+        });
     } else {
       // Save to localStorage for guest users
       updateTilesInLocalstorage(items);
@@ -1291,16 +1301,16 @@ const GridTiles = memo(function GridTiles({
   };
 
   return (
-    <div className='main_grid_container'>
-      <div className='tiles_container'>
-        {sortedTilesWithIndex.map(({ tile, originalIndex: index }) => {  
+    <div className="main_grid_container">
+      <div className="tiles_container">
+        {sortedTilesWithIndex.map(({ tile, originalIndex: index }) => {
           const computedStyle = style(index, tile);
           const isImgBackground = isBackgroundImage(tile.tileBackground);
           return (
             <Rnd
               key={tile._id || index}
               onMouseLeave={() => setShowOption(null)}
-              className='tile'
+              className="tile"
               style={computedStyle}
               size={{ width: tile.width, height: tile.height }}
               position={{ x: tile.x, y: tile.y }}
@@ -1333,43 +1343,43 @@ const GridTiles = memo(function GridTiles({
             >
               {tile.displayTitle && (
                 <div
-                  className='text_overlay'
+                  className="text_overlay"
                   style={TitlePositionStyle(tile)}
                   dangerouslySetInnerHTML={{
-                    __html: changedTitlehandle(index, tile)
+                    __html: changedTitlehandle(index, tile),
                   }}
                 />
               )}
               {isImgBackground && (
                 <Image
                   src={tile.tileBackground}
-                  alt='Preview'
+                  alt="Preview"
                   fill
                   priority={index < 6}
                   quality={75}
                   // Use unoptimized for external CDN URLs to allow browser parallel loading
-                  unoptimized={tile.tileBackground && tile.tileBackground.startsWith('http')}
+                  unoptimized={tile.tileBackground && tile.tileBackground.startsWith("http")}
                   style={{
-                    objectFit: 'cover',
-                    borderRadius: '10px',
-                    pointerEvents: 'none'
+                    objectFit: "cover",
+                    borderRadius: "10px",
+                    pointerEvents: "none",
                   }}
                 />
               )}
               <div
-                className='showOptions absolute top-0 right-2 cursor-pointer'
+                className="showOptions absolute top-0 right-2 cursor-pointer"
                 onClick={e => openModel(e, index, null)}
               >
                 <MoreHorizSharpIcon />
               </div>
               {showOption == `tile_${index}` && (
                 <div
-                  className='absolute top-0 right-2 cursor-pointer '
+                  className="absolute top-0 right-2 cursor-pointer "
                   onTouchStart={e => openModel(e, index, null)}
                 >
                   <MoreHorizSharpIcon />
                 </div>
-              )}{' '}
+              )}{" "}
               {/* For Mobile view port  */}
             </Rnd>
           );
@@ -1381,7 +1391,7 @@ const GridTiles = memo(function GridTiles({
         <>
           {/* Backdrop */}
           <div
-            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out"
             onClick={() => {
               setShowModel(false);
               setSelectedPod(null);
@@ -1393,14 +1403,14 @@ const GridTiles = memo(function GridTiles({
           />
 
           {/* Modal */}
-          <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+          <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
             <div
-              className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
+              className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[90vh] flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className='flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                <h2 className='text-lg font-bold text-[#63899e]'>Box Settings</h2>
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0">
+                <h2 className="text-lg font-bold text-[#63899e]">Box Settings</h2>
                 <button
                   onClick={() => {
                     setShowModel(false);
@@ -1410,470 +1420,469 @@ const GridTiles = memo(function GridTiles({
                     setSelectedTile(null);
                     setImageFileName(null);
                   }}
-                  className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
-                  aria-label='Close dialog'
+                  className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer"
+                  aria-label="Close dialog"
                 >
                   <svg
-                    className='h-5 w-5'
-                    fill='none'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2.5'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
+                    className="h-5 w-5"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <path d='M6 18L18 6M6 6l12 12' />
+                    <path d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
               {/* Content - Scrollable */}
-              <div className='flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0 mt-6'>
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-4 sm:pb-6 space-y-6 min-h-0 mt-6">
                 {/* Text Display */}
-                <div className='space-y-3'>
+                <div className="space-y-3">
                   <button
-                    onClick={() => toggleSection('textDisplay')}
-                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    onClick={() => toggleSection("textDisplay")}
+                    className="w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0"
                   >
                     <span>Box Text Display</span>
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        collapsedSections.textDisplay ? 'rotate-180' : ''
+                        collapsedSections.textDisplay ? "rotate-180" : ""
                       }`}
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <path d='M19 9l-7 7-7-7' />
+                      <path d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {!collapsedSections.textDisplay && (
-                  <div className='flex flex-col sm:flex-row gap-4'>
-                    {/* Left: Edit Text Content button */}
-                    <div className='flex-1'>
-                      <button
-                        onClick={() => {
-                          if (selectedTile !== null && selectedTile !== undefined) {
-                            setCurrentTileIndex(selectedTile);
-                          }
-                          setEditorOpen(true);
-                        }}
-                        className='flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full'
-                      >
-                        <Image
-                          src={text}
-                          alt='TEXT'
-                          width={40}
-                          height={40}
-                          className='group-hover:scale-110 transition-transform'
-                        />
-                        <span className='text-sm font-medium text-gray-700 group-hover:text-[#63899e]'>
-                          Edit Text Content
-                        </span>
-                      </button>
-                    </div>
-                    {/* Right: Checkbox and dropdowns */}
-                    <div className='flex flex-col gap-3 flex-1'>
-                      <label className='flex items-center gap-2 cursor-pointer group'>
-                        <input
-                          type='checkbox'
-                          checked={selectedTileDetail.displayTitle}
-                          onChange={displayTitle}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer'
-                        />
-                        <span className='text-sm font-medium text-gray-700'>Show Text</span>
-                      </label>
-                      <div className='flex gap-2'>
-                        <select
-                          value={selectedTileDetail.titleX}
-                          onChange={handleChangePositionX}
-                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Left: Edit Text Content button */}
+                      <div className="flex-1">
+                        <button
+                          onClick={() => {
+                            if (selectedTile !== null && selectedTile !== undefined) {
+                              setCurrentTileIndex(selectedTile);
+                            }
+                            setEditorOpen(true);
+                          }}
+                          className="flex items-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#63899e] hover:bg-[#63899e]/5 transition-all duration-200 cursor-pointer group w-full"
                         >
-                          <option value={1}>Left</option>
-                          <option value={2}>Center</option>
-                          <option value={3}>Right</option>
-                        </select>
-                        <select
-                          value={selectedTileDetail.titleY}
-                          onChange={handleChangePositionY}
-                          className='px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1'
-                        >
-                          <option value={1}>Top</option>
-                          <option value={2}>Center</option>
-                          <option value={3}>Bottom</option>
-                        </select>
+                          <Image
+                            src={text}
+                            alt="TEXT"
+                            width={40}
+                            height={40}
+                            className="group-hover:scale-110 transition-transform"
+                          />
+                          <span className="text-sm font-medium text-gray-700 group-hover:text-[#63899e]">
+                            Edit Text Content
+                          </span>
+                        </button>
+                      </div>
+                      {/* Right: Checkbox and dropdowns */}
+                      <div className="flex flex-col gap-3 flex-1">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedTileDetail.displayTitle}
+                            onChange={displayTitle}
+                            className="w-4 h-4 text-[#63899e] border-gray-300 rounded focus:ring-0 focus:outline-none cursor-pointer"
+                          />
+                          <span className="text-sm font-medium text-gray-700">Show Text</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <select
+                            value={selectedTileDetail.titleX}
+                            onChange={handleChangePositionX}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1"
+                          >
+                            <option value={1}>Left</option>
+                            <option value={2}>Center</option>
+                            <option value={3}>Right</option>
+                          </select>
+                          <select
+                            value={selectedTileDetail.titleY}
+                            onChange={handleChangePositionY}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#63899e] focus:border-[#63899e] cursor-pointer bg-white flex-1"
+                          >
+                            <option value={1}>Top</option>
+                            <option value={2}>Center</option>
+                            <option value={3}>Bottom</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
                   )}
                 </div>
                 {/* Box Background */}
-                <div className='space-y-3'>
+                <div className="space-y-3">
                   <button
-                    onClick={() => toggleSection('background')}
-                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    onClick={() => toggleSection("background")}
+                    className="w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0"
                   >
                     <span>Box Background</span>
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        collapsedSections.background ? 'rotate-180' : ''
+                        collapsedSections.background ? "rotate-180" : ""
                       }`}
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <path d='M19 9l-7 7-7-7' />
+                      <path d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {!collapsedSections.background && (
-                  <div className='space-y-4'>
-                    <div className='flex flex-col sm:flex-row gap-3'>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
-                          selectedTileDetail.backgroundAction === 'color'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='backgroundAction'
-                          value='color'
-                          checked={selectedTileDetail.backgroundAction === 'color'}
-                          onChange={handleColorImage}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.backgroundAction === 'color'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
+                            selectedTileDetail.backgroundAction === "color"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          Select Color
-                        </span>
-                      </label>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
-                          selectedTileDetail.backgroundAction === 'image'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='backgroundAction'
-                          value='image'
-                          checked={selectedTileDetail.backgroundAction === 'image'}
-                          onChange={handleColorImage}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.backgroundAction === 'image'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          <input
+                            type="radio"
+                            name="backgroundAction"
+                            value="color"
+                            checked={selectedTileDetail.backgroundAction === "color"}
+                            onChange={handleColorImage}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.backgroundAction === "color"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            Select Color
+                          </span>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 ${
+                            selectedTileDetail.backgroundAction === "image"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          Upload Image
-                        </span>
-                      </label>
-                    </div>
-                    {selectedTileDetail.backgroundAction === 'color' && (
-                      <div>
-                        <ColorPicker
-                          handleColorChange={handleColorChange}
-                          colorBackground={colorBackground}
-                        />
+                          <input
+                            type="radio"
+                            name="backgroundAction"
+                            value="image"
+                            checked={selectedTileDetail.backgroundAction === "image"}
+                            onChange={handleColorImage}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.backgroundAction === "image"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            Upload Image
+                          </span>
+                        </label>
                       </div>
-                    )}
-                    {selectedTileDetail.backgroundAction === 'image' && (
-                      <div className='flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200'>
-                        <div
-                          className='relative w-12 h-12 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group'
-                          onClick={handleImageInput}
-                        >
-                          {imagePreview ||
-                          (selectedTileDetail.tileBackground &&
-                            typeof selectedTileDetail.tileBackground === 'string' &&
-                            selectedTileDetail.tileBackground.startsWith('http')) ? (
-                            <img
-                              src={
-                                imagePreview ||
-                                (selectedTileDetail.tileBackground &&
-                                typeof selectedTileDetail.tileBackground === 'string'
-                                  ? selectedTileDetail.tileBackground
-                                  : imageUpload)
-                              }
-                              alt='Preview'
-                              className='w-full h-full object-cover'
-                            />
-                          ) : (
-                            <div className='flex flex-col items-center gap-1'>
-                              <Image
-                                src={imageUpload}
-                                alt='Upload image'
-                                width={28}
-                                height={28}
-                                className='opacity-70 group-hover:opacity-100 transition-opacity duration-200 ml-1'
+                      {selectedTileDetail.backgroundAction === "color" && (
+                        <div>
+                          <ColorPicker
+                            handleColorChange={handleColorChange}
+                            colorBackground={colorBackground}
+                          />
+                        </div>
+                      )}
+                      {selectedTileDetail.backgroundAction === "image" && (
+                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div
+                            className="relative w-12 h-12 rounded-lg border-2 border-dashed border-[#63899e]/40 hover:border-[#63899e] hover:bg-[#63899e]/5 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer overflow-hidden bg-white flex items-center justify-center group"
+                            onClick={handleImageInput}
+                          >
+                            {imagePreview ||
+                            (selectedTileDetail.tileBackground &&
+                              typeof selectedTileDetail.tileBackground === "string" &&
+                              selectedTileDetail.tileBackground.startsWith("http")) ? (
+                              <img
+                                src={
+                                  imagePreview ||
+                                  (selectedTileDetail.tileBackground &&
+                                  typeof selectedTileDetail.tileBackground === "string"
+                                    ? selectedTileDetail.tileBackground
+                                    : imageUpload)
+                                }
+                                alt="Preview"
+                                className="w-full h-full object-cover"
                               />
-                              {/* <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span> */}
-                            </div>
-                          )}
+                            ) : (
+                              <div className="flex flex-col items-center gap-1">
+                                <Image
+                                  src={imageUpload}
+                                  alt="Upload image"
+                                  width={28}
+                                  height={28}
+                                  className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 ml-1"
+                                />
+                                {/* <span className='text-[10px] text-[#63899e]/70 group-hover:text-[#63899e] font-medium transition-colors duration-200'>Upload</span> */}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500 font-medium m-0">Selected file</p>
+                            <p className="text-sm font-medium text-gray-700 truncate m-0">
+                              {imageFileName ||
+                                (selectedTileDetail.tileBackground &&
+                                typeof selectedTileDetail.tileBackground === "string" &&
+                                isBackgroundImage(selectedTileDetail.tileBackground)
+                                  ? "Image loaded"
+                                  : "No file selected")}
+                            </p>
+                          </div>
                         </div>
-                        <div className='flex-1 min-w-0'>
-                          <p className='text-xs text-gray-500 font-medium m-0'>Selected file</p>
-                          <p className='text-sm font-medium text-gray-700 truncate m-0'>
-                            {imageFileName ||
-                              (selectedTileDetail.tileBackground &&
-                              typeof selectedTileDetail.tileBackground === 'string' &&
-                              isBackgroundImage(selectedTileDetail.tileBackground)
-                                ? 'Image loaded'
-                                : 'No file selected')}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    <input
-                      type='file'
-                      accept='image/*'
-                      ref={hiddenFileInput}
-                      className='hidden'
-                      onChange={handleImageChange}
-                    />
-                  </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={hiddenFileInput}
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </div>
                   )}
                 </div>
 
                 {/* Box Action */}
-                <div className='space-y-3'>
+                <div className="space-y-3">
                   <button
-                    onClick={() => toggleSection('action')}
-                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                    onClick={() => toggleSection("action")}
+                    className="w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0"
                   >
                     <span>Box Action</span>
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        collapsedSections.action ? 'rotate-180' : ''
+                        collapsedSections.action ? "rotate-180" : ""
                       }`}
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <path d='M19 9l-7 7-7-7' />
+                      <path d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {!collapsedSections.action && (
-                  <div className='space-y-3'>
-                    <div className='flex flex-row flex-wrap gap-2'>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
-                          selectedTileDetail.action === 'link'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='action'
-                          value='link'
-                          checked={selectedTileDetail.action === 'link'}
-                          onChange={changeAction}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.action === 'link'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                    <div className="space-y-3">
+                      <div className="flex flex-row flex-wrap gap-2">
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                            selectedTileDetail.action === "link"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          Opens Link
-                        </span>
-                      </label>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
-                          selectedTileDetail.action === 'textEditor'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='action'
-                          value='textEditor'
-                          checked={selectedTileDetail.action === 'textEditor'}
-                          onChange={changeAction}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.action === 'textEditor'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          <input
+                            type="radio"
+                            name="action"
+                            value="link"
+                            checked={selectedTileDetail.action === "link"}
+                            onChange={changeAction}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.action === "link"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            Opens Link
+                          </span>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                            selectedTileDetail.action === "textEditor"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          Opens Text Editor
-                        </span>
-                      </label>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
-                          selectedTileDetail.action === 'textDisplay'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='action'
-                          value='textDisplay'
-                          checked={selectedTileDetail.action === 'textDisplay'}
-                          onChange={changeAction}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.action === 'textDisplay'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          <input
+                            type="radio"
+                            name="action"
+                            value="textEditor"
+                            checked={selectedTileDetail.action === "textEditor"}
+                            onChange={changeAction}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.action === "textEditor"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            Opens Text Editor
+                          </span>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                            selectedTileDetail.action === "textDisplay"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          Opens Text Display
-                        </span>
-                      </label>
-                      <label
-                        className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
-                          selectedTileDetail.action === 'noAction'
-                            ? 'bg-[#63899e]/10 text-[#63899e]'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='action'
-                          value='noAction'
-                          checked={selectedTileDetail.action === 'noAction'}
-                          onChange={changeAction}
-                          className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
-                        />
-                        <span
-                          className={`text-sm font-medium transition-colors ${
-                            selectedTileDetail.action === 'noAction'
-                              ? 'text-[#63899e] font-semibold'
-                              : 'text-gray-700 group-hover:text-[#63899e]'
+                          <input
+                            type="radio"
+                            name="action"
+                            value="textDisplay"
+                            checked={selectedTileDetail.action === "textDisplay"}
+                            onChange={changeAction}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.action === "textDisplay"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            Opens Text Display
+                          </span>
+                        </label>
+                        <label
+                          className={`flex items-center gap-2 cursor-pointer group hover:bg-gray-50 rounded-lg p-2 transition-colors flex-1 min-w-[140px] ${
+                            selectedTileDetail.action === "noAction"
+                              ? "bg-[#63899e]/10 text-[#63899e]"
+                              : ""
                           }`}
                         >
-                          No Action
-                        </span>
-                      </label>
+                          <input
+                            type="radio"
+                            name="action"
+                            value="noAction"
+                            checked={selectedTileDetail.action === "noAction"}
+                            onChange={changeAction}
+                            className='w-4 h-4 text-[#63899e] border-gray-300 focus:ring-2 focus:ring-[#63899e] checked:ring-2 checked:ring-[#63899e] cursor-pointer appearance-none rounded-full border-2 checked:border-[#63899e] focus:outline-none focus:ring-offset-0 checked:ring-offset-0 relative before:content-[""] before:absolute before:inset-0 before:rounded-full before:scale-0 checked:before:scale-[0.4] before:bg-[#63899e] before:transition-transform before:duration-200'
+                          />
+                          <span
+                            className={`text-sm font-medium transition-colors ${
+                              selectedTileDetail.action === "noAction"
+                                ? "text-[#63899e] font-semibold"
+                                : "text-gray-700 group-hover:text-[#63899e]"
+                            }`}
+                          >
+                            No Action
+                          </span>
+                        </label>
+                      </div>
+                      {selectedTileDetail.action === "link" && (
+                        <Input
+                          type="text"
+                          value={selectedTileDetail.tileLink || ""}
+                          onChange={enterLink}
+                          placeholder="Add URL here"
+                          className="w-full"
+                        />
+                      )}
                     </div>
-                    {selectedTileDetail.action === 'link' && (
-                      <Input
-                        type='text'
-                        value={selectedTileDetail.tileLink || ''}
-                        onChange={enterLink}
-                        placeholder='Add URL here'
-                        className='w-full'
-                      />
-                    )}
-                  </div>
                   )}
                 </div>
 
-                
-
                 {/* Box Order */}
-                <div className='space-y-3'>
-                      <button
-                    onClick={() => toggleSection('order')}
-                    className='w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0'
+                <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSection("order")}
+                    className="w-full flex items-center justify-between text-base font-semibold text-[#63899e] bg-[#63899e]/10 px-4 py-5 rounded-lg hover:bg-[#63899e]/20 transition-colors cursor-pointer border-0"
                   >
                     <span>Box Order</span>
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        collapsedSections.order ? 'rotate-180' : ''
+                        collapsedSections.order ? "rotate-180" : ""
                       }`}
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <path d='M19 9l-7 7-7-7' />
+                      <path d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {!collapsedSections.order && (
-                  <div className='space-y-2'>
-                    <label className='block text-sm font-medium text-gray-700'>
-                      Order (used for text editor navigation):
-                    </label>
-                    <Input
-                      type='number'
-                      min='1'
-                      value={
-                        selectedTileDetail.order !== undefined && selectedTileDetail.order !== null
-                          ? selectedTileDetail.order
-                          : ''
-                      }
-                      onChange={e => {
-                        const inputValue = e.target.value;
-                        if (inputValue === '') {
-                          setSelectedTileDetail({ ...selectedTileDetail, order: null });
-                          const values = formValue;
-                          values.order = null;
-                          setFormValue(values);
-                        } else {
-                          const newOrder = parseInt(inputValue);
-                          if (!isNaN(newOrder) && newOrder > 0) {
-                            setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
-                            const values = formValue;
-                            values.order = newOrder;
-                            setFormValue(values);
-                          }
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Order (used for text editor navigation):
+                      </label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={
+                          selectedTileDetail.order !== undefined &&
+                          selectedTileDetail.order !== null
+                            ? selectedTileDetail.order
+                            : ""
                         }
-                      }}
-                      placeholder='Enter order number'
-                      className='w-full'
-                    />
-                    <p className='text-xs text-gray-500'>
-                      This determines the order when navigating between boxes in the text editor
-                    </p>
-                  </div>
+                        onChange={e => {
+                          const inputValue = e.target.value;
+                          if (inputValue === "") {
+                            setSelectedTileDetail({ ...selectedTileDetail, order: null });
+                            const values = formValue;
+                            values.order = null;
+                            setFormValue(values);
+                          } else {
+                            const newOrder = parseInt(inputValue);
+                            if (!isNaN(newOrder) && newOrder > 0) {
+                              setSelectedTileDetail({ ...selectedTileDetail, order: newOrder });
+                              const values = formValue;
+                              values.order = newOrder;
+                              setFormValue(values);
+                            }
+                          }
+                        }}
+                        placeholder="Enter order number"
+                        className="w-full"
+                      />
+                      <p className="text-xs text-gray-500">
+                        This determines the order when navigating between boxes in the text editor
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0'>
-                <div className='flex gap-4'>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0">
+                <div className="flex gap-4">
                   <button
                     onClick={() => tileClone(selectedTile)}
-                    className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#63899e] hover:bg-gray-100 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none"
                   >
-                    <DifferenceOutlinedIcon className='text-[#63899e]' />
+                    <DifferenceOutlinedIcon className="text-[#63899e]" />
                     <span>Duplicate</span>
                   </button>
                   <button
                     onClick={() => deleteTile(selectedTile)}
-                    className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none'
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer border-0 outline-none"
                   >
                     <DeleteOutlineIcon />
                     <span>Delete</span>
                   </button>
                 </div>
-                <div className='flex items-center gap-3 sm:justify-end'>
+                <div className="flex items-center gap-3 sm:justify-end">
                   <Button
-                    variant='outline'
+                    variant="outline"
                     onClick={() => {
                       setShowModel(false);
                       setSelectedPod(null);
@@ -1882,14 +1891,14 @@ const GridTiles = memo(function GridTiles({
                       setSelectedTile(null);
                       setImageFileName(null);
                     }}
-                    className='border-gray-300 cursor-pointer flex-1 sm:flex-initial'
+                    className="border-gray-300 cursor-pointer flex-1 sm:flex-initial"
                   >
                     Cancel
                   </Button>
                   <Button
-                    variant='default'
+                    variant="default"
                     onClick={index => handleSave(`tiles_${selectedTile}`)}
-                    className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial'
+                    className="bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer flex-1 sm:flex-initial"
                   >
                     Save
                   </Button>
@@ -1901,156 +1910,157 @@ const GridTiles = memo(function GridTiles({
       )}
 
       {/* Editor Modal */}
-      {editorOpen && (() => {
-        const hasMultipleTiles = tileCordinates.length > 1;
-        const canGoPrev = currentTileIndex > 0;
-        const canGoNext = currentTileIndex < tileCordinates.length - 1;
+      {editorOpen &&
+        (() => {
+          const hasMultipleTiles = tileCordinates.length > 1;
+          const canGoPrev = currentTileIndex > 0;
+          const canGoNext = currentTileIndex < tileCordinates.length - 1;
 
-        const goPrev = () => {
-          if (!canGoPrev) return;
-          const prevIndex = currentTileIndex - 1;
-          setCurrentTileIndex(prevIndex);
-          setSelectedTile(prevIndex);
-          const prevTile = tileCordinates[prevIndex];
-          setSelectedTileDetail(prevTile);
-          setFormValue({ ...formValue, tileText: prevTile.tileText || '' });
-          currentBackground(prevTile);
-        };
+          const goPrev = () => {
+            if (!canGoPrev) return;
+            const prevIndex = currentTileIndex - 1;
+            setCurrentTileIndex(prevIndex);
+            setSelectedTile(prevIndex);
+            const prevTile = tileCordinates[prevIndex];
+            setSelectedTileDetail(prevTile);
+            setFormValue({ ...formValue, tileText: prevTile.tileText || "" });
+            currentBackground(prevTile);
+          };
 
-        const goNext = () => {
-          if (!canGoNext) return;
-          const nextIndex = currentTileIndex + 1;
-          setCurrentTileIndex(nextIndex);
-          setSelectedTile(nextIndex);
-          const nextTile = tileCordinates[nextIndex];
-          setSelectedTileDetail(nextTile);
-          setFormValue({ ...formValue, tileText: nextTile.tileText || '' });
-          currentBackground(nextTile);
-        };
+          const goNext = () => {
+            if (!canGoNext) return;
+            const nextIndex = currentTileIndex + 1;
+            setCurrentTileIndex(nextIndex);
+            setSelectedTile(nextIndex);
+            const nextTile = tileCordinates[nextIndex];
+            setSelectedTileDetail(nextTile);
+            setFormValue({ ...formValue, tileText: nextTile.tileText || "" });
+            currentBackground(nextTile);
+          };
 
-        return (
-          <>
-            <div
-              className='fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out'
-              onClick={() => setEditorOpen(false)}
-            />
-            <div className='fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none'>
+          return (
+            <>
               <div
-                className='bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden'
-                onClick={e => e.stopPropagation()}
-              >
-                {/* Header */}
-                <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0'>
-                  <h2 className='text-xl font-bold text-[#63899e] m-0'>Edit Text</h2>
-                  <button
-                    onClick={() => setEditorOpen(false)}
-                    className='p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer'
-                    aria-label='Close dialog'
-                  >
-                    <svg
-                      className='h-5 w-5'
-                      fill='none'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2.5'
-                      viewBox='0 0 24 24'
-                      stroke='currentColor'
-                    >
-                      <path d='M6 18L18 6M6 6l12 12' />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Editor Content */}
-                <div className='flex-1 overflow-auto flex items-stretch min-h-0'>
-                  <div className='flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6'>
-                    <TipTapMainEditor
-                      initialContent={formValue.tileText || selectedTileDetail.tileText || ''}
-                      onContentChange={html => enterText(html)}
-                    />
-                  </div>
-                </div>
-
-                {/* Navigation Indicator */}
-                {hasMultipleTiles && (
-                  <div className='flex items-center justify-center gap-2 px-4 py-3 border-t border-gray-200'>
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-all duration-300 ease-in-out"
+                onClick={() => setEditorOpen(false)}
+              />
+              <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+                <div
+                  className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-full sm:max-w-[1128px] h-[100dvh] sm:h-auto sm:max-h-[90vh] max-h-screen flex flex-col pointer-events-auto transform transition-all duration-300 ease-in-out overflow-hidden"
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#63899e]/10 to-[#4a6d7e]/10 backdrop-blur-sm flex-shrink-0">
+                    <h2 className="text-xl font-bold text-[#63899e] m-0">Edit Text</h2>
                     <button
-                      onClick={goPrev}
-                      disabled={!canGoPrev}
-                      className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
-                        canGoPrev
-                          ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
-                          : 'text-gray-300 cursor-not-allowed'
-                      }`}
-                      aria-label='Previous tile'
+                      onClick={() => setEditorOpen(false)}
+                      className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 border-0 outline-none flex-shrink-0 cursor-pointer"
+                      aria-label="Close dialog"
                     >
                       <svg
-                        className='h-5 w-5'
-                        fill='none'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2.5'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
+                        className="h-5 w-5"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2.5"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        <path d='M15 19l-7-7 7-7' />
+                        <path d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
-                    <div className='flex items-center gap-1 px-3'>
-                      <span className='text-sm text-gray-600 font-medium'>
-                        {currentTileIndex + 1} / {tileCordinates.length}
-                      </span>
+                  </div>
+
+                  {/* Editor Content */}
+                  <div className="flex-1 overflow-auto flex items-stretch min-h-0">
+                    <div className="flex-1 min-w-0 px-4 sm:px-6 pt-4 sm:pt-6">
+                      <TipTapMainEditor
+                        initialContent={formValue.tileText || selectedTileDetail.tileText || ""}
+                        onContentChange={html => enterText(html)}
+                      />
                     </div>
-                    <button
-                      onClick={goNext}
-                      disabled={!canGoNext}
-                      className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
-                        canGoNext
-                          ? 'text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer'
-                          : 'text-gray-300 cursor-not-allowed'
-                      }`}
-                      aria-label='Next tile'
-                    >
-                      <svg
-                        className='h-5 w-5'
-                        fill='none'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2.5'
-                        viewBox='0 0 24 24'
-                        stroke='currentColor'
-                      >
-                        <path d='M9 5l7 7-7 7' />
-                      </svg>
-                    </button>
                   </div>
-                )}
 
-              {/* Footer */}
-              <div
-                className='flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 bg-gray-50/50 flex-shrink-0'
-                style={{ borderTop: '1px solid #e5e7eb' }} // tailwind's border-gray-200 as inline style
-              >
-                <Button
-                  variant='outline'
-                  onClick={() => setEditorOpen(false)}
-                  className='border-gray-300 cursor-pointer w-full'
-                >
-                  Close
-                </Button>
-                <Button
-                  variant='default'
-                  onClick={saveEditorText}
-                  className='bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer w-full'
-                >
-                  Save
-                </Button>
+                  {/* Navigation Indicator */}
+                  {hasMultipleTiles && (
+                    <div className="flex items-center justify-center gap-2 px-4 py-3 border-t border-gray-200">
+                      <button
+                        onClick={goPrev}
+                        disabled={!canGoPrev}
+                        className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                          canGoPrev
+                            ? "text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer"
+                            : "text-gray-300 cursor-not-allowed"
+                        }`}
+                        aria-label="Previous tile"
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <div className="flex items-center gap-1 px-3">
+                        <span className="text-sm text-gray-600 font-medium">
+                          {currentTileIndex + 1} / {tileCordinates.length}
+                        </span>
+                      </div>
+                      <button
+                        onClick={goNext}
+                        disabled={!canGoNext}
+                        className={`p-2 rounded-lg transition-all duration-200 border-0 outline-none ${
+                          canGoNext
+                            ? "text-[#63899e] hover:bg-[#63899e]/10 cursor-pointer"
+                            : "text-gray-300 cursor-not-allowed"
+                        }`}
+                        aria-label="Next tile"
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 bg-gray-50/50 flex-shrink-0"
+                    style={{ borderTop: "1px solid #e5e7eb" }} // tailwind's border-gray-200 as inline style
+                  >
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditorOpen(false)}
+                      className="border-gray-300 cursor-pointer w-full"
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={saveEditorText}
+                      className="bg-[#63899e] hover:bg-[#4a6d7e] cursor-pointer w-full"
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          </>
-        );
-      })()}
+            </>
+          );
+        })()}
 
       {/* <TextEditor */}
       <TipTapTextEditorDialog

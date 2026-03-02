@@ -16,7 +16,7 @@ const ImagePreloader = ({
   const isMountedRef = useRef(true);
 
   const preloadImage = useCallback(
-    (src) => {
+    src => {
       return new Promise((resolve, reject) => {
         const img = new Image();
 
@@ -60,21 +60,21 @@ const ImagePreloader = ({
         img.src = src;
       });
     },
-    [priority],
+    [priority]
   );
 
   const preloadBatch = useCallback(
-    async (imageBatch) => {
-      const promises = imageBatch.map(async (src) => {
+    async imageBatch => {
+      const promises = imageBatch.map(async src => {
         try {
           await preloadImage(src);
           if (isMountedRef.current) {
-            setLoadedImages((prev) => new Set([...prev, src]));
+            setLoadedImages(prev => new Set([...prev, src]));
             return { src, success: true };
           }
         } catch (error) {
           if (isMountedRef.current) {
-            setFailedImages((prev) => new Set([...prev, src]));
+            setFailedImages(prev => new Set([...prev, src]));
             return { src, success: false };
           }
         }
@@ -82,7 +82,7 @@ const ImagePreloader = ({
 
       return Promise.allSettled(promises);
     },
-    [preloadImage],
+    [preloadImage]
   );
 
   useEffect(() => {
@@ -103,9 +103,7 @@ const ImagePreloader = ({
         await preloadBatch(batch);
 
         processedImages += batch.length;
-        const currentProgress = Math.round(
-          (processedImages / totalImages) * 100,
-        );
+        const currentProgress = Math.round((processedImages / totalImages) * 100);
 
         if (isMountedRef.current) {
           setProgress(currentProgress);
@@ -114,7 +112,7 @@ const ImagePreloader = ({
 
         // Add delay between batches to prevent blocking
         if (i + batchSize < images.length && delay > 0) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 
@@ -128,16 +126,7 @@ const ImagePreloader = ({
     return () => {
       isMountedRef.current = false;
     };
-  }, [
-    images,
-    preloadBatch,
-    onComplete,
-    onProgress,
-    batchSize,
-    delay,
-    loadedImages,
-    failedImages,
-  ]);
+  }, [images, preloadBatch, onComplete, onProgress, batchSize, delay, loadedImages, failedImages]);
 
   return null;
 };
