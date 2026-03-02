@@ -27,6 +27,7 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false);
   const [params, setParams] = useState({ success: null, canceled: null });
   const [prices, setPrices] = useState({ monthly: null, annual: null });
+  const [pricesLoading, setPricesLoading] = useState(true);
   const [checkoutError, setCheckoutError] = useState("");
   const handleParams = useCallback(p => setParams(p), []);
 
@@ -38,7 +39,8 @@ export default function SubscriptionPage() {
     fetch("/api/stripe/prices")
       .then(res => (res.ok ? res.json() : {}))
       .then(data => setPrices({ monthly: data.monthly || null, annual: data.annual || null }))
-      .catch(() => setPrices({ monthly: null, annual: null }));
+      .catch(() => setPrices({ monthly: null, annual: null }))
+      .finally(() => setPricesLoading(false));
   }, []);
 
   const isPro = isUserPro(dbUser);
@@ -169,7 +171,9 @@ export default function SubscriptionPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch">
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto items-stretch transition-opacity duration-200 ${pricesLoading ? "opacity-50 animate-pulse pointer-events-none" : ""}`}
+            >
               {(SUBSCRIPTION_PLANS || []).map(plan => (
                 <PriceCard
                   key={plan.id}
