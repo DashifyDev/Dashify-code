@@ -1,7 +1,8 @@
 import Stripe from "stripe";
 
 const isTestMode = process.env.STRIPE_TEST_MODE === "true";
-const secretKey = isTestMode ? process.env.STRIPE_TEST_SECRET_KEY : process.env.STRIPE_SECRET_KEY;
+const rawKey = isTestMode ? process.env.STRIPE_TEST_SECRET_KEY : process.env.STRIPE_SECRET_KEY;
+const secretKey = typeof rawKey === "string" ? rawKey.trim() : rawKey;
 
 let stripe = null;
 if (secretKey) {
