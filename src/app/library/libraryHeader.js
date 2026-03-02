@@ -14,7 +14,7 @@ function LibraryHeader() {
   const dropdownRef = useRef(null);
   const { dbUser } = useContext(globalContext);
   const isMobile = useIsMobile();
-  const { user } = useUser();
+  const { user, isLoading: authLoading } = useUser();
 
   const toggleDrawer = () => {
     setDrawerOpen(!isDrawerOpen);
@@ -73,7 +73,9 @@ function LibraryHeader() {
             </button>
 
             {/* User Menu or Auth Buttons */}
-            {dbUser ? (
+            {authLoading ? (
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gray-200 animate-pulse" />
+            ) : dbUser ? (
               <div ref={dropdownRef} className="relative">
                 <button
                   onClick={handlePicClick}
