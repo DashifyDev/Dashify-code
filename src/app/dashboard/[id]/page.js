@@ -91,23 +91,7 @@ function OptimizedDashboardPage() {
     }
   }, [dashboardData, isLoading, error, isBoardsLoaded, boards, id, router]);
 
-  // Preload next boards
-  useEffect(() => {
-    if (dashboardData && dashboardData.relatedBoards) {
-      dashboardData.relatedBoards.forEach(boardId => {
-        queryClient.prefetchQuery({
-          queryKey: dashboardKeys.detail(boardId),
-          queryFn: async () => {
-            const response = await fetch(`/api/dashboard/${boardId}`);
-            return response.json();
-          },
-          staleTime: 5 * 60 * 1000,
-        });
-      });
-    }
-  }, [dashboardData, queryClient]);
-
-  const [tiles, setTiles] = useState([]);
+const [tiles, setTiles] = useState([]);
   const [pods, setPods] = useState([]);
   const [activeBoard, setActiveBoard] = useState(id);
   const [headerWidth, setHeaderWidth] = useState(0);
