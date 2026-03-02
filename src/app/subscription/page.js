@@ -44,15 +44,15 @@ export default function SubscriptionPage() {
   }, []);
 
   const isPro = isUserPro(dbUser);
-  const monthlyDisplay = prices.monthly?.formatted ?? "—";
-  const annualDisplay = prices.annual?.formattedPerMonth ?? prices.annual?.formatted ?? "—";
+  const monthlyDisplay = prices.monthly?.formatted ?? "-";
+  const annualDisplay = prices.annual?.formattedPerMonth ?? prices.annual?.formatted ?? "-";
 
   const getPriceDisplayForPlan = plan => {
     if (plan.id === "free") return plan.priceDisplay;
     if (plan.id === "pro") {
       return isAnnual ? annualDisplay : monthlyDisplay;
     }
-    return "—";
+    return "-";
   };
 
   const getPriceSublineForPlan = plan => {
@@ -120,7 +120,7 @@ export default function SubscriptionPage() {
         )}
 
         {mounted && isPro && dbUser ? (
-          <div className="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-200/60 p-8">
+          <div className="max-w-md mx-auto bg-white rounded-2xl p-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{PLAN_LABELS[dbUser.plan] || "Pro"}</h2>
               <SubscriptionStatusBadge status={dbUser.subscriptionStatus} />
@@ -135,7 +135,11 @@ export default function SubscriptionPage() {
                 Your last payment failed. Update your payment method to keep Pro access.
               </div>
             )}
-            <Button onClick={handleManage} disabled={loading} className="w-full">
+            <Button
+              onClick={handleManage}
+              disabled={loading}
+              className="w-full border-0 shadow-none hover:shadow-none"
+            >
               {loading ? "Loading..." : "Manage Subscription"}
             </Button>
           </div>
