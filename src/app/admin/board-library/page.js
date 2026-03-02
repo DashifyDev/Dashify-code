@@ -31,15 +31,21 @@ function board_library() {
   const [imageData, setImageData] = useState();
   const [modalButtonState, setModalButtonState] = useState(false);
   const [selectedData, setSelectedData] = useState({});
-  const { getRootProps, getInputProps, acceptedFiles } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png"] },
     onDrop: acceptedFiles => {
-      let file = acceptedFiles[0];
-      setAddBoardData({ ...addBoardData, boardImage: file });
-      let blobURL = URL.createObjectURL(file);
-      setImageData(blobURL);
+      const file = acceptedFiles[0];
+      setAddBoardData(prev => ({ ...prev, boardImage: file }));
+      setImageData(URL.createObjectURL(file));
     },
   });
+
+  const handleCancel = () => {
+    setOpenAddBoardModel(false);
+    setImageData();
+    setAddBoardData({});
+    setModalButtonState(false);
+  };
 
   useEffect(() => {
     axios.get("/api/template/addTemplate").then(res => {
@@ -132,6 +138,7 @@ function board_library() {
                 <TableCell align="center">Rating</TableCell>
                 <TableCell align="center">Date</TableCell>
                 <TableCell align="center">Description</TableCell>
+                <TableCell align="center">Type</TableCell>
                 <TableCell colSpan={2} align="center">
                   Action
                 </TableCell>
@@ -158,6 +165,11 @@ function board_library() {
                     {new Date(board.date).toLocaleDateString("en-GB")}
                   </TableCell>
                   <TableCell align="center">{board.boardDescription}</TableCell>
+                  <TableCell align="center">
+                    <span className={`type-badge${board.isPremium ? " premium" : " community"}`}>
+                      {board.isPremium ? "Premium" : "Community"}
+                    </span>
+                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       sx={{ color: "#434343" }}
@@ -186,7 +198,7 @@ function board_library() {
         </TableContainer>
       </div>
       {/* Add Board Model */}
-      <Dialog open={openAddBoardModel} close={openAddBoardModel.toString()}>
+      <Dialog open={openAddBoardModel} onClose={handleCancel}>
         <DialogContent>
           <div className="modal-div-style">
             <label id="board-name">Board Name</label>
@@ -271,10 +283,29 @@ function board_library() {
               }}
             />
           </div>
+          <div className="modal-div-style">
+            <label>Template Type</label>
+            <div className="type-toggle">
+              <button
+                type="button"
+                className={`type-toggle-btn${!addBoardData.isPremium ? " active" : ""}`}
+                onClick={() => setAddBoardData(prev => ({ ...prev, isPremium: false }))}
+              >
+                Community
+              </button>
+              <button
+                type="button"
+                className={`type-toggle-btn${addBoardData.isPremium ? " active" : ""}`}
+                onClick={() => setAddBoardData(prev => ({ ...prev, isPremium: true }))}
+              >
+                Premium
+              </button>
+            </div>
+          </div>
           <div className="modal-label-style">
             <label>Image</label>
           </div>
-          <div {...getRootProps({ className: "dropzone" })} className="drop-zone">
+          <div {...getRootProps()} className="drop-zone">
             <input {...getInputProps()} />
 
             {imageData ? (
@@ -296,16 +327,7 @@ function board_library() {
           ) : (
             <Button onClick={() => handleSaveData()}>Save</Button>
           )}
-          <Button
-            onClick={() => {
-              setOpenAddBoardModel(false);
-              setImageData();
-              setAddBoardData({});
-              setModalButtonState(false);
-            }}
-          >
-            Cancel
-          </Button>
+          <Button onClick={handleCancel}>Cancel</Button>
         </DialogActions>
       </Dialog>
 
